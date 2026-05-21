@@ -1,0 +1,31 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  workspace: one
+  kind: MyString
+  description: MyString
+  amount_cents: 1
+  transacted_on: 2026-05-21
+  origin: MyString
+  status: MyString
+  document_id: 1
+  counterparty_id: 1
+  category_id: 1
+  counterparty_name_snapshot: MyString
+  counterparty_tax_id_snapshot: MyString
+  counterparty_tax_id_status: MyString
+
+two:
+  workspace: two
+  kind: MyString
+  description: MyString
+  amount_cents: 1
+  transacted_on: 2026-05-21
+  origin: MyString
+  status: MyString
+  document_id: 1
+  counterparty_id: 1
+  category_id: 1
+  counterparty_name_snapshot: MyString
+  counterparty_tax_id_snapshot: MyString
+  counterparty_tax_id_status: MyString

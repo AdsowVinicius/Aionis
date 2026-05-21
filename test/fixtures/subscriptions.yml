@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  workspace: one
+  plan: one
+  status: MyString
+  starts_at: 2026-05-21 15:50:31
+  ends_at: 2026-05-21 15:50:31
+  trial_ends_at: 2026-05-21 15:50:31
+
+two:
+  workspace: two
+  plan: two
+  status: MyString
+  starts_at: 2026-05-21 15:50:31
+  ends_at: 2026-05-21 15:50:31
+  trial_ends_at: 2026-05-21 15:50:31

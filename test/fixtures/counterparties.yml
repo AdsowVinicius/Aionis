@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  workspace: one
+  name: MyString
+  kind: MyString
+  tax_id: MyString
+  tax_id_status: MyString
+  tax_id_source: MyString
+  notes: MyText
+
+two:
+  workspace: two
+  name: MyString
+  kind: MyString
+  tax_id: MyString
+  tax_id_status: MyString
+  tax_id_source: MyString
+  notes: MyText

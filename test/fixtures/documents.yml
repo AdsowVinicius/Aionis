@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  workspace: one
+  counterparty_id: 1
+  status: MyString
+  source: MyString
+  notes: MyText
+
+two:
+  workspace: two
+  counterparty_id: 1
+  status: MyString
+  source: MyString
+  notes: MyText
