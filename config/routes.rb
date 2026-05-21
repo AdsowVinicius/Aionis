@@ -9,12 +9,16 @@ Rails.application.routes.draw do
 
   resources :workspaces do
     scope module: :workspaces do
-      resource  :dashboard, only: :show
+      # controller: 'dashboard' mantém Workspaces::DashboardController (singular)
+      resource  :dashboard,             only: :show,  controller: "dashboard"
+      resources :financial_transactions
       resources :categories
       resources :counterparties
       resources :documents
-      resources :financial_transactions
+      resources :payables,    only: :index
+      resources :receivables, only: :index
       resource  :subscription, only: [:show, :edit, :update]
+      resource  :settings,    only: :show
     end
   end
 

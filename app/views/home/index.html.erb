@@ -1,0 +1,37 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex flex-col">
+  <header class="px-6 py-5 flex items-center justify-between max-w-6xl mx-auto w-full">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl font-bold text-teal-400">Aionis</span>
+      <span class="text-slate-400 text-sm">financeiro</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <%= link_to "Entrar", new_user_session_path,
+            class: "text-sm text-slate-300 hover:text-white transition-colors px-4 py-2" %>
+      <%= link_to "Criar conta", new_user_registration_path,
+            class: "text-sm bg-teal-600 hover:bg-teal-500 text-white font-medium px-4 py-2 rounded-lg transition-colors" %>
+    </div>
+  </header>
+
+  <main class="flex-1 flex items-center justify-center px-6 py-20">
+    <div class="text-center max-w-2xl">
+      <h1 class="text-4xl sm:text-5xl font-bold text-white leading-tight mb-6">
+        Seu assistente financeiro<br>
+        <span class="text-teal-400">simples e inteligente</span>
+      </h1>
+      <p class="text-lg text-slate-300 mb-10 leading-relaxed">
+        Controle despesas, receitas, documentos e fornecedores em um só lugar.
+        Para CPF, MEI e pequenas empresas.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <%= link_to "Começar gratuitamente", new_user_registration_path,
+              class: "bg-teal-600 hover:bg-teal-500 text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-colors" %>
+        <%= link_to "Já tenho conta", new_user_session_path,
+              class: "border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-8 py-3.5 rounded-xl text-base transition-colors" %>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-6 text-slate-500 text-sm">
+    © <%= Date.current.year %> Aionis. Todos os direitos reservados.
+  </footer>
+</div>

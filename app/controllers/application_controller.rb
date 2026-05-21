@@ -5,6 +5,9 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_user!
+  before_action :configure_permitted_parameters, if: :devise_controller?
+
+  layout :choose_layout
 
   rescue_from Pundit::NotAuthorizedError, with: :handle_unauthorized
 
@@ -12,14 +15,33 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def choose_layout
+    devise_controller? ? "application" : (user_signed_in? ? "authenticated" : "application")
+  end
+
   def current_workspace
-    @current_workspace ||= begin
-      if params[:workspace_id]
-        current_user.workspaces.find(params[:workspace_id])
-      end
+    return @current_workspace if defined?(@current_workspace)
+    @current_workspace = if params[:workspace_id]
+      current_user.workspaces.find_by(id: params[:workspace_id])
     end
-  rescue ActiveRecord::RecordNotFound
-    redirect_to workspaces_path, alert: "Workspace não encontrado."
+  end
+
+  def require_workspace!
+    return if current_workspace
+    redirect_to workspaces_path, alert: "Workspace não encontrado ou sem permissão de acesso."
+  end
+
+  def after_sign_in_path_for(_resource)
+    authenticated_root_path
+  end
+
+  def after_sign_up_path_for(_resource)
+    authenticated_root_path
+  end
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_up,         keys: [:name])
+    devise_parameter_sanitizer.permit(:account_update,  keys: [:name])
   end
 
   def handle_unauthorized

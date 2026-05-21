@@ -1,5 +1,5 @@
 module Workspaces
-  class FinancialTransactionsController < ApplicationController
+  class FinancialTransactionsController < Workspaces::BaseController
     before_action :set_transaction, only: [:show, :edit, :update, :destroy]
 
     def index

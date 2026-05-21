@@ -1,0 +1,11 @@
+<% flash.each do |type, message| %>
+  <% color = type.to_s == "alert" ? "red" : "teal" %>
+  <div class="px-4 py-3 text-sm font-medium
+              <%= type.to_s == "alert" ? "bg-red-50 text-red-800 border border-red-200" : "bg-teal-50 text-teal-800 border border-teal-200" %>"
+       data-controller="flash"
+       data-action="animationend->flash#remove">
+    <div class="max-w-7xl mx-auto flex items-center gap-2">
+      <span><%= message %></span>
+    </div>
+  </div>
+<% end %>
