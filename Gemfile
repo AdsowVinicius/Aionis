@@ -32,6 +32,9 @@ gem "pagy", "~> 9.0"
 # Money formatting for BRL
 gem "money-rails", "~> 1.15"
 
+# Full pt-BR translations for Rails (dates, numbers, errors, etc.)
+gem "rails-i18n"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

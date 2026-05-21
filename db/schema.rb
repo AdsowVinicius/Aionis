@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_185314) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_191808) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,6 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_185314) do
     t.string "cost_type"
     t.datetime "created_at", null: false
     t.string "essentiality"
+    t.boolean "is_system_default", default: false, null: false
     t.string "kind", null: false
     t.string "name", null: false
     t.integer "parent_id"
@@ -81,14 +82,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_185314) do
   end
 
   create_table "plans", force: :cascade do |t|
-    t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
-    t.jsonb "features", default: {}, null: false
+    t.boolean "includes_email_channel", default: false, null: false
+    t.boolean "includes_kpi_advanced", default: false, null: false
+    t.boolean "includes_open_finance", default: false, null: false
+    t.integer "max_documents_month"
+    t.integer "max_users"
+    t.integer "max_whatsapp_messages_month"
+    t.integer "monthly_price_cents", default: 0, null: false
     t.string "name", null: false
-    t.integer "price_cents", default: 0, null: false
+    t.integer "setup_fee_cents", default: 0, null: false
     t.string "slug", null: false
+    t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_plans_on_slug", unique: true
+    t.index ["status"], name: "index_plans_on_status"
   end
 
   create_table "subscriptions", force: :cascade do |t|

@@ -1,0 +1,126 @@
+# Categorias globais do sistema (workspace_id nulo).
+# Para alterar: edite este arquivo e rode rails db:seed.
+# parent: nome exato da categoria pai (deve existir no mesmo arquivo).
+
+receitas:
+  name: "Receitas"
+  kind: "income"
+  is_system_default: true
+
+despesas:
+  name: "Despesas"
+  kind: "expense"
+  is_system_default: true
+
+impostos:
+  name: "Impostos"
+  kind: "expense"
+  cost_type: "fixed"
+  essentiality: "essential"
+  is_system_default: true
+
+fornecedores:
+  name: "Fornecedores"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "operational_important"
+  is_system_default: true
+
+materiais:
+  name: "Materiais"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "operational_important"
+  is_system_default: true
+
+transporte:
+  name: "Transporte"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "review"
+  is_system_default: true
+
+combustivel:
+  name: "Combustível"
+  kind: "expense"
+  parent: "Transporte"
+  cost_type: "variable"
+  essentiality: "review"
+  is_system_default: true
+
+alimentacao:
+  name: "Alimentação"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "review"
+  is_system_default: true
+
+energia:
+  name: "Energia"
+  kind: "expense"
+  cost_type: "fixed"
+  essentiality: "essential"
+  is_system_default: true
+
+agua:
+  name: "Água"
+  kind: "expense"
+  cost_type: "fixed"
+  essentiality: "essential"
+  is_system_default: true
+
+internet:
+  name: "Internet"
+  kind: "expense"
+  cost_type: "fixed"
+  essentiality: "essential"
+  is_system_default: true
+
+software:
+  name: "Software"
+  kind: "expense"
+  cost_type: "fixed"
+  essentiality: "operational_important"
+  is_system_default: true
+
+contador:
+  name: "Contador"
+  kind: "expense"
+  cost_type: "fixed"
+  essentiality: "essential"
+  is_system_default: true
+
+tarifas_bancarias:
+  name: "Tarifas bancárias"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "operational_important"
+  is_system_default: true
+
+manutencao:
+  name: "Manutenção"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "operational_important"
+  is_system_default: true
+
+equipamentos:
+  name: "Equipamentos"
+  kind: "expense"
+  cost_type: "one_time"
+  essentiality: "operational_important"
+  is_system_default: true
+
+pessoal_socio:
+  name: "Pessoal / Sócio"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "review"
+  is_system_default: true
+
+outros:
+  name: "Outros"
+  kind: "expense"
+  cost_type: "variable"
+  essentiality: "review"
+  is_system_default: true

@@ -4,6 +4,7 @@ class Counterparty < ApplicationRecord
   has_many :financial_transactions, dependent: :nullify
 
   enum :kind, { supplier: "supplier", client: "client", both: "both" }
+
   enum :tax_id_status, {
     not_informed: "not_informed",
     informed: "informed",
@@ -11,6 +12,7 @@ class Counterparty < ApplicationRecord
     invalid: "invalid",
     skipped: "skipped"
   }, prefix: :tax_id
+
   enum :tax_id_source, {
     user_input: "user_input",
     ocr: "ocr",
@@ -30,9 +32,11 @@ class Counterparty < ApplicationRecord
 
   def update_tax_id_status
     if tax_id.blank?
-      self.tax_id_status = "not_informed" if tax_id_not_informed?
+      # Preserva "skipped" se o usuário escolheu pular explicitamente; do contrário, reset
+      self.tax_id_status = "not_informed" unless tax_id_skipped?
     else
-      self.tax_id_status = "informed"
+      # Preserva "verified" se já foi verificado manualmente
+      self.tax_id_status = "informed" unless tax_id_verified?
     end
   end
 end

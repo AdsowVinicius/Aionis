@@ -1,13 +1,18 @@
 class Plan < ApplicationRecord
   has_many :subscriptions, dependent: :restrict_with_error
 
-  validates :name, :slug, presence: true
+  enum :status, { active: "active", coming_soon: "coming_soon", archived: "archived" }
+
+  validates :name, :slug, :status, presence: true
   validates :slug, uniqueness: true
-  validates :price_cents, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :monthly_price_cents, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :setup_fee_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  scope :active, -> { where(active: true) }
+  def monthly_price_brl
+    monthly_price_cents / 100.0
+  end
 
-  def price_brl
-    price_cents / 100.0
+  def setup_fee_brl
+    (setup_fee_cents || 0) / 100.0
   end
 end

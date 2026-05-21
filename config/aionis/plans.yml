@@ -1,0 +1,47 @@
+cpf:
+  name: "Aionis CPF"
+  monthly_price_cents: 2600
+  setup_fee_cents: 0
+  max_documents_month: 50
+  max_whatsapp_messages_month: 150
+  max_users: 1
+  includes_email_channel: false
+  includes_kpi_advanced: false
+  includes_open_finance: false
+  status: "active"
+
+mei:
+  name: "Aionis MEI"
+  monthly_price_cents: 9700
+  setup_fee_cents: 29700
+  max_documents_month: 150
+  max_whatsapp_messages_month: 400
+  max_users: 2
+  includes_email_channel: false
+  includes_kpi_advanced: false
+  includes_open_finance: false
+  status: "active"
+
+pro:
+  name: "Aionis Pro"
+  monthly_price_cents: 19700
+  setup_fee_cents: 100000
+  max_documents_month: 500
+  max_whatsapp_messages_month: 1500
+  max_users: 5
+  includes_email_channel: true
+  includes_kpi_advanced: true
+  includes_open_finance: false
+  status: "active"
+
+gestao:
+  name: "Aionis Gestão"
+  monthly_price_cents: 49700
+  setup_fee_cents: 200000
+  max_documents_month: 1500
+  max_whatsapp_messages_month: 4000
+  max_users: 10
+  includes_email_channel: true
+  includes_kpi_advanced: true
+  includes_open_finance: true
+  status: "active"

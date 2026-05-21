@@ -7,8 +7,9 @@ module ActiveSupport
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors, with: :threads)
 
-    # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
-    fixtures :all
+    # Fixtures não carregadas por padrão — tests usam setup com dados inline.
+    # Para usar fixtures num test específico: declare `fixtures :nome_da_tabela` na classe.
+    self.fixture_paths = []
 
     # Add more helper methods to be used by all tests here...
   end

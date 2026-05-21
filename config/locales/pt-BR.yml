@@ -1,0 +1,57 @@
+pt-BR:
+  hello: "Olá mundo"
+
+  errors:
+    messages:
+      cpf_cnpj_invalid: "não é um CPF ou CNPJ válido"
+
+  activerecord:
+    attributes:
+      user:
+        name: "Nome"
+        email: "E-mail"
+        password: "Senha"
+        password_confirmation: "Confirmação de senha"
+      workspace:
+        name: "Nome"
+        kind: "Tipo"
+        tax_id: "CPF/CNPJ"
+        status: "Status"
+      counterparty:
+        name: "Nome"
+        kind: "Tipo"
+        tax_id: "CPF/CNPJ"
+        notes: "Observações"
+      financial_transaction:
+        description: "Descrição"
+        amount_cents: "Valor"
+        transacted_on: "Data"
+        kind: "Tipo"
+        origin: "Origem"
+        status: "Status"
+        category: "Categoria"
+        counterparty: "Fornecedor/Cliente"
+        document: "Documento"
+      plan:
+        name: "Plano"
+        monthly_price_cents: "Preço mensal"
+        status: "Status"
+      category:
+        name: "Categoria"
+        kind: "Tipo"
+        cost_type: "Tipo de custo"
+        essentiality: "Essencialidade"
+      document:
+        source: "Origem"
+        status: "Status"
+        notes: "Observações"
+
+    models:
+      user: "Usuário"
+      workspace: "Empresa/Perfil"
+      counterparty: "Fornecedor/Cliente"
+      financial_transaction: "Lançamento financeiro"
+      plan: "Plano"
+      category: "Categoria"
+      document: "Documento"
+      subscription: "Assinatura"
