@@ -3,7 +3,7 @@
 
 <%# Cards de métricas %>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-  <%# Receitas %>
+  <%# Receitas do mês %>
   <div class="bg-white rounded-xl border border-slate-200 p-5">
     <div class="flex items-center justify-between mb-3">
       <span class="text-sm font-medium text-slate-500">Receitas do mês</span>
@@ -14,10 +14,10 @@
       </span>
     </div>
     <p class="text-2xl font-bold text-slate-900"><%= format_brl(@income_cents) %></p>
-    <p class="text-xs text-slate-400 mt-1">Total lançado este mês</p>
+    <p class="text-xs text-slate-400 mt-1"><%= Date.current.strftime("%B de %Y").capitalize %></p>
   </div>
 
-  <%# Despesas %>
+  <%# Despesas do mês %>
   <div class="bg-white rounded-xl border border-slate-200 p-5">
     <div class="flex items-center justify-between mb-3">
       <span class="text-sm font-medium text-slate-500">Despesas do mês</span>
@@ -28,7 +28,7 @@
       </span>
     </div>
     <p class="text-2xl font-bold text-slate-900"><%= format_brl(@expense_cents) %></p>
-    <p class="text-xs text-slate-400 mt-1">Total lançado este mês</p>
+    <p class="text-xs text-slate-400 mt-1"><%= Date.current.strftime("%B de %Y").capitalize %></p>
   </div>
 
   <%# Saldo %>
@@ -44,21 +44,21 @@
     <p class="text-2xl font-bold <%= @balance_cents >= 0 ? 'text-teal-700' : 'text-red-600' %>">
       <%= format_brl(@balance_cents) %>
     </p>
-    <p class="text-xs text-slate-400 mt-1">Receitas − Despesas</p>
+    <p class="text-xs text-slate-400 mt-1">Receitas − Despesas no mês</p>
   </div>
 
-  <%# Contas a pagar %>
+  <%# Lançamentos %>
   <div class="bg-white rounded-xl border border-slate-200 p-5">
     <div class="flex items-center justify-between mb-3">
-      <span class="text-sm font-medium text-slate-500">Contas a pagar</span>
-      <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-amber-500">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <span class="text-sm font-medium text-slate-500">Lançamentos</span>
+      <span class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-slate-500">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
         </svg>
       </span>
     </div>
-    <p class="text-2xl font-bold text-slate-900">0</p>
-    <p class="text-xs text-slate-400 mt-1">Implementado na próxima etapa</p>
+    <p class="text-2xl font-bold text-slate-900"><%= @transactions_count %></p>
+    <p class="text-xs text-slate-400 mt-1">Total registrado</p>
   </div>
 
   <%# Documentos pendentes %>
@@ -76,6 +76,13 @@
   </div>
 
   <%# Saúde financeira %>
+  <% health_label, health_color = if @transactions_count.zero?
+       ["Sem dados", "text-slate-400"]
+     elsif @balance_cents >= 0
+       ["Saudável", "text-teal-600"]
+     else
+       ["Atenção", "text-amber-600"]
+     end %>
   <div class="bg-white rounded-xl border border-slate-200 p-5">
     <div class="flex items-center justify-between mb-3">
       <span class="text-sm font-medium text-slate-500">Saúde financeira</span>
@@ -85,14 +92,14 @@
         </svg>
       </span>
     </div>
-    <p class="text-2xl font-bold text-slate-400">—</p>
-    <p class="text-xs text-slate-400 mt-1">Disponível após primeiro mês</p>
+    <p class="text-2xl font-bold <%= health_color %>"><%= health_label %></p>
+    <p class="text-xs text-slate-400 mt-1">Baseado no saldo do mês</p>
   </div>
 </div>
 
-<%# Alertas / Onboarding %>
+<%# Alertas / Últimos lançamentos %>
 <% if @recent_transactions.empty? %>
-  <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-6">
     <h3 class="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-amber-500">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -102,38 +109,40 @@
     <div class="space-y-3">
       <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
         <span class="text-amber-500 text-sm mt-0.5">●</span>
-        <p class="text-sm text-slate-700">Você ainda não possui lançamentos este mês. <strong><%= link_to "Criar primeiro lançamento", workspace_financial_transactions_path(@workspace), class: "text-teal-600 hover:underline" %></strong>.</p>
+        <p class="text-sm text-slate-700">
+          Você ainda não possui lançamentos.
+          <%= link_to "Criar primeiro lançamento →", new_workspace_financial_transaction_path(@workspace), class: "text-teal-600 font-medium hover:underline" %>
+        </p>
       </div>
       <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
         <span class="text-blue-400 text-sm mt-0.5">●</span>
-        <p class="text-sm text-slate-700">Envie seu primeiro documento para o Aionis organizar seu financeiro. <strong><%= link_to "Enviar documento", workspace_documents_path(@workspace), class: "text-teal-600 hover:underline" %></strong>.</p>
-      </div>
-      <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-        <span class="text-slate-400 text-sm mt-0.5">●</span>
-        <p class="text-sm text-slate-700">Cadastre uma despesa manual para começar a organizar seu financeiro.</p>
+        <p class="text-sm text-slate-700">
+          Envie seu primeiro documento para o Aionis organizar seu financeiro.
+          <%= link_to "Enviar documento →", workspace_documents_path(@workspace), class: "text-teal-600 font-medium hover:underline" %>
+        </p>
       </div>
     </div>
   </div>
 <% else %>
-  <%# Últimos lançamentos %>
   <div class="bg-white rounded-xl border border-slate-200 p-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-semibold text-slate-800">Últimos lançamentos</h3>
       <%= link_to "Ver todos →", workspace_financial_transactions_path(@workspace),
             class: "text-sm text-teal-600 hover:text-teal-700" %>
     </div>
-    <div class="space-y-3">
+    <div class="space-y-1">
       <% @recent_transactions.each do |t| %>
-        <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-          <div>
-            <p class="text-sm font-medium text-slate-800"><%= t.description %></p>
-            <p class="text-xs text-slate-400">
+        <div class="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
+          <div class="flex-1 min-w-0 pr-4">
+            <p class="text-sm font-medium text-slate-800 truncate"><%= t.description %></p>
+            <p class="text-xs text-slate-400 mt-0.5">
               <%= t.transacted_on&.strftime("%d/%m/%Y") || "—" %>
-              <% if t.category %>· <%= t.category.name %><% end %>
+              <% if t.category %> · <%= t.category.name %><% end %>
+              &nbsp;<%= transaction_status_badge(t.status) %>
             </p>
           </div>
-          <span class="text-sm font-semibold <%= t.income? ? 'text-teal-600' : 'text-red-600' %>">
-            <%= t.income? ? "+" : "-" %><%= format_brl(t.amount_cents) %>
+          <span class="text-sm font-semibold whitespace-nowrap <%= t.income? ? 'text-teal-600' : 'text-red-600' %>">
+            <%= t.income? ? "+" : "−" %><%= format_brl(t.amount_cents) %>
           </span>
         </div>
       <% end %>
