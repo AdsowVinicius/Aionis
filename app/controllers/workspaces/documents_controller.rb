@@ -1,10 +1,11 @@
 module Workspaces
   class DocumentsController < Workspaces::BaseController
-    before_action :set_document, only: [:show, :destroy]
+    before_action :set_document, only: [:show, :destroy, :trigger]
 
     def index
       @documents = current_workspace.documents
                                     .with_attached_file
+                                    .includes(:document_extractions)
                                     .order(created_at: :desc)
 
       base = current_workspace.documents
@@ -14,7 +15,15 @@ module Workspaces
       @failed_count    = base.where(status: "failed").count
     end
 
-    def show; end
+    def show
+      @extractions = @document.document_extractions.order(created_at: :desc)
+    end
+
+    def trigger
+      ProcessDocumentJob.perform_later(@document.id)
+      redirect_to workspace_document_path(current_workspace, @document),
+                  notice: "Documento enviado para processamento."
+    end
 
     def new
       @document = current_workspace.documents.new

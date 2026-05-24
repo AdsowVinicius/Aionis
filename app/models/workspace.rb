@@ -6,6 +6,7 @@ class Workspace < ApplicationRecord
   has_many :categories, dependent: :destroy
   has_many :counterparties, dependent: :destroy
   has_many :documents, dependent: :destroy
+  has_many :document_extractions, dependent: :destroy
   has_many :financial_transactions, dependent: :destroy
 
   enum :kind, { cpf: "cpf", mei: "mei", empresa: "empresa" }

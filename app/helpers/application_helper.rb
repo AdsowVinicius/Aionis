@@ -57,6 +57,20 @@ module ApplicationHelper
     end
   end
 
+  EXTRACTION_STATUS_STYLES = {
+    "pending"      => { label: "Pendente",    css: "bg-slate-100 text-slate-500 border border-slate-200" },
+    "processing"   => { label: "Processando", css: "bg-blue-50 text-blue-700 border border-blue-200" },
+    "extracted"    => { label: "Extraído",    css: "bg-teal-50 text-teal-700 border border-teal-200" },
+    "needs_review" => { label: "Revisar",     css: "bg-amber-50 text-amber-700 border border-amber-200" },
+    "failed"       => { label: "Falhou",      css: "bg-red-50 text-red-700 border border-red-200" }
+  }.freeze
+
+  def extraction_status_badge(status)
+    style = EXTRACTION_STATUS_STYLES[status.to_s] || { label: status.to_s.humanize, css: "bg-slate-100 text-slate-500" }
+    content_tag(:span, style[:label],
+                class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium #{style[:css]}")
+  end
+
   def format_file_size(bytes)
     return "—" if bytes.nil?
     if bytes >= 1.megabyte

@@ -2,6 +2,7 @@ class Document < ApplicationRecord
   belongs_to :workspace
   belongs_to :counterparty, optional: true
   has_many :financial_transactions, dependent: :nullify
+  has_many :document_extractions, dependent: :destroy
 
   has_one_attached :file
 
@@ -31,6 +32,10 @@ class Document < ApplicationRecord
   MAX_FILE_SIZE = 10.megabytes
 
   validates :status, :source, presence: true
+
+  def latest_extraction
+    document_extractions.max_by(&:created_at)
+  end
   validate  :acceptable_file
 
   private

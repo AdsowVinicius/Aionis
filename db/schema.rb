@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_215328) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_24_223156) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -70,6 +70,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_215328) do
     t.index ["workspace_id", "name"], name: "index_counterparties_on_workspace_id_and_name"
     t.index ["workspace_id", "tax_id"], name: "index_counterparties_on_workspace_and_tax_id", unique: true, where: "(tax_id IS NOT NULL)"
     t.index ["workspace_id"], name: "index_counterparties_on_workspace_id"
+  end
+
+  create_table "document_extractions", force: :cascade do |t|
+    t.integer "confidence_score"
+    t.datetime "created_at", null: false
+    t.bigint "document_id", null: false
+    t.text "error_message"
+    t.jsonb "extracted_data", default: {}, null: false
+    t.datetime "finished_at"
+    t.string "processor_name"
+    t.string "processor_version"
+    t.text "raw_text"
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.jsonb "suggested_transaction_data", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["document_id"], name: "index_document_extractions_on_document_id"
+    t.index ["status"], name: "index_document_extractions_on_status"
+    t.index ["workspace_id", "document_id"], name: "index_document_extractions_on_workspace_id_and_document_id"
+    t.index ["workspace_id"], name: "index_document_extractions_on_workspace_id"
   end
 
   create_table "documents", force: :cascade do |t|
@@ -180,6 +201,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_215328) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "categories", "workspaces"
   add_foreign_key "counterparties", "workspaces"
+  add_foreign_key "document_extractions", "documents"
+  add_foreign_key "document_extractions", "workspaces"
   add_foreign_key "documents", "workspaces"
   add_foreign_key "financial_transactions", "workspaces"
   add_foreign_key "subscriptions", "plans"

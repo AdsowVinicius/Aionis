@@ -90,7 +90,19 @@
   </div>
 
   <%# Ações %>
-  <div class="flex items-center gap-3">
+  <div class="flex flex-wrap items-center gap-3 mb-6">
+
+    <%# Botão processar documento (somente quando faz sentido processar) %>
+    <% if @document.pending? || @document.failed? || @document.review? %>
+      <%= button_to trigger_workspace_document_path(current_workspace, @document),
+            method: :post,
+            class: "inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer border-0" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+        </svg>
+        Processar documento
+      <% end %>
+    <% end %>
 
     <%# Botão abrir/baixar arquivo %>
     <% if @document.file.attached? %>
@@ -136,4 +148,72 @@
     <%= link_to "← Voltar para documentos", workspace_documents_path(current_workspace),
           class: "px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
   </div>
+
+  <%# Histórico de extrações %>
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-slate-800">Histórico de extrações</h3>
+        <p class="text-xs text-slate-400 mt-0.5">
+          O pipeline interno já está preparado. A leitura automática por OCR/IA será implementada em uma próxima etapa.
+        </p>
+      </div>
+      <span class="text-xs text-slate-400 font-medium"><%= @extractions.size %> <%= @extractions.size == 1 ? "extração" : "extrações" %></span>
+    </div>
+
+    <% if @extractions.empty? %>
+      <div class="px-6 py-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-10 h-10 text-slate-200 mx-auto mb-3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+        </svg>
+        <p class="text-sm text-slate-500 font-medium">Nenhuma extração foi executada para este documento.</p>
+        <p class="text-xs text-slate-400 mt-1">Clique em "Processar documento" para iniciar.</p>
+      </div>
+    <% else %>
+      <div class="divide-y divide-slate-100">
+        <% @extractions.each do |extraction| %>
+          <div class="px-6 py-4">
+            <div class="flex items-start justify-between gap-4 mb-2">
+              <div class="flex items-center gap-2">
+                <%= extraction_status_badge(extraction.status) %>
+                <% if extraction.processor_name.present? %>
+                  <span class="text-xs text-slate-400">
+                    <%= extraction.processor_name %>
+                    <% if extraction.processor_version.present? %>
+                      v<%= extraction.processor_version %>
+                    <% end %>
+                  </span>
+                <% end %>
+              </div>
+              <% if extraction.confidence_score %>
+                <span class="text-xs text-slate-500 shrink-0">Confiança: <strong><%= extraction.confidence_score %>%</strong></span>
+              <% end %>
+            </div>
+
+            <% if extraction.extracted_data.present? && extraction.extracted_data["message"].present? %>
+              <p class="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2 mt-2">
+                <%= extraction.extracted_data["message"] %>
+              </p>
+            <% end %>
+
+            <% if extraction.error_message.present? %>
+              <p class="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mt-2">
+                <strong>Erro:</strong> <%= extraction.error_message %>
+              </p>
+            <% end %>
+
+            <div class="flex items-center gap-4 mt-2 text-xs text-slate-400">
+              <% if extraction.started_at %>
+                <span>Iniciado: <%= extraction.started_at.strftime("%d/%m/%Y %H:%M") %></span>
+              <% end %>
+              <% if extraction.finished_at %>
+                <span>Finalizado: <%= extraction.finished_at.strftime("%d/%m/%Y %H:%M") %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
 </div>

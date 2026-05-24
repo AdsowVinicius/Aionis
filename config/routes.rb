@@ -14,7 +14,11 @@ Rails.application.routes.draw do
       resources :financial_transactions
       resources :categories
       resources :counterparties
-      resources :documents, only: [:index, :new, :create, :show, :destroy]
+      resources :documents, only: [:index, :new, :create, :show, :destroy] do
+        member do
+          post :trigger
+        end
+      end
       resources :payables,    only: :index
       resources :receivables, only: :index
       resource  :subscription, only: [:show, :edit, :update]
