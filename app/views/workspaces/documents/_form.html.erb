@@ -1,0 +1,57 @@
+<%= form_with model: [current_workspace, @document],
+      local: true,
+      html: { multipart: true },
+      class: "space-y-5" do |f| %>
+
+  <%# Erros de validação %>
+  <% if @document.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <p class="text-sm font-medium text-red-700 mb-1">
+        <%= pluralize(@document.errors.count, "erro", "erros") %> impediram o envio:
+      </p>
+      <ul class="list-disc list-inside text-sm text-red-600 space-y-0.5">
+        <% @document.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Área de upload %>
+  <div>
+    <%= f.label :file, "Arquivo *", class: "block text-sm font-medium text-slate-700 mb-1" %>
+    <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-teal-400 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-slate-300 mx-auto mb-3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+      </svg>
+      <p class="text-sm text-slate-500 mb-1">Clique para selecionar ou arraste o arquivo</p>
+      <p class="text-xs text-slate-400">PDF, JPG, PNG ou XML — máximo 10 MB</p>
+      <%= f.file_field :file,
+            accept: "application/pdf,image/jpeg,image/png,text/xml,application/xml",
+            class: "mt-3 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer" %>
+    </div>
+    <p class="text-xs text-slate-400 mt-2">
+      Envie notas, recibos, boletos, comprovantes ou XML. O Aionis irá organizar estes documentos para análise futura.
+    </p>
+  </div>
+
+  <%# Observações (campo notes já existe no model) %>
+  <div>
+    <%= f.label :notes, class: "block text-sm font-medium text-slate-700 mb-1" do %>
+      Observações <span class="text-slate-400 font-normal">(opcional)</span>
+    <% end %>
+    <%= f.text_area :notes,
+          rows: 3,
+          placeholder: "Ex: Nota fiscal de material de escritório — maio/2026",
+          class: "w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none" %>
+  </div>
+
+  <%# Botões %>
+  <div class="flex items-center gap-3 pt-2 border-t border-slate-100">
+    <%= f.submit "Enviar documento",
+          class: "px-5 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors cursor-pointer" %>
+    <%= link_to "Cancelar", workspace_documents_path(current_workspace),
+          class: "px-5 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors" %>
+  </div>
+
+<% end %>
