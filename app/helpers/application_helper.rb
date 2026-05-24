@@ -57,6 +57,49 @@ module ApplicationHelper
     end
   end
 
+  CATEGORY_KIND_LABELS = {
+    "income"   => "Receita",
+    "expense"  => "Despesa",
+    "transfer" => "Transferência"
+  }.freeze
+
+  def category_kind_label(kind)
+    CATEGORY_KIND_LABELS[kind.to_s] || kind.to_s
+  end
+
+  COST_TYPE_LABELS = {
+    "fixed"         => "Fixo",
+    "variable"      => "Variável",
+    "semi_variable" => "Semivariável",
+    "one_time"      => "Pontual"
+  }.freeze
+
+  def cost_type_label(cost_type)
+    COST_TYPE_LABELS[cost_type.to_s] || "—"
+  end
+
+  ESSENTIALITY_LABELS = {
+    "essential"              => "Essencial",
+    "operational_important"  => "Importante operacional",
+    "non_essential"          => "Não essencial",
+    "superfluous"            => "Supérfluo",
+    "review"                 => "Revisar"
+  }.freeze
+
+  def essentiality_label(essentiality)
+    ESSENTIALITY_LABELS[essentiality.to_s] || "—"
+  end
+
+  def category_origin_badge(category)
+    if category.workspace_id.nil?
+      content_tag(:span, "Sistema",
+                  class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200")
+    else
+      content_tag(:span, "Personalizada",
+                  class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200")
+    end
+  end
+
   COUNTERPARTY_KIND_LABELS = {
     "supplier" => "Fornecedor",
     "client"   => "Cliente",

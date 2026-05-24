@@ -1,6 +1,176 @@
 <% content_for :title, "Categorias — #{current_workspace.name}" %>
 <% content_for :page_title, "Categorias" %>
-<div class="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center max-w-2xl">
-  <p class="text-base font-semibold text-slate-700 mb-2">Categorias</p>
-  <p class="text-sm text-slate-500">Esta área será implementada na próxima etapa.</p>
+
+<div class="max-w-6xl">
+
+  <%# Cabeçalho %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-xl font-bold text-slate-900">Categorias</h2>
+      <p class="text-slate-500 text-sm mt-0.5">Categorias do sistema e categorias personalizadas do workspace.</p>
+    </div>
+    <%= link_to new_workspace_category_path(current_workspace),
+          class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Nova categoria
+    <% end %>
+  </div>
+
+  <%# Cards de resumo %>
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Total</p>
+      <p class="text-xl font-bold text-slate-900"><%= @total_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5">Categorias disponíveis</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Sistema</p>
+      <p class="text-xl font-bold text-slate-600"><%= @global_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5">Categorias padrão</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Personalizadas</p>
+      <p class="text-xl font-bold text-teal-600"><%= @custom_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5">Criadas no workspace</p>
+    </div>
+  </div>
+
+  <%# Filtros %>
+  <div class="mb-4">
+    <%= form_with url: workspace_categories_path(current_workspace), method: :get, data: { turbo: false } do |f| %>
+      <div class="flex gap-3">
+        <%= f.text_field :q, value: params[:q],
+              placeholder: "Buscar por nome…",
+              class: "flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" %>
+        <%= f.select :kind,
+              [["Todas as naturezas", ""], ["Receita", "income"], ["Despesa", "expense"], ["Transferência", "transfer"]],
+              { selected: params[:kind] },
+              class: "px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white" %>
+        <%= f.submit "Buscar",
+              class: "px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" %>
+        <% if params[:q].present? || params[:kind].present? %>
+          <%= link_to "Limpar", workspace_categories_path(current_workspace),
+                class: "px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Tabela / Estado vazio %>
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <% if @categories.empty? %>
+      <div class="p-12 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+        </svg>
+        <h3 class="text-base font-semibold text-slate-700 mb-1">
+          <% if params[:q].present? || params[:kind].present? %>
+            Nenhum resultado para os filtros aplicados
+          <% else %>
+            Nenhuma categoria encontrada
+          <% end %>
+        </h3>
+        <p class="text-sm text-slate-500 mb-4">
+          <% if params[:q].present? || params[:kind].present? %>
+            Tente ajustar os filtros de busca.
+          <% else %>
+            Crie uma categoria personalizada para começar.
+          <% end %>
+        </p>
+        <% unless params[:q].present? || params[:kind].present? %>
+          <%= link_to "Nova categoria", new_workspace_category_path(current_workspace),
+                class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Nome</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Natureza</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Origem</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Categoria pai</th>
+              <th class="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Subcategorias</th>
+              <th class="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Lançamentos</th>
+              <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% @categories.each do |cat| %>
+              <% global = cat.workspace_id.nil? %>
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                <td class="px-4 py-3 max-w-xs">
+                  <p class="font-medium text-slate-800 truncate"><%= cat.name %></p>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-600">
+                  <%= category_kind_label(cat.kind) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <%= category_origin_badge(cat) %>
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-500">
+                  <% if cat.parent %>
+                    <%= link_to cat.parent.name,
+                          workspace_category_path(current_workspace, cat.parent),
+                          class: "text-teal-600 hover:text-teal-700 hover:underline" %>
+                  <% else %>
+                    <span class="text-slate-400">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-center text-xs text-slate-600">
+                  <%= cat.subcategories.size %>
+                </td>
+                <td class="px-4 py-3 text-center text-xs text-slate-600">
+                  <%= cat.financial_transactions.size %>
+                </td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1">
+                    <%= link_to workspace_category_path(current_workspace, cat),
+                          class: "p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors",
+                          title: "Ver detalhes" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    <% end %>
+                    <% unless global %>
+                      <%= link_to edit_workspace_category_path(current_workspace, cat),
+                            class: "p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors",
+                            title: "Editar" do %>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                        </svg>
+                      <% end %>
+                      <%
+                        subcats = cat.subcategories.count
+                        confirm_msg = if subcats > 0
+                          "Excluir \"#{cat.name}\"? Esta categoria tem #{subcats} #{"subcategoria".pluralize(subcats)} que também será excluída. Lançamentos vinculados serão mantidos."
+                        else
+                          "Excluir \"#{cat.name}\"? Lançamentos vinculados serão mantidos."
+                        end
+                      %>
+                      <%= button_to workspace_category_path(current_workspace, cat),
+                            method: :delete,
+                            form: { data: { turbo_confirm: confirm_msg } },
+                            class: "p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer bg-transparent border-0",
+                            title: "Excluir" do %>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+
 </div>
