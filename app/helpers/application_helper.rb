@@ -57,6 +57,43 @@ module ApplicationHelper
     end
   end
 
+  COUNTERPARTY_KIND_LABELS = {
+    "supplier" => "Fornecedor",
+    "client"   => "Cliente",
+    "both"     => "Ambos"
+  }.freeze
+
+  def counterparty_kind_label(kind)
+    COUNTERPARTY_KIND_LABELS[kind.to_s] || kind.to_s
+  end
+
+  TAX_ID_SOURCE_LABELS = {
+    "user_input"    => "Manual",
+    "ocr"           => "OCR",
+    "xml"           => "XML",
+    "bank_statement"=> "Extrato bancário",
+    "ai"            => "IA",
+    "import"        => "Importação"
+  }.freeze
+
+  def tax_id_source_label(source)
+    TAX_ID_SOURCE_LABELS[source.to_s] || "—"
+  end
+
+  TAX_ID_STATUS_STYLES = {
+    "not_informed" => { label: "Não informado", css: "bg-slate-100 text-slate-500 border border-slate-200" },
+    "informed"     => { label: "Informado",     css: "bg-blue-50 text-blue-700 border border-blue-200" },
+    "verified"     => { label: "Verificado",    css: "bg-teal-50 text-teal-700 border border-teal-200" },
+    "invalid"      => { label: "Inválido",      css: "bg-red-50 text-red-700 border border-red-200" },
+    "skipped"      => { label: "Pulado",        css: "bg-slate-100 text-slate-400 border border-slate-200" }
+  }.freeze
+
+  def tax_id_status_badge(status)
+    style = TAX_ID_STATUS_STYLES[status.to_s] || { label: status.to_s.humanize, css: "bg-slate-100 text-slate-500" }
+    content_tag(:span, style[:label],
+                class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium #{style[:css]}")
+  end
+
   EXTRACTION_STATUS_STYLES = {
     "pending"      => { label: "Pendente",    css: "bg-slate-100 text-slate-500 border border-slate-200" },
     "processing"   => { label: "Processando", css: "bg-blue-50 text-blue-700 border border-blue-200" },

@@ -4,8 +4,9 @@ require "rails/test_help"
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors, with: :threads)
+    # Thread parallelization causa race conditions no carregamento de atributos AR
+    # quando muitos testes são executados juntos. Threshold alto mantém execução serial.
+    parallelize(workers: :number_of_processors, with: :threads, threshold: 500)
 
     # Fixtures não carregadas por padrão — tests usam setup com dados inline.
     # Para usar fixtures num test específico: declare `fixtures :nome_da_tabela` na classe.
