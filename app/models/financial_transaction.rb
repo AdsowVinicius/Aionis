@@ -17,6 +17,10 @@ class FinancialTransaction < ApplicationRecord
   validates :kind, :description, :amount_cents, :origin, :status, presence: true
   validates :amount_cents, numericality: { greater_than: 0 }
 
+  validate :document_belongs_to_workspace,     if: -> { document_id.present? }
+  validate :counterparty_belongs_to_workspace, if: -> { counterparty_id.present? }
+  validate :category_allowed_for_workspace,    if: -> { category_id.present? }
+
   def amount_brl
     (amount_cents || 0) / 100.0
   end
@@ -34,5 +38,28 @@ class FinancialTransaction < ApplicationRecord
     self.amount_cents = BigDecimal(sanitized).mult(100, 10).to_i
   rescue ArgumentError, TypeError
     # amount_cents permanece; validação capturará valor ausente/inválido
+  end
+
+  private
+
+  def document_belongs_to_workspace
+    return if workspace_id.blank?
+    unless Document.where(id: document_id, workspace_id: workspace_id).exists?
+      errors.add(:document, "não pertence a este workspace")
+    end
+  end
+
+  def counterparty_belongs_to_workspace
+    return if workspace_id.blank?
+    unless Counterparty.where(id: counterparty_id, workspace_id: workspace_id).exists?
+      errors.add(:counterparty, "não pertence a este workspace")
+    end
+  end
+
+  def category_allowed_for_workspace
+    return if workspace_id.blank?
+    unless Category.where(id: category_id).where("workspace_id IS NULL OR workspace_id = ?", workspace_id).exists?
+      errors.add(:category, "não pertence a este workspace")
+    end
   end
 end

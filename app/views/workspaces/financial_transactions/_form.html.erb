@@ -101,6 +101,21 @@
     </div>
   </div>
 
+  <%# Documento vinculado (opcional) %>
+  <div>
+    <%= f.label :document_id, class: "block text-sm font-medium text-slate-700 mb-1" do %>
+      Documento vinculado <span class="text-slate-400 font-normal">(opcional)</span>
+    <% end %>
+    <%= f.select :document_id,
+          [["— Nenhum —", ""]] + @documents.map { |d|
+            label = d.file.attached? ? d.file.blob.filename.to_s : "Documento ##{d.id}"
+            [label, d.id]
+          },
+          { selected: @transaction.document_id },
+          class: "w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white" %>
+    <p class="text-xs text-slate-400 mt-1">Vincule este lançamento a um documento já enviado, se houver.</p>
+  </div>
+
   <%# Botões %>
   <div class="flex items-center gap-3 pt-2 border-t border-slate-100">
     <%= f.submit @transaction.new_record? ? "Criar lançamento" : "Salvar alterações",

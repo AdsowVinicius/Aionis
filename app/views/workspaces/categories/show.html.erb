@@ -88,7 +88,15 @@
   </div>
 
   <%# Ações (somente para categorias personalizadas) %>
-  <div class="flex items-center gap-3 mb-6">
+  <div class="flex flex-wrap items-center gap-3 mb-6">
+    <%= link_to new_workspace_financial_transaction_path(current_workspace, category_id: @category.id),
+          class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Criar lançamento vinculado
+    <% end %>
+
     <% unless global %>
       <%= link_to edit_workspace_category_path(current_workspace, @category),
             class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors" do %>

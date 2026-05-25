@@ -16,7 +16,8 @@ module Workspaces
     end
 
     def show
-      @extractions = @document.document_extractions.order(created_at: :desc)
+      @extractions    = @document.document_extractions.order(created_at: :desc)
+      @transactions   = @document.financial_transactions.order(created_at: :desc).limit(10)
     end
 
     def trigger

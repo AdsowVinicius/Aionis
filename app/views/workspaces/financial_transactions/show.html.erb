@@ -53,13 +53,41 @@
       <div class="px-6 py-3 flex gap-4">
         <dt class="text-sm text-slate-500 w-44 shrink-0">Categoria</dt>
         <dd class="text-sm font-medium text-slate-800">
-          <%= @transaction.category&.name || "—" %>
+          <% if @transaction.category %>
+            <%= link_to @transaction.category.name,
+                  workspace_category_path(current_workspace, @transaction.category),
+                  class: "text-teal-600 hover:text-teal-700 hover:underline" %>
+          <% else %>
+            <span class="text-slate-400 italic">Nenhuma categoria vinculada</span>
+          <% end %>
         </dd>
       </div>
       <div class="px-6 py-3 flex gap-4">
         <dt class="text-sm text-slate-500 w-44 shrink-0">Fornecedor / Cliente</dt>
         <dd class="text-sm font-medium text-slate-800">
-          <%= @transaction.counterparty&.name || @transaction.counterparty_name_snapshot || "—" %>
+          <% if @transaction.counterparty %>
+            <%= link_to @transaction.counterparty.name,
+                  workspace_counterparty_path(current_workspace, @transaction.counterparty),
+                  class: "text-teal-600 hover:text-teal-700 hover:underline" %>
+          <% elsif @transaction.counterparty_name_snapshot.present? %>
+            <span class="text-slate-600"><%= @transaction.counterparty_name_snapshot %></span>
+            <span class="text-xs text-slate-400 ml-1">(registro excluído)</span>
+          <% else %>
+            <span class="text-slate-400 italic">Nenhum fornecedor/cliente vinculado</span>
+          <% end %>
+        </dd>
+      </div>
+      <div class="px-6 py-3 flex gap-4">
+        <dt class="text-sm text-slate-500 w-44 shrink-0">Documento vinculado</dt>
+        <dd class="text-sm font-medium text-slate-800">
+          <% if @transaction.document %>
+            <% doc_label = @transaction.document.file.attached? ? @transaction.document.file.blob.filename.to_s : "Documento ##{@transaction.document_id}" %>
+            <%= link_to doc_label,
+                  workspace_document_path(current_workspace, @transaction.document),
+                  class: "text-teal-600 hover:text-teal-700 hover:underline" %>
+          <% else %>
+            <span class="text-slate-400 italic">Nenhum documento vinculado</span>
+          <% end %>
         </dd>
       </div>
       <div class="px-6 py-3 flex gap-4">
@@ -68,15 +96,6 @@
           <%= { "manual" => "Manual", "document" => "Documento", "import" => "Importação" }[@transaction.origin] || @transaction.origin %>
         </dd>
       </div>
-      <% if @transaction.document.present? %>
-        <div class="px-6 py-3 flex gap-4">
-          <dt class="text-sm text-slate-500 w-44 shrink-0">Documento vinculado</dt>
-          <dd class="text-sm font-medium text-slate-800">
-            <%= link_to "Documento ##{@transaction.document_id}", workspace_document_path(current_workspace, @transaction.document),
-                  class: "text-teal-600 hover:underline" %>
-          </dd>
-        </div>
-      <% end %>
       <div class="px-6 py-3 flex gap-4">
         <dt class="text-sm text-slate-500 w-44 shrink-0">Criado em</dt>
         <dd class="text-sm text-slate-500">

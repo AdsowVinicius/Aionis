@@ -49,6 +49,7 @@ module Workspaces
         transacted_on: Date.current,
         status: "pending"
       )
+      prefill_from_params
       load_form_data
     end
 
@@ -91,17 +92,36 @@ module Workspaces
       @transaction = current_workspace.financial_transactions.find(params[:id])
     end
 
+    def prefill_from_params
+      if params[:document_id].present?
+        doc = current_workspace.documents.find_by(id: params[:document_id])
+        raise ActiveRecord::RecordNotFound unless doc
+        @transaction.document = doc
+      end
+
+      if params[:counterparty_id].present?
+        cp = current_workspace.counterparties.find_by(id: params[:counterparty_id])
+        raise ActiveRecord::RecordNotFound unless cp
+        @transaction.counterparty = cp
+      end
+
+      if params[:category_id].present?
+        cat = Category.for_workspace(current_workspace).find_by(id: params[:category_id])
+        raise ActiveRecord::RecordNotFound unless cat
+        @transaction.category = cat
+      end
+    end
+
     def load_form_data
       @categories     = Category.for_workspace(current_workspace).order(:name)
       @counterparties = current_workspace.counterparties.order(:name)
+      @documents      = current_workspace.documents.with_attached_file.order(created_at: :desc)
     end
 
     def transaction_params
       params.require(:financial_transaction).permit(
         :kind, :description, :amount_brl, :transacted_on, :status,
-        :category_id, :counterparty_id
-        # document_id, counterparty_id e category_id são opcionais
-        # origin NÃO está aqui — é sempre forçado como "manual"
+        :category_id, :counterparty_id, :document_id
       )
     end
   end

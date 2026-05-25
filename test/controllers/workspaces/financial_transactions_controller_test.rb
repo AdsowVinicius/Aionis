@@ -186,6 +186,221 @@ class Workspaces::FinancialTransactionsControllerTest < ActionDispatch::Integrat
     assert_equal 12_050, FinancialTransaction.last.amount_cents
   end
 
+  # ─── Testes de vínculo manual (etapa: vínculos) ───────────────────────────
+
+  # V1. Form de novo lançamento renderiza com selects de categoria, fornecedor e documento
+  test "GET new renderiza selects de vínculo" do
+    get new_workspace_financial_transaction_path(@workspace)
+    assert_response :success
+    assert_match "category_id",     response.body
+    assert_match "counterparty_id", response.body
+    assert_match "document_id",     response.body
+  end
+
+  # V2. Cria lançamento com documento do mesmo workspace
+  test "POST create com document_id do mesmo workspace vincula documento" do
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.save!(validate: false)
+
+    assert_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Compra vinculada",
+          amount_brl: "200", status: "pending", document_id: doc.id
+        }
+      }
+    end
+    assert_equal doc.id, FinancialTransaction.last.document_id
+  end
+
+  # V3. Cria lançamento com fornecedor/cliente do mesmo workspace
+  test "POST create com counterparty_id do mesmo workspace vincula fornecedor" do
+    cp = @workspace.counterparties.create!(name: "Fornecedor Vínculo", kind: "supplier")
+
+    assert_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Pagamento fornecedor",
+          amount_brl: "500", status: "pending", counterparty_id: cp.id
+        }
+      }
+    end
+    assert_equal cp.id, FinancialTransaction.last.counterparty_id
+  end
+
+  # V4. Cria lançamento com categoria global do sistema
+  test "POST create com categoria global vincula categoria" do
+    global_cat = Category.create!(name: "Global Vínculo #{SecureRandom.hex(4)}", kind: "expense")
+
+    assert_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Despesa com categoria global",
+          amount_brl: "300", status: "pending", category_id: global_cat.id
+        }
+      }
+    end
+    assert_equal global_cat.id, FinancialTransaction.last.category_id
+  end
+
+  # V5. Cria lançamento com categoria do próprio workspace
+  test "POST create com categoria do workspace vincula categoria" do
+    cat = @workspace.categories.create!(name: "Categoria WS Vínculo", kind: "expense")
+
+    assert_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Despesa com categoria custom",
+          amount_brl: "150", status: "pending", category_id: cat.id
+        }
+      }
+    end
+    assert_equal cat.id, FinancialTransaction.last.category_id
+  end
+
+  # V6. Não aceita documento de outro workspace
+  test "POST create com document_id de outro workspace é rejeitado" do
+    other_user = User.create!(
+      name: "Outro Doc", email: "otherdoc_#{SecureRandom.hex(4)}@aionis.test", password: "senha1234"
+    )
+    other_ws = Workspace.create!(name: "WS Other Doc", kind: "cpf", owner: other_user)
+    other_doc = other_ws.documents.new(source: "web", status: "pending")
+    other_doc.save!(validate: false)
+
+    assert_no_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Tentativa cross-doc",
+          amount_brl: "100", status: "pending", document_id: other_doc.id
+        }
+      }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  # V7. Não aceita fornecedor de outro workspace
+  test "POST create com counterparty_id de outro workspace é rejeitado" do
+    other_user = User.create!(
+      name: "Outro CP", email: "othercp_#{SecureRandom.hex(4)}@aionis.test", password: "senha1234"
+    )
+    other_ws = Workspace.create!(name: "WS Other CP", kind: "cpf", owner: other_user)
+    other_cp = other_ws.counterparties.create!(name: "Fornecedor Alheio", kind: "supplier")
+
+    assert_no_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Tentativa cross-cp",
+          amount_brl: "100", status: "pending", counterparty_id: other_cp.id
+        }
+      }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  # V8. Não aceita categoria personalizada de outro workspace
+  test "POST create com categoria personalizada de outro workspace é rejeitada" do
+    other_user = User.create!(
+      name: "Outro Cat", email: "othercat_#{SecureRandom.hex(4)}@aionis.test", password: "senha1234"
+    )
+    other_ws = Workspace.create!(name: "WS Other Cat", kind: "cpf", owner: other_user)
+    other_cat = other_ws.categories.create!(name: "Categoria Alheia", kind: "expense")
+
+    assert_no_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "Tentativa cross-cat",
+          amount_brl: "100", status: "pending", category_id: other_cat.id
+        }
+      }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  # V9. New com document_id válido pré-seleciona documento
+  test "GET new com document_id válido pré-seleciona documento" do
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.save!(validate: false)
+
+    get new_workspace_financial_transaction_path(@workspace), params: { document_id: doc.id }
+    assert_response :success
+    assert_match doc.id.to_s, response.body
+  end
+
+  # V10. New com counterparty_id válido pré-seleciona fornecedor
+  test "GET new com counterparty_id válido pré-seleciona fornecedor" do
+    cp = @workspace.counterparties.create!(name: "Fornecedor Prefill", kind: "client")
+
+    get new_workspace_financial_transaction_path(@workspace), params: { counterparty_id: cp.id }
+    assert_response :success
+    assert_match cp.id.to_s, response.body
+  end
+
+  # V11. New com category_id válido pré-seleciona categoria
+  test "GET new com category_id válido pré-seleciona categoria" do
+    cat = @workspace.categories.create!(name: "Cat Prefill", kind: "income")
+
+    get new_workspace_financial_transaction_path(@workspace), params: { category_id: cat.id }
+    assert_response :success
+    assert_match cat.id.to_s, response.body
+  end
+
+  # V12. New com document_id de outro workspace retorna 404
+  test "GET new com document_id de outro workspace retorna 404" do
+    other_user = User.create!(
+      name: "Outro New", email: "othernew_#{SecureRandom.hex(4)}@aionis.test", password: "senha1234"
+    )
+    other_ws = Workspace.create!(name: "WS Other New", kind: "cpf", owner: other_user)
+    other_doc = other_ws.documents.new(source: "web", status: "pending")
+    other_doc.save!(validate: false)
+
+    get new_workspace_financial_transaction_path(@workspace), params: { document_id: other_doc.id }
+    assert_response :not_found
+  end
+
+  # V13. Show do lançamento mostra documento, fornecedor e categoria vinculados
+  test "GET show exibe vínculos do lançamento" do
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.save!(validate: false)
+    cp  = @workspace.counterparties.create!(name: "Forn Show", kind: "supplier")
+    cat = @workspace.categories.create!(name: "Cat Show", kind: "expense")
+
+    tx = @workspace.financial_transactions.create!(
+      kind: "expense", description: "Lançamento com vínculos",
+      amount_cents: 9_000, origin: "manual", status: "pending",
+      document: doc, counterparty: cp, category: cat
+    )
+
+    get workspace_financial_transaction_path(@workspace, tx)
+    assert_response :success
+    assert_match "Forn Show",    response.body
+    assert_match "Cat Show",     response.body
+    assert_match doc.id.to_s,   response.body
+  end
+
+  # V14. Excluir documento não exclui lançamento; category e counterparty também
+  test "excluir documento, fornecedor e categoria não exclui lançamento" do
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.save!(validate: false)
+    cp  = @workspace.counterparties.create!(name: "Forn Del", kind: "supplier")
+    cat = @workspace.categories.create!(name: "Cat Del", kind: "expense")
+
+    tx = @workspace.financial_transactions.create!(
+      kind: "expense", description: "Lançamento para teste de cascata",
+      amount_cents: 1_000, origin: "manual", status: "pending",
+      document: doc, counterparty: cp, category: cat
+    )
+
+    doc.destroy
+    cp.destroy
+    cat.destroy
+
+    assert FinancialTransaction.exists?(tx.id)
+    tx.reload
+    assert_nil tx.document_id
+    assert_nil tx.counterparty_id
+    assert_nil tx.category_id
+  end
+
   # 8. Dashboard calcula receitas e despesas do mês atual
   test "dashboard exibe dados reais do mês atual" do
     @workspace.financial_transactions.create!(
