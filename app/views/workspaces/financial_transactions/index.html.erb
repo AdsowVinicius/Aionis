@@ -4,68 +4,69 @@
 <div class="max-w-6xl">
 
   <%# Cabeçalho %>
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
     <div>
-      <h2 class="text-xl font-bold text-slate-900">Lançamentos financeiros</h2>
-      <p class="text-slate-500 text-sm mt-0.5">Receitas e despesas do workspace.</p>
+      <h2 class="text-lg md:text-xl font-bold text-slate-900">Lançamentos financeiros</h2>
+      <p class="text-slate-500 text-sm mt-0.5 hidden sm:block">Receitas e despesas do workspace.</p>
     </div>
     <%= link_to new_workspace_financial_transaction_path(current_workspace),
-          class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
+          class: "shrink-0 inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
-      Novo lançamento
+      <span class="hidden sm:inline">Novo lançamento</span>
+      <span class="sm:hidden">Novo</span>
     <% end %>
   </div>
 
   <%# Cards de resumo %>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Receitas</p>
-      <p class="text-xl font-bold text-teal-600"><%= format_brl(@summary_income_cents) %></p>
-      <p class="text-xs text-slate-400 mt-0.5">Total acumulado</p>
+      <p class="text-lg md:text-xl font-bold text-teal-600"><%= format_brl(@summary_income_cents) %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Total acumulado</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Despesas</p>
-      <p class="text-xl font-bold text-red-600"><%= format_brl(@summary_expense_cents) %></p>
-      <p class="text-xs text-slate-400 mt-0.5">Total acumulado</p>
+      <p class="text-lg md:text-xl font-bold text-red-600"><%= format_brl(@summary_expense_cents) %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Total acumulado</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Saldo</p>
-      <p class="text-xl font-bold <%= @summary_balance_cents >= 0 ? 'text-teal-700' : 'text-red-600' %>">
+      <p class="text-lg md:text-xl font-bold <%= @summary_balance_cents >= 0 ? 'text-teal-700' : 'text-red-600' %>">
         <%= format_brl(@summary_balance_cents) %>
       </p>
-      <p class="text-xs text-slate-400 mt-0.5">Receitas − Despesas</p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Receitas − Despesas</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Lançamentos</p>
-      <p class="text-xl font-bold text-slate-900"><%= @summary_count %></p>
-      <p class="text-xs text-slate-400 mt-0.5">Total registrado</p>
+      <p class="text-lg md:text-xl font-bold text-slate-900"><%= @summary_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Total registrado</p>
     </div>
   </div>
 
   <%# Filtros %>
   <%= form_with url: workspace_financial_transactions_path(current_workspace), method: :get,
-        class: "bg-white rounded-xl border border-slate-200 p-4 mb-4" do |f| %>
-    <div class="flex flex-wrap gap-3 items-end">
-      <div class="flex-1 min-w-[160px]">
+        class: "bg-white rounded-xl border border-slate-200 p-3 md:p-4 mb-4" do |f| %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 items-end">
+      <div class="sm:col-span-2 lg:flex-1 lg:min-w-[160px]">
         <%= f.label :q, "Buscar", class: "block text-xs font-medium text-slate-600 mb-1" %>
         <%= f.text_field :q, value: params[:q], placeholder: "Descrição...",
-              class: "w-full text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
+              class: "w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
       </div>
       <div>
         <%= f.label :kind, "Tipo", class: "block text-xs font-medium text-slate-600 mb-1" %>
         <%= f.select :kind,
               [["Todos", ""], ["Receitas", "income"], ["Despesas", "expense"]],
               { selected: params[:kind] },
-              class: "text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
+              class: "w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
       </div>
       <div>
         <%= f.label :status, "Status", class: "block text-xs font-medium text-slate-600 mb-1" %>
         <%= f.select :status,
               [["Todos", ""], ["Pendente", "pending"], ["Classificado", "classified"], ["Confirmado", "confirmed"], ["Cancelado", "cancelled"]],
               { selected: params[:status] },
-              class: "text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
+              class: "w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
       </div>
       <% if @categories.any? %>
         <div>
@@ -73,20 +74,20 @@
           <%= f.select :category_id,
                 [["Todas", ""]] + @categories.map { |c| [c.name, c.id] },
                 { selected: params[:category_id] },
-                class: "text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
+                class: "w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
         </div>
       <% end %>
       <div>
         <%= f.label :period, "Período", class: "block text-xs font-medium text-slate-600 mb-1" %>
         <%= f.month_field :period, value: params[:period],
-              class: "text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
+              class: "w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" %>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 sm:col-span-2 lg:col-span-1">
         <%= f.submit "Filtrar",
-              class: "px-4 py-1.5 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer" %>
+              class: "flex-1 lg:flex-none px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors cursor-pointer" %>
         <% if [params[:q], params[:kind], params[:status], params[:category_id], params[:period]].any?(&:present?) %>
           <%= link_to "Limpar", workspace_financial_transactions_path(current_workspace),
-                class: "px-4 py-1.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors" %>
+                class: "flex-1 lg:flex-none text-center px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors" %>
         <% end %>
       </div>
     </div>
@@ -95,7 +96,7 @@
   <%# Tabela / Estado vazio %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
     <% if @transactions.empty? %>
-      <div class="p-12 text-center">
+      <div class="p-8 md:p-12 text-center">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
         </svg>
@@ -112,7 +113,47 @@
               class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" %>
       </div>
     <% else %>
-      <div class="overflow-x-auto">
+
+      <%# Cards mobile (visíveis apenas em telas pequenas) %>
+      <div class="md:hidden divide-y divide-slate-100">
+        <% @transactions.each do |t| %>
+          <div class="px-4 py-3">
+            <div class="flex items-start justify-between gap-2 mb-1.5">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-slate-800 text-sm truncate"><%= t.description %></p>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  <%= t.transacted_on&.strftime("%d/%m/%Y") || "—" %>
+                  <% if t.category %><span class="mx-1">·</span><%= t.category.name %><% end %>
+                  <% if t.counterparty %><span class="mx-1">·</span><%= t.counterparty.name %><% end %>
+                </p>
+              </div>
+              <div class="shrink-0 text-right flex flex-col items-end gap-1">
+                <span class="text-sm font-semibold <%= t.income? ? 'text-teal-700' : 'text-red-600' %>">
+                  <%= t.income? ? "+" : "−" %><%= format_brl(t.amount_cents) %>
+                </span>
+                <%= transaction_status_badge(t.status) %>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 mt-1.5">
+              <%= link_to "Ver detalhes",
+                    workspace_financial_transaction_path(current_workspace, t),
+                    class: "text-xs font-medium text-teal-600 hover:text-teal-700" %>
+              <%= link_to "Editar",
+                    edit_workspace_financial_transaction_path(current_workspace, t),
+                    class: "text-xs text-slate-400 hover:text-slate-600" %>
+              <%= button_to workspace_financial_transaction_path(current_workspace, t),
+                    method: :delete,
+                    form: { data: { turbo_confirm: "Remover este lançamento? Esta ação não pode ser desfeita." } },
+                    class: "text-xs text-slate-400 hover:text-red-500 cursor-pointer bg-transparent border-0 p-0" do %>
+                Remover
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Tabela desktop (oculta em mobile) %>
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
@@ -197,6 +238,7 @@
           </tbody>
         </table>
       </div>
+
     <% end %>
   </div>
 

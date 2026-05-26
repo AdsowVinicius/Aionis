@@ -4,74 +4,74 @@
 <div class="max-w-3xl">
 
   <%# Cabeçalho %>
-  <div class="flex items-center gap-3 mb-6">
+  <div class="flex items-center gap-3 mb-4 md:mb-6">
     <%= link_to workspace_counterparties_path(current_workspace),
-          class: "text-slate-400 hover:text-slate-600 transition-colors" do %>
+          class: "text-slate-400 hover:text-slate-600 transition-colors shrink-0" do %>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
       </svg>
     <% end %>
-    <h2 class="text-xl font-bold text-slate-900 truncate"><%= @counterparty.name %></h2>
+    <h2 class="text-lg md:text-xl font-bold text-slate-900 truncate"><%= @counterparty.name %></h2>
   </div>
 
   <%# Detalhes %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
-    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
-      <div>
-        <p class="font-semibold text-slate-900"><%= @counterparty.name %></p>
+    <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
+      <div class="min-w-0">
+        <p class="font-semibold text-slate-900 truncate"><%= @counterparty.name %></p>
         <p class="text-xs text-slate-400 mt-0.5"><%= counterparty_kind_label(@counterparty.kind) %></p>
       </div>
       <%= tax_id_status_badge(@counterparty.tax_id_status) %>
     </div>
 
     <dl class="divide-y divide-slate-100">
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Tipo</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Tipo</dt>
         <dd class="text-sm font-medium text-slate-800"><%= counterparty_kind_label(@counterparty.kind) %></dd>
       </div>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">CPF/CNPJ</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">CPF/CNPJ</dt>
         <dd class="text-sm font-medium text-slate-800">
           <%= @counterparty.tax_id.present? ? @counterparty.tax_id : content_tag(:span, "Não informado", class: "text-slate-400 italic") %>
         </dd>
       </div>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Status do CPF/CNPJ</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Status do CPF/CNPJ</dt>
         <dd><%= tax_id_status_badge(@counterparty.tax_id_status) %></dd>
       </div>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Origem do CPF/CNPJ</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Origem do CPF/CNPJ</dt>
         <dd class="text-sm text-slate-700">
           <%= @counterparty.tax_id_source.present? ? tax_id_source_label(@counterparty.tax_id_source) : content_tag(:span, "—", class: "text-slate-400") %>
         </dd>
       </div>
       <% if @counterparty.notes.present? %>
-        <div class="px-6 py-3 flex gap-4">
-          <dt class="text-sm text-slate-500 w-44 shrink-0">Observações</dt>
+        <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+          <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Observações</dt>
           <dd class="text-sm text-slate-700"><%= @counterparty.notes %></dd>
         </div>
       <% end %>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Lançamentos</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Lançamentos</dt>
         <dd class="text-sm font-medium text-slate-800"><%= @counterparty.financial_transactions.size %></dd>
       </div>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Documentos</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Documentos</dt>
         <dd class="text-sm font-medium text-slate-800"><%= @counterparty.documents.size %></dd>
       </div>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Cadastrado em</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Cadastrado em</dt>
         <dd class="text-sm text-slate-500"><%= @counterparty.created_at.strftime("%d/%m/%Y às %H:%M") %></dd>
       </div>
-      <div class="px-6 py-3 flex gap-4">
-        <dt class="text-sm text-slate-500 w-44 shrink-0">Atualizado em</dt>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Atualizado em</dt>
         <dd class="text-sm text-slate-500"><%= @counterparty.updated_at.strftime("%d/%m/%Y às %H:%M") %></dd>
       </div>
     </dl>
   </div>
 
   <%# Ações %>
-  <div class="flex flex-wrap items-center gap-3 mb-6">
+  <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6">
     <%= link_to new_workspace_financial_transaction_path(current_workspace, counterparty_id: @counterparty.id),
           class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors" do %>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -104,17 +104,17 @@
 
   <%# Últimos lançamentos vinculados %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
-    <div class="px-6 py-4 border-b border-slate-100">
+    <div class="px-4 md:px-6 py-4 border-b border-slate-100">
       <h3 class="text-sm font-semibold text-slate-800">Últimos lançamentos vinculados</h3>
     </div>
     <% if @transactions.empty? %>
-      <div class="px-6 py-6 text-center">
+      <div class="px-4 md:px-6 py-6 text-center">
         <p class="text-sm text-slate-400">Nenhum lançamento vinculado a este fornecedor/cliente.</p>
       </div>
     <% else %>
       <div class="divide-y divide-slate-100">
         <% @transactions.each do |tx| %>
-          <div class="px-6 py-3 flex items-center justify-between gap-4">
+          <div class="px-4 md:px-6 py-3 flex items-center justify-between gap-4">
             <div class="min-w-0">
               <p class="text-sm font-medium text-slate-800 truncate"><%= tx.description %></p>
               <p class="text-xs text-slate-400 mt-0.5">
@@ -138,17 +138,17 @@
 
   <%# Documentos vinculados %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-100">
+    <div class="px-4 md:px-6 py-4 border-b border-slate-100">
       <h3 class="text-sm font-semibold text-slate-800">Documentos vinculados</h3>
     </div>
     <% if @documents.empty? %>
-      <div class="px-6 py-6 text-center">
+      <div class="px-4 md:px-6 py-6 text-center">
         <p class="text-sm text-slate-400">Nenhum documento vinculado a este fornecedor/cliente.</p>
       </div>
     <% else %>
       <div class="divide-y divide-slate-100">
         <% @documents.each do |doc| %>
-          <div class="px-6 py-3 flex items-center justify-between gap-4">
+          <div class="px-4 md:px-6 py-3 flex items-center justify-between gap-4">
             <div class="min-w-0">
               <% if doc.file.attached? %>
                 <p class="text-sm font-medium text-slate-800 truncate"><%= doc.file.blob.filename %></p>

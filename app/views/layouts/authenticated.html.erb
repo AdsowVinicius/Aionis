@@ -17,17 +17,28 @@
   </head>
 
   <body class="bg-slate-50 antialiased">
-    <div class="flex h-screen overflow-hidden">
-      <%= render "layouts/sidebar" %>
+    <div class="flex h-screen overflow-hidden" data-controller="sidebar">
 
-      <div class="flex flex-col flex-1 overflow-hidden">
+      <%# Overlay mobile — fecha o drawer ao clicar fora %>
+      <div class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"
+           data-sidebar-target="overlay"
+           data-action="click->sidebar#close"></div>
+
+      <%# Sidebar — drawer no mobile, estática no desktop %>
+      <div class="fixed inset-y-0 left-0 z-30 flex -translate-x-full transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:z-auto"
+           data-sidebar-target="panel">
+        <%= render "layouts/sidebar" %>
+      </div>
+
+      <div class="flex flex-col flex-1 overflow-hidden min-w-0">
         <%= render "layouts/topbar" %>
 
-        <main class="flex-1 overflow-y-auto p-6">
+        <main class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           <%= render "layouts/flash" %>
           <%= yield %>
         </main>
       </div>
+
     </div>
   </body>
 </html>

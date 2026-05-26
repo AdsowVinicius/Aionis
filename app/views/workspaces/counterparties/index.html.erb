@@ -4,35 +4,36 @@
 <div class="max-w-6xl">
 
   <%# Cabeçalho %>
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
     <div>
-      <h2 class="text-xl font-bold text-slate-900">Fornecedores e Clientes</h2>
-      <p class="text-slate-500 text-sm mt-0.5">Gerencie seus fornecedores e clientes do workspace.</p>
+      <h2 class="text-lg md:text-xl font-bold text-slate-900">Fornecedores e Clientes</h2>
+      <p class="text-slate-500 text-sm mt-0.5 hidden sm:block">Gerencie seus fornecedores e clientes do workspace.</p>
     </div>
     <%= link_to new_workspace_counterparty_path(current_workspace),
-          class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
+          class: "shrink-0 inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
-      Novo fornecedor/cliente
+      <span class="hidden sm:inline">Novo fornecedor/cliente</span>
+      <span class="sm:hidden">Novo</span>
     <% end %>
   </div>
 
   <%# Cards de resumo %>
-  <div class="grid grid-cols-3 gap-4 mb-6">
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Total</p>
-      <p class="text-xl font-bold text-slate-900"><%= @total_count %></p>
+      <p class="text-lg md:text-xl font-bold text-slate-900"><%= @total_count %></p>
       <p class="text-xs text-slate-400 mt-0.5">Cadastrados</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Com CPF/CNPJ</p>
-      <p class="text-xl font-bold text-teal-600"><%= @with_tax_id_count %></p>
+      <p class="text-lg md:text-xl font-bold text-teal-600"><%= @with_tax_id_count %></p>
       <p class="text-xs text-slate-400 mt-0.5">Identificados</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Sem CPF/CNPJ</p>
-      <p class="text-xl font-bold text-amber-600"><%= @without_tax_id_count %></p>
+      <p class="text-lg md:text-xl font-bold text-amber-600"><%= @without_tax_id_count %></p>
       <p class="text-xs text-slate-400 mt-0.5">Não informado</p>
     </div>
   </div>
@@ -40,15 +41,15 @@
   <%# Busca %>
   <div class="mb-4">
     <%= form_with url: workspace_counterparties_path(current_workspace), method: :get, data: { turbo: false } do |f| %>
-      <div class="flex gap-3">
+      <div class="flex gap-2 md:gap-3">
         <%= f.text_field :q, value: params[:q],
               placeholder: "Buscar por nome…",
               class: "flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" %>
         <%= f.submit "Buscar",
-              class: "px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" %>
+              class: "px-3 md:px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" %>
         <% if params[:q].present? %>
           <%= link_to "Limpar", workspace_counterparties_path(current_workspace),
-                class: "px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
+                class: "px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
         <% end %>
       </div>
     <% end %>
@@ -57,7 +58,7 @@
   <%# Tabela / Estado vazio %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
     <% if @counterparties.empty? %>
-      <div class="p-12 text-center">
+      <div class="p-8 md:p-12 text-center">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
         </svg>
@@ -72,7 +73,7 @@
           <% if params[:q].present? %>
             Tente buscar por outro nome.
           <% else %>
-            Você ainda não cadastrou fornecedores ou clientes. Cadastre manualmente ou aguarde o Aionis identificar a partir dos documentos.
+            Você ainda não cadastrou fornecedores ou clientes.
           <% end %>
         </p>
         <% unless params[:q].present? %>
@@ -81,7 +82,44 @@
         <% end %>
       </div>
     <% else %>
-      <div class="overflow-x-auto">
+
+      <%# Cards mobile %>
+      <div class="md:hidden divide-y divide-slate-100">
+        <% @counterparties.each do |cp| %>
+          <div class="px-4 py-3">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-slate-800 text-sm truncate"><%= cp.name %></p>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  <%= counterparty_kind_label(cp.kind) %>
+                  <% if cp.tax_id.present? %><span class="mx-1">·</span><%= cp.tax_id %><% end %>
+                </p>
+              </div>
+              <div class="shrink-0">
+                <%= tax_id_status_badge(cp.tax_id_status) %>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">
+              <%= cp.financial_transactions.size %> lançamentos · <%= cp.documents.size %> documentos · <%= cp.created_at.strftime("%d/%m/%Y") %>
+            </p>
+            <div class="flex items-center gap-3">
+              <%= link_to "Ver", workspace_counterparty_path(current_workspace, cp),
+                    class: "text-xs font-medium text-teal-600 hover:text-teal-700" %>
+              <%= link_to "Editar", edit_workspace_counterparty_path(current_workspace, cp),
+                    class: "text-xs text-slate-400 hover:text-slate-600" %>
+              <%= button_to workspace_counterparty_path(current_workspace, cp),
+                    method: :delete,
+                    form: { data: { turbo_confirm: "Excluir #{cp.name}? Lançamentos e documentos vinculados serão mantidos." } },
+                    class: "text-xs text-slate-400 hover:text-red-500 cursor-pointer bg-transparent border-0 p-0" do %>
+                Excluir
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Tabela desktop %>
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
@@ -155,6 +193,7 @@
           </tbody>
         </table>
       </div>
+
     <% end %>
   </div>
 

@@ -4,35 +4,36 @@
 <div class="max-w-6xl">
 
   <%# Cabeçalho %>
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
     <div>
-      <h2 class="text-xl font-bold text-slate-900">Categorias</h2>
-      <p class="text-slate-500 text-sm mt-0.5">Categorias do sistema e categorias personalizadas do workspace.</p>
+      <h2 class="text-lg md:text-xl font-bold text-slate-900">Categorias</h2>
+      <p class="text-slate-500 text-sm mt-0.5 hidden sm:block">Categorias do sistema e categorias personalizadas do workspace.</p>
     </div>
     <%= link_to new_workspace_category_path(current_workspace),
-          class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
+          class: "shrink-0 inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
-      Nova categoria
+      <span class="hidden sm:inline">Nova categoria</span>
+      <span class="sm:hidden">Nova</span>
     <% end %>
   </div>
 
   <%# Cards de resumo %>
-  <div class="grid grid-cols-3 gap-4 mb-6">
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Total</p>
-      <p class="text-xl font-bold text-slate-900"><%= @total_count %></p>
+      <p class="text-lg md:text-xl font-bold text-slate-900"><%= @total_count %></p>
       <p class="text-xs text-slate-400 mt-0.5">Categorias disponíveis</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Sistema</p>
-      <p class="text-xl font-bold text-slate-600"><%= @global_count %></p>
+      <p class="text-lg md:text-xl font-bold text-slate-600"><%= @global_count %></p>
       <p class="text-xs text-slate-400 mt-0.5">Categorias padrão</p>
     </div>
-    <div class="bg-white rounded-xl border border-slate-200 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
       <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Personalizadas</p>
-      <p class="text-xl font-bold text-teal-600"><%= @custom_count %></p>
+      <p class="text-lg md:text-xl font-bold text-teal-600"><%= @custom_count %></p>
       <p class="text-xs text-slate-400 mt-0.5">Criadas no workspace</p>
     </div>
   </div>
@@ -40,19 +41,19 @@
   <%# Filtros %>
   <div class="mb-4">
     <%= form_with url: workspace_categories_path(current_workspace), method: :get, data: { turbo: false } do |f| %>
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-2 md:gap-3">
         <%= f.text_field :q, value: params[:q],
               placeholder: "Buscar por nome…",
-              class: "flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" %>
+              class: "flex-1 min-w-[140px] px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" %>
         <%= f.select :kind,
               [["Todas as naturezas", ""], ["Receita", "income"], ["Despesa", "expense"], ["Transferência", "transfer"]],
               { selected: params[:kind] },
               class: "px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white" %>
         <%= f.submit "Buscar",
-              class: "px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" %>
+              class: "px-3 md:px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" %>
         <% if params[:q].present? || params[:kind].present? %>
           <%= link_to "Limpar", workspace_categories_path(current_workspace),
-                class: "px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
+                class: "px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
         <% end %>
       </div>
     <% end %>
@@ -61,7 +62,7 @@
   <%# Tabela / Estado vazio %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
     <% if @categories.empty? %>
-      <div class="p-12 text-center">
+      <div class="p-8 md:p-12 text-center">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
@@ -86,7 +87,55 @@
         <% end %>
       </div>
     <% else %>
-      <div class="overflow-x-auto">
+
+      <%# Cards mobile %>
+      <div class="md:hidden divide-y divide-slate-100">
+        <% @categories.each do |cat| %>
+          <% global = cat.workspace_id.nil? %>
+          <div class="px-4 py-3">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-slate-800 text-sm truncate"><%= cat.name %></p>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  <%= category_kind_label(cat.kind) %>
+                  <% if cat.parent %><span class="mx-1">·</span>Subcat. de <%= cat.parent.name %><% end %>
+                </p>
+              </div>
+              <div class="shrink-0">
+                <%= category_origin_badge(cat) %>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">
+              <%= cat.subcategories.size %> subcategorias · <%= cat.financial_transactions.size %> lançamentos
+            </p>
+            <div class="flex items-center gap-3">
+              <%= link_to "Ver", workspace_category_path(current_workspace, cat),
+                    class: "text-xs font-medium text-teal-600 hover:text-teal-700" %>
+              <% unless global %>
+                <%= link_to "Editar", edit_workspace_category_path(current_workspace, cat),
+                      class: "text-xs text-slate-400 hover:text-slate-600" %>
+                <%
+                  subcats = cat.subcategories.count
+                  confirm_msg = if subcats > 0
+                    "Excluir \"#{cat.name}\"? Esta categoria tem #{subcats} #{"subcategoria".pluralize(subcats)} que também será excluída."
+                  else
+                    "Excluir \"#{cat.name}\"? Lançamentos vinculados serão mantidos."
+                  end
+                %>
+                <%= button_to workspace_category_path(current_workspace, cat),
+                      method: :delete,
+                      form: { data: { turbo_confirm: confirm_msg } },
+                      class: "text-xs text-slate-400 hover:text-red-500 cursor-pointer bg-transparent border-0 p-0" do %>
+                  Excluir
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Tabela desktop %>
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
@@ -170,6 +219,7 @@
           </tbody>
         </table>
       </div>
+
     <% end %>
   </div>
 

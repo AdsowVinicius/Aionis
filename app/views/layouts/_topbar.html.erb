@@ -1,32 +1,42 @@
-<header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-  <div class="flex items-center gap-3">
+<header class="h-14 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 md:px-6 shrink-0">
+  <div class="flex items-center gap-2 md:gap-3 min-w-0">
+    <%# Hamburger — visível apenas no mobile %>
+    <button type="button"
+            class="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+            data-action="click->sidebar#open"
+            aria-label="Abrir menu">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+      </svg>
+    </button>
+
     <% if current_workspace %>
-      <h1 class="text-base font-semibold text-slate-800">
+      <h1 class="text-sm md:text-base font-semibold text-slate-800 truncate">
         <%= content_for(:page_title) || current_workspace.name %>
       </h1>
     <% else %>
-      <h1 class="text-base font-semibold text-slate-800">
+      <h1 class="text-sm md:text-base font-semibold text-slate-800 truncate">
         <%= content_for(:page_title) || "Dashboard" %>
       </h1>
     <% end %>
   </div>
 
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-2 md:gap-4 shrink-0">
     <div class="flex items-center gap-2 text-sm text-slate-600">
-      <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-semibold text-xs">
+      <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-semibold text-xs shrink-0">
         <%= current_user.name.first(2).upcase %>
       </div>
-      <span class="hidden sm:inline"><%= current_user.name %></span>
+      <span class="hidden sm:inline text-sm text-slate-700 truncate max-w-[120px] md:max-w-none"><%= current_user.name %></span>
     </div>
 
     <%= button_to destroy_user_session_path,
           method: :delete,
-          class: "flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50",
+          class: "flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-600 transition-colors px-2 md:px-3 py-1.5 rounded-lg hover:bg-red-50",
           data: { turbo: false } do %>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 shrink-0">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
       </svg>
-      <span>Sair</span>
+      <span class="hidden sm:inline">Sair</span>
     <% end %>
   </div>
 </header>

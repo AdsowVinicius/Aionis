@@ -2,7 +2,7 @@
 <% content_for :page_title, "Dashboard" %>
 
 <%# ── Cards principais ──────────────────────────────────────────────────────── %>
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-5">
 
   <%# Receita do mês %>
   <div class="bg-white rounded-xl border border-slate-200 p-5">
@@ -67,7 +67,7 @@
 </div>
 
 <%# ── Cards operacionais ────────────────────────────────────────────────────── %>
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-5">
 
   <div class="bg-white rounded-xl border border-slate-200 p-4">
     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Lançamentos pendentes</p>
@@ -114,7 +114,7 @@
 </div>
 
 <%# ── Seções analíticas + Últimos lançamentos ───────────────────────────────── %>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 mb-4 md:mb-5">
 
   <%# Top categorias de despesa do mês %>
   <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -213,27 +213,26 @@
   <% else %>
     <div class="divide-y divide-slate-100">
       <% @recent_transactions.each do |t| %>
-        <div class="px-5 py-3 flex items-center gap-4">
-          <div class="shrink-0 text-xs text-slate-400 w-20">
+        <div class="px-4 md:px-5 py-3 flex items-center gap-3">
+          <div class="hidden sm:block shrink-0 text-xs text-slate-400 w-16 md:w-20">
             <%= (t.transacted_on || t.created_at.to_date).strftime("%d/%m/%Y") %>
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-slate-800 truncate"><%= t.description %></p>
             <p class="text-xs text-slate-400 mt-0.5 truncate">
-              <% parts = [] %>
-              <% parts << t.category.name if t.category %>
-              <% parts << t.counterparty.name if t.counterparty %>
-              <%= parts.join(" · ").presence || "Sem categoria/fornecedor" %>
+              <% hint_parts = [t.category&.name, t.counterparty&.name].compact %>
+              <span class="sm:hidden"><%= (t.transacted_on || t.created_at.to_date).strftime("%d/%m") %><%= hint_parts.any? ? " · " + hint_parts.join(" · ") : "" %></span>
+              <span class="hidden sm:inline"><%= hint_parts.join(" · ").presence || "Sem categoria/fornecedor" %></span>
             </p>
           </div>
           <div class="shrink-0">
             <%= transaction_status_badge(t.status) %>
           </div>
-          <div class="shrink-0 text-sm font-semibold text-right w-28 <%= t.income? ? 'text-teal-700' : 'text-red-600' %>">
+          <div class="shrink-0 text-sm font-semibold text-right w-20 md:w-28 <%= t.income? ? 'text-teal-700' : 'text-red-600' %>">
             <%= t.income? ? "+" : "−" %><%= format_brl(t.amount_cents) %>
           </div>
           <%= link_to workspace_financial_transaction_path(@workspace, t),
-                class: "shrink-0 text-xs text-slate-400 hover:text-teal-600 transition-colors" do %>
+                class: "hidden sm:block shrink-0 text-xs text-slate-400 hover:text-teal-600 transition-colors" do %>
             Ver →
           <% end %>
         </div>
