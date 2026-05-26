@@ -6,9 +6,13 @@ module Workspaces
       period_start = Date.current.beginning_of_month
       period_end   = Date.current.end_of_month
 
-      # Base scopes — todos isolados por workspace, excluindo cancelled
-      all_active = @workspace.financial_transactions.where.not(status: "cancelled")
-      monthly    = all_active.where(
+      # Base scopes — excluem cancelled E contas abertas (settlement_status: open)
+      # Contas abertas não entraram no caixa ainda; só entram quando liquidadas (settled) ou sem settlement_status
+      all_active = @workspace.financial_transactions
+                             .where.not(status: "cancelled")
+                             .where(settlement_status: [nil, "settled"])
+
+      monthly = all_active.where(
         "COALESCE(financial_transactions.transacted_on, financial_transactions.created_at::date) BETWEEN ? AND ?",
         period_start, period_end
       )
@@ -27,6 +31,12 @@ module Workspaces
       @pending_docs               = @workspace.documents.where(status: "pending").count
       @review_docs                = @workspace.documents.where(status: "review").count
       @counterparties_count       = @workspace.counterparties.count
+
+      # ── Alertas de contas a pagar/receber ──────────────────────────────────
+      @overdue_payables_count    = @workspace.financial_transactions.payables.overdue.count
+      @overdue_receivables_count = @workspace.financial_transactions.receivables.overdue.count
+      @upcoming_payables_cents   = @workspace.financial_transactions.payables.upcoming.sum(:amount_cents)
+      @upcoming_receivables_cents = @workspace.financial_transactions.receivables.upcoming.sum(:amount_cents)
 
       # ── Resumo por status ───────────────────────────────────────────────────
       @status_summary = @workspace.financial_transactions.group(:status).count
@@ -56,8 +66,10 @@ module Workspaces
                "COUNT(financial_transactions.id)")
         .map { |name, total, count| { name: name, total_cents: total.to_i, count: count.to_i } }
 
-      # ── Últimos lançamentos (sem N+1) ───────────────────────────────────────
+      # ── Últimos lançamentos realizados (sem N+1) ────────────────────────────
       @recent_transactions = @workspace.financial_transactions
+                                       .where(settlement_status: [nil, "settled"])
+                                       .where.not(status: "cancelled")
                                        .includes(:category, :counterparty, :document)
                                        .order(
                                          Arel.sql("COALESCE(financial_transactions.transacted_on, financial_transactions.created_at::date) DESC, financial_transactions.created_at DESC")

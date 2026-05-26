@@ -151,6 +151,18 @@ module ApplicationHelper
                 class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium #{style[:css]}")
   end
 
+  SETTLEMENT_STATUS_STYLES = {
+    "open"      => { label: "Em aberto",  css: "bg-amber-50 text-amber-700 border border-amber-200" },
+    "settled"   => { label: "Liquidado",  css: "bg-teal-50 text-teal-700 border border-teal-200" },
+    "cancelled" => { label: "Cancelado",  css: "bg-slate-100 text-slate-500 border border-slate-200" }
+  }.freeze
+
+  def settlement_status_badge(status)
+    style = SETTLEMENT_STATUS_STYLES[status.to_s] || { label: status.to_s.humanize, css: "bg-slate-100 text-slate-500" }
+    content_tag(:span, style[:label],
+                class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium #{style[:css]}")
+  end
+
   def format_file_size(bytes)
     return "—" if bytes.nil?
     if bytes >= 1.megabyte

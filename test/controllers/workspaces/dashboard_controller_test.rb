@@ -157,6 +157,85 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_match "ClienteBetaUnique",     response.body
   end
 
+  # 13. Conta a pagar em aberto NÃO entra nos KPIs de despesa realizada
+  # open payable (311_111) não deve inflacionar a despesa do mês (40_000)
+  # Se fosse incluída, o total seria 3.511,11 — isso não pode aparecer nos KPIs
+  # Nota: o valor 3.111,11 pode aparecer nos alertas de contas a pagar (comportamento correto)
+  test "conta a pagar aberta não entra na despesa realizada do mês" do
+    tx(kind: "expense", amount_cents: 40_000)  # despesa real
+    @workspace.financial_transactions.create!(
+      kind: "expense", description: "Conta aberta",
+      amount_cents: 311_111, origin: "manual", status: "pending",
+      settlement_status: "open", due_on: Date.current + 5
+    )
+
+    get workspace_dashboard_path(@workspace)
+    assert_response :success
+    assert_match    "400,00",   response.body   # despesa realizada do mês
+    assert_no_match "3.511,11", response.body   # soma errada se open fosse incluída nos KPIs
+  end
+
+  # 14. Conta a receber em aberto NÃO entra nos KPIs de receita realizada
+  # open receivable (411_111) não deve inflacionar a receita do mês (60_000)
+  # Se fosse incluída, o total seria 4.711,11 — isso não pode aparecer nos KPIs
+  test "conta a receber aberta não entra na receita realizada do mês" do
+    tx(kind: "income", amount_cents: 60_000)  # receita real
+    @workspace.financial_transactions.create!(
+      kind: "income", description: "Receita pendente",
+      amount_cents: 411_111, origin: "manual", status: "pending",
+      settlement_status: "open", due_on: Date.current + 3
+    )
+
+    get workspace_dashboard_path(@workspace)
+    assert_response :success
+    assert_match    "600,00",   response.body   # receita realizada do mês
+    assert_no_match "4.711,11", response.body   # soma errada se open fosse incluída nos KPIs
+  end
+
+  # 15. Conta liquidada (settled) ENTRA nos KPIs como realizada
+  test "conta liquidada entra nos KPIs como realizada" do
+    p = @workspace.financial_transactions.create!(
+      kind: "expense", description: "Conta liquidada",
+      amount_cents: 55_000, origin: "manual", status: "pending",
+      settlement_status: "open", due_on: Date.current - 1
+    )
+    p.settle!
+
+    get workspace_dashboard_path(@workspace)
+    assert_response :success
+    assert_match "550,00", response.body  # despesa liquidada aparece
+  end
+
+  # 16. overdue? é true quando due_on < Date.current e settlement_status = open
+  test "overdue? retorna true para conta vencida aberta" do
+    t = @workspace.financial_transactions.new(
+      kind: "expense", description: "Conta vencida",
+      amount_cents: 10_000, origin: "manual", status: "pending",
+      settlement_status: "open", due_on: Date.current - 1
+    )
+    assert t.overdue?
+  end
+
+  # 17. overdue? é false para conta futura
+  test "overdue? retorna false para conta futura" do
+    t = @workspace.financial_transactions.new(
+      kind: "expense", description: "Conta futura",
+      amount_cents: 10_000, origin: "manual", status: "pending",
+      settlement_status: "open", due_on: Date.current + 5
+    )
+    assert_not t.overdue?
+  end
+
+  # 18. overdue? é false para conta liquidada mesmo com due_on passado
+  test "overdue? retorna false para conta liquidada" do
+    t = @workspace.financial_transactions.new(
+      kind: "expense", description: "Conta paga",
+      amount_cents: 10_000, origin: "manual", status: "confirmed",
+      settlement_status: "settled", due_on: Date.current - 5
+    )
+    assert_not t.overdue?
+  end
+
   # 12. Não mistura dados de outro workspace
   # Outro workspace: income 978_654 → R$ 9.786,54 (não deve aparecer)
   # Workspace atual: income 10_000 → R$ 100,00 (deve aparecer)

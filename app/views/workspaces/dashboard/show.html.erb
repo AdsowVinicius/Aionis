@@ -113,6 +113,53 @@
 
 </div>
 
+<%# ── Alertas de contas a pagar/receber ─────────────────────────────────────── %>
+<% if @overdue_payables_count > 0 || @overdue_receivables_count > 0 || @upcoming_payables_cents > 0 || @upcoming_receivables_cents > 0 %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-5">
+
+    <% if @overdue_payables_count > 0 %>
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p class="text-xs font-semibold text-red-600 uppercase tracking-wide mb-1">A pagar vencidas</p>
+        <p class="text-xl font-bold text-red-700"><%= @overdue_payables_count %></p>
+        <p class="text-xs text-red-500 mt-0.5">
+          <%= link_to "Ver →", workspace_payables_path(@workspace, filter: "overdue"), class: "hover:underline" %>
+        </p>
+      </div>
+    <% end %>
+
+    <% if @overdue_receivables_count > 0 %>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">A receber vencidas</p>
+        <p class="text-xl font-bold text-amber-700"><%= @overdue_receivables_count %></p>
+        <p class="text-xs text-amber-500 mt-0.5">
+          <%= link_to "Ver →", workspace_receivables_path(@workspace, filter: "overdue"), class: "hover:underline" %>
+        </p>
+      </div>
+    <% end %>
+
+    <% if @upcoming_payables_cents > 0 %>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">A pagar (7 dias)</p>
+        <p class="text-xl font-bold text-red-600"><%= format_brl(@upcoming_payables_cents) %></p>
+        <p class="text-xs text-slate-400 mt-0.5">
+          <%= link_to "Ver →", workspace_payables_path(@workspace, filter: "upcoming"), class: "text-teal-600 hover:underline" %>
+        </p>
+      </div>
+    <% end %>
+
+    <% if @upcoming_receivables_cents > 0 %>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">A receber (7 dias)</p>
+        <p class="text-xl font-bold text-teal-600"><%= format_brl(@upcoming_receivables_cents) %></p>
+        <p class="text-xs text-slate-400 mt-0.5">
+          <%= link_to "Ver →", workspace_receivables_path(@workspace, filter: "upcoming"), class: "text-teal-600 hover:underline" %>
+        </p>
+      </div>
+    <% end %>
+
+  </div>
+<% end %>
+
 <%# ── Seções analíticas + Últimos lançamentos ───────────────────────────────── %>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 mb-4 md:mb-5">
 
@@ -348,8 +395,36 @@
         </div>
       </div>
 
+      <%# Contas a pagar vencidas %>
+      <% if @overdue_payables_count > 0 %>
+        <div class="px-5 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+            <span class="text-sm text-slate-700">Contas a pagar vencidas</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-semibold text-red-600"><%= @overdue_payables_count %></span>
+            <%= link_to "Ver →", workspace_payables_path(@workspace, filter: "overdue"), class: "text-xs text-teal-600 hover:underline" %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Contas a receber vencidas %>
+      <% if @overdue_receivables_count > 0 %>
+        <div class="px-5 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+            <span class="text-sm text-slate-700">Contas a receber vencidas</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-semibold text-amber-600"><%= @overdue_receivables_count %></span>
+            <%= link_to "Ver →", workspace_receivables_path(@workspace, filter: "overdue"), class: "text-xs text-teal-600 hover:underline" %>
+          </div>
+        </div>
+      <% end %>
+
       <%# CTA se tudo zerado %>
-      <% if @pending_transactions_count.zero? && @pending_docs.zero? && @review_docs.zero? %>
+      <% if @pending_transactions_count.zero? && @pending_docs.zero? && @review_docs.zero? && @overdue_payables_count.zero? && @overdue_receivables_count.zero? %>
         <div class="px-5 py-4 text-center">
           <p class="text-xs text-slate-400">Nenhuma pendência. Tudo em dia.</p>
         </div>

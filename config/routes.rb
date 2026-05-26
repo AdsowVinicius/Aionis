@@ -19,8 +19,12 @@ Rails.application.routes.draw do
           post :trigger
         end
       end
-      resources :payables,    only: :index
-      resources :receivables, only: :index
+      resources :payables do
+        member { patch :settle }
+      end
+      resources :receivables do
+        member { patch :settle }
+      end
       resource  :subscription, only: [:show, :edit, :update]
       resource  :settings,    only: :show
     end

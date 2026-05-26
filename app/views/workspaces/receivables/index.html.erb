@@ -1,6 +1,201 @@
-<% content_for :title, "Contas a receber — #{current_workspace.name}" %>
-<% content_for :page_title, "Contas a receber" %>
-<div class="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center max-w-2xl">
-  <p class="text-base font-semibold text-slate-700 mb-2">Contas a receber</p>
-  <p class="text-sm text-slate-500">Esta área será implementada na próxima etapa.</p>
+<% content_for :title, "Contas a Receber — #{current_workspace.name}" %>
+<% content_for :page_title, "Contas a Receber" %>
+
+<div class="max-w-6xl">
+
+  <%# Cabeçalho %>
+  <div class="flex items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
+    <div>
+      <h2 class="text-lg md:text-xl font-bold text-slate-900">Contas a Receber</h2>
+      <p class="text-slate-500 text-sm mt-0.5 hidden sm:block">Receitas programadas e em aberto do workspace.</p>
+    </div>
+    <%= link_to new_workspace_receivable_path(current_workspace),
+          class: "shrink-0 inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      <span class="hidden sm:inline">Nova conta a receber</span>
+      <span class="sm:hidden">Nova</span>
+    <% end %>
+  </div>
+
+  <%# Cards de resumo %>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Total em aberto</p>
+      <p class="text-lg md:text-xl font-bold text-teal-600"><%= format_brl(@total_open_cents) %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Valor a receber</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Vencidas</p>
+      <p class="text-lg md:text-xl font-bold <%= @overdue_count > 0 ? 'text-red-600' : 'text-slate-400' %>"><%= @overdue_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Com prazo passado</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Vencem em breve</p>
+      <p class="text-lg md:text-xl font-bold <%= @upcoming_count > 0 ? 'text-amber-600' : 'text-slate-400' %>"><%= @upcoming_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Nos próximos 7 dias</p>
+    </div>
+  </div>
+
+  <%# Filtros de abas %>
+  <div class="flex gap-1 mb-4 border-b border-slate-200 overflow-x-auto">
+    <% [
+         ["open",      "Em aberto"],
+         ["overdue",   "Vencidas"],
+         ["upcoming",  "Em breve"],
+         ["received",  "Recebidas"],
+         ["cancelled", "Canceladas"]
+       ].each do |val, label| %>
+      <%= link_to workspace_receivables_path(current_workspace, filter: val),
+            class: "px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap #{@filter == val ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-700'}" do %>
+        <%= label %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# Lista %>
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <% if @receivables.empty? %>
+      <div class="p-8 md:p-12 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+        </svg>
+        <h3 class="text-base font-semibold text-slate-700 mb-1">Nenhuma conta encontrada</h3>
+        <p class="text-sm text-slate-500 mb-4">
+          <% if @filter == "open" %>
+            Nenhuma conta a receber em aberto. Crie uma nova para começar.
+          <% else %>
+            Nenhuma conta nesta categoria.
+          <% end %>
+        </p>
+        <% if @filter == "open" %>
+          <%= link_to "Nova conta a receber", new_workspace_receivable_path(current_workspace),
+                class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" %>
+        <% end %>
+      </div>
+    <% else %>
+
+      <%# Cards mobile %>
+      <div class="md:hidden divide-y divide-slate-100">
+        <% @receivables.each do |r| %>
+          <div class="px-4 py-3">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-slate-800 text-sm truncate"><%= r.description %></p>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  Vence: <%= r.due_on&.strftime("%d/%m/%Y") || "—" %>
+                  <% if r.overdue? %>
+                    <span class="text-red-500 font-medium ml-1">Vencida</span>
+                  <% end %>
+                </p>
+                <p class="text-xs text-slate-400"><%= r.category&.name || "Sem categoria" %></p>
+              </div>
+              <div class="shrink-0 flex flex-col items-end gap-1">
+                <span class="text-sm font-semibold text-teal-600"><%= format_brl(r.amount_cents) %></span>
+                <%= settlement_status_badge(r.settlement_status) %>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 mt-1.5">
+              <%= link_to "Ver", workspace_receivable_path(current_workspace, r),
+                    class: "text-xs font-medium text-teal-600 hover:text-teal-700" %>
+              <% if r.settlement_open? %>
+                <%= button_to "Marcar recebido",
+                      settle_workspace_receivable_path(current_workspace, r),
+                      method: :patch,
+                      class: "text-xs font-medium text-teal-600 hover:text-teal-700 bg-transparent border-0 p-0 cursor-pointer" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Tabela desktop %>
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Descrição</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Vencimento</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Categoria</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cliente</th>
+              <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor</th>
+              <th class="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+              <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% @receivables.each do |r| %>
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                <td class="px-4 py-3 max-w-xs">
+                  <p class="font-medium text-slate-800 truncate"><%= r.description %></p>
+                  <% if r.notes.present? %>
+                    <p class="text-xs text-slate-400 truncate mt-0.5"><%= r.notes %></p>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <% if r.due_on %>
+                    <span class="<%= r.overdue? ? 'text-red-600 font-medium' : 'text-slate-700' %>">
+                      <%= r.due_on.strftime("%d/%m/%Y") %>
+                    </span>
+                    <% if r.overdue? %>
+                      <span class="block text-xs text-red-500">Vencida</span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-slate-400">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                  <%= r.category&.name || "—" %>
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                  <%= r.counterparty&.name || "—" %>
+                </td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  <span class="text-sm font-semibold text-teal-600"><%= format_brl(r.amount_cents) %></span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <%= settlement_status_badge(r.settlement_status) %>
+                </td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1">
+                    <%= link_to workspace_receivable_path(current_workspace, r),
+                          class: "p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors",
+                          title: "Ver detalhes" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    <% end %>
+                    <% if r.settlement_open? %>
+                      <%= button_to settle_workspace_receivable_path(current_workspace, r),
+                            method: :patch,
+                            form: { data: { turbo_confirm: "Marcar \"#{r.description}\" como recebido?" } },
+                            class: "p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors cursor-pointer bg-transparent border-0",
+                            title: "Marcar como recebido" do %>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      <% end %>
+                    <% end %>
+                    <%= button_to workspace_receivable_path(current_workspace, r),
+                          method: :delete,
+                          form: { data: { turbo_confirm: r.settlement_settled? ? "Esta conta já foi recebida. Deseja cancelá-la?" : "Excluir esta conta a receber?" } },
+                          class: "p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer bg-transparent border-0",
+                          title: r.settlement_settled? ? "Cancelar" : "Excluir" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+    <% end %>
+  </div>
+
 </div>

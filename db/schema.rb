@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_223156) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_132709) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -116,8 +116,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_223156) do
     t.datetime "created_at", null: false
     t.string "description", null: false
     t.integer "document_id"
+    t.date "due_on"
     t.string "kind", null: false
+    t.text "notes"
     t.string "origin", default: "manual", null: false
+    t.date "settled_on"
+    t.string "settlement_status"
     t.string "status", default: "pending", null: false
     t.date "transacted_on"
     t.datetime "updated_at", null: false
@@ -125,6 +129,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_223156) do
     t.index ["category_id"], name: "index_financial_transactions_on_category_id"
     t.index ["counterparty_id"], name: "index_financial_transactions_on_counterparty_id"
     t.index ["document_id"], name: "index_financial_transactions_on_document_id"
+    t.index ["workspace_id", "settlement_status", "due_on"], name: "index_financial_transactions_on_settlement"
     t.index ["workspace_id", "status"], name: "index_financial_transactions_on_workspace_id_and_status"
     t.index ["workspace_id", "transacted_on"], name: "index_financial_transactions_on_workspace_id_and_transacted_on"
     t.index ["workspace_id"], name: "index_financial_transactions_on_workspace_id"
