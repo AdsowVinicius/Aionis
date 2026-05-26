@@ -101,9 +101,10 @@ module Workspaces
     private
 
     def set_form_options
-      @categories    = Category.where("workspace_id IS NULL OR workspace_id = ?", current_workspace.id)
-                               .where(kind: "expense").order(:name)
+      @categories     = Category.where("workspace_id IS NULL OR workspace_id = ?", current_workspace.id)
+                                .where(kind: "expense").order(:name)
       @counterparties = current_workspace.counterparties.order(:name)
+      @documents      = current_workspace.documents.with_attached_file.order(created_at: :desc)
     end
 
     def set_payable

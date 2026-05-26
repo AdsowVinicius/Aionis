@@ -104,6 +104,7 @@ module Workspaces
       @categories     = Category.where("workspace_id IS NULL OR workspace_id = ?", current_workspace.id)
                                 .where(kind: "income").order(:name)
       @counterparties = current_workspace.counterparties.order(:name)
+      @documents      = current_workspace.documents.with_attached_file.order(created_at: :desc)
     end
 
     def set_receivable

@@ -74,6 +74,19 @@
           <% end %>
         </dd>
       </div>
+      <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+        <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Documento vinculado</dt>
+        <dd class="text-sm font-medium text-slate-800">
+          <% if @receivable.document %>
+            <% doc_label = @receivable.document.file.attached? ? @receivable.document.file.blob.filename.to_s : "Documento ##{@receivable.document_id}" %>
+            <%= link_to doc_label,
+                  workspace_document_path(current_workspace, @receivable.document),
+                  class: "text-teal-600 hover:text-teal-700 hover:underline" %>
+          <% else %>
+            <span class="text-slate-400 italic">Nenhum documento vinculado</span>
+          <% end %>
+        </dd>
+      </div>
       <% if @receivable.notes.present? %>
         <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
           <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0">Observações</dt>
