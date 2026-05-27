@@ -163,6 +163,27 @@ module ApplicationHelper
                 class: "inline-block px-2 py-0.5 rounded-full text-xs font-medium #{style[:css]}")
   end
 
+  def workspace_critical_alerts_count
+    return 0 unless current_workspace
+    @_workspace_alerts_summary ||= (@alerts_summary || Workspaces::AlertsSummary.new(current_workspace))
+    @_workspace_alerts_summary.critical_count
+  end
+
+  def alert_link_path(alert, workspace)
+    case alert.kind
+    when :overdue_payables, :payables_due_soon, :payables_due_7days
+      workspace_payables_path(workspace)
+    when :overdue_receivables, :receivables_due_soon, :receivables_due_7days
+      workspace_receivables_path(workspace)
+    when :failed_documents, :review_documents, :pending_documents
+      workspace_documents_path(workspace)
+    when :pending_transactions, :transactions_no_category, :transactions_no_counterparty
+      workspace_financial_transactions_path(workspace)
+    else
+      workspace_dashboard_path(workspace)
+    end
+  end
+
   def format_file_size(bytes)
     return "—" if bytes.nil?
     if bytes >= 1.megabyte

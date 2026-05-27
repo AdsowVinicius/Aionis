@@ -1,7 +1,8 @@
 module Workspaces
   class DashboardController < Workspaces::BaseController
     def show
-      @workspace = current_workspace
+      @workspace      = current_workspace
+      @alerts_summary = Workspaces::AlertsSummary.new(@workspace)
 
       period_start = Date.current.beginning_of_month
       period_end   = Date.current.end_of_month

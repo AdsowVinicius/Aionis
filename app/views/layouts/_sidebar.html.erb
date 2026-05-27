@@ -53,6 +53,21 @@
         <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Financeiro</p>
       </div>
 
+      <%# Pendências com badge de críticos %>
+      <% critical_count = workspace_critical_alerts_count %>
+      <%= link_to workspace_alerts_path(current_workspace),
+            class: "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 #{request.path.start_with?(workspace_alerts_path(current_workspace)) ? 'bg-teal-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 shrink-0">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+        <span class="flex-1">Pendências</span>
+        <% if critical_count > 0 %>
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold leading-none">
+            <%= critical_count > 9 ? "9+" : critical_count %>
+          </span>
+        <% end %>
+      <% end %>
+
       <%= sidebar_nav_link "Contas a pagar",
             workspace_payables_path(current_workspace) do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 shrink-0 text-red-400">

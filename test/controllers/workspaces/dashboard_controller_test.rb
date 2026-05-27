@@ -236,6 +236,19 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_not t.overdue?
   end
 
+  # 19. Dashboard mostra resumo e link de alertas quando há pendências críticas
+  test "dashboard mostra link Ver alertas quando há conta vencida" do
+    @workspace.financial_transactions.create!(
+      kind: "expense", description: "Conta vencida",
+      amount_cents: 10_000, origin: "manual", status: "pending",
+      settlement_status: "open", due_on: Date.current - 1
+    )
+
+    get workspace_dashboard_path(@workspace)
+    assert_response :success
+    assert_match "Ver alertas", response.body
+  end
+
   # 12. Não mistura dados de outro workspace
   # Outro workspace: income 978_654 → R$ 9.786,54 (não deve aparecer)
   # Workspace atual: income 10_000 → R$ 100,00 (deve aparecer)

@@ -160,6 +160,25 @@
   </div>
 <% end %>
 
+<%# ── Resumo de alertas ──────────────────────────────────────────────────────── %>
+<% if @alerts_summary.any? %>
+  <div class="bg-white border border-slate-200 rounded-xl px-4 py-3 mb-4 md:mb-5 flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3 flex-wrap">
+      <% if @alerts_summary.critical_count > 0 %>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+          <%= @alerts_summary.critical_count %> <%= @alerts_summary.critical_count == 1 ? "crítico" : "críticos" %>
+        </span>
+      <% end %>
+      <span class="text-sm text-slate-600">
+        <%= @alerts_summary.total_count %> <%= @alerts_summary.total_count == 1 ? "pendência no total" : "pendências no total" %>
+      </span>
+    </div>
+    <%= link_to "Ver alertas →", workspace_alerts_path(@workspace),
+          class: "text-sm font-medium text-teal-600 hover:text-teal-700 hover:underline shrink-0" %>
+  </div>
+<% end %>
+
 <%# ── Seções analíticas + Últimos lançamentos ───────────────────────────────── %>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 mb-4 md:mb-5">
 

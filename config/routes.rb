@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       resources :receivables do
         member { patch :settle }
       end
+      resources :alerts, only: [:index]
       resource  :subscription, only: [:show, :edit, :update]
       resource  :settings,    only: :show
     end

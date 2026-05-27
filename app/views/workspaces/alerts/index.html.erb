@@ -1,0 +1,79 @@
+<% content_for :title, "Pendências — #{current_workspace.name}" %>
+<% content_for :page_title, "Central de Pendências" %>
+
+<div class="max-w-3xl">
+
+  <% if @alerts.none? %>
+    <div class="bg-white rounded-xl border border-slate-200 p-10 text-center">
+      <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center mx-auto mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-teal-600">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <p class="text-base font-semibold text-slate-700 mb-1">Tudo em dia</p>
+      <p class="text-sm text-slate-400">Nenhuma pendência encontrada para este workspace.</p>
+    </div>
+
+  <% else %>
+
+    <%# Totalizador %>
+    <div class="flex items-center gap-3 mb-5 flex-wrap">
+      <% if @alerts.critical_count > 0 %>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+          <%= @alerts.critical_count %> crítico(s)
+        </span>
+      <% end %>
+      <span class="text-sm text-slate-500">
+        <%= @alerts.total_count %> <%= @alerts.total_count == 1 ? "pendência no total" : "pendências no total" %>
+      </span>
+    </div>
+
+    <%# ── Crítico ────────────────────────────────────────────────────────────── %>
+    <% if @alerts.critical.any? %>
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
+          <h3 class="text-sm font-bold text-red-700 uppercase tracking-wide">Crítico</h3>
+        </div>
+        <div class="space-y-2">
+          <% @alerts.critical.each do |alert| %>
+            <%= render "workspaces/alerts/alert_card", alert: alert %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# ── Atenção ─────────────────────────────────────────────────────────────── %>
+    <% if @alerts.warnings.any? %>
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span>
+          <h3 class="text-sm font-bold text-amber-700 uppercase tracking-wide">Atenção</h3>
+        </div>
+        <div class="space-y-2">
+          <% @alerts.warnings.each do |alert| %>
+            <%= render "workspaces/alerts/alert_card", alert: alert %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# ── Informativo ──────────────────────────────────────────────────────────── %>
+    <% if @alerts.info.any? %>
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0"></span>
+          <h3 class="text-sm font-bold text-blue-700 uppercase tracking-wide">Informativo</h3>
+        </div>
+        <div class="space-y-2">
+          <% @alerts.info.each do |alert| %>
+            <%= render "workspaces/alerts/alert_card", alert: alert %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+  <% end %>
+
+</div>
