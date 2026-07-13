@@ -1,0 +1,54 @@
+# Camada de Integração — provedores plugáveis (Aionis::Integrations).
+# ---------------------------------------------------------------------------
+# Nenhuma chamada externa está implementada nesta etapa: o provedor ativo é
+# sempre "null" (stub seguro). Para ligar um provedor real no futuro:
+#   1. crie a classe concreta (ex.: Aionis::Integrations::Ocr::TesseractProvider)
+#   2. adicione-a em `providers:` do tipo correspondente
+#   3. troque `provider:` para a chave dela (ou controle por ENV)
+#   4. preencha as credenciais em `settings:` via ENV
+# O restante do app NÃO muda — só consome Aionis::Integrations.<tipo>.
+#
+# NUNCA coloque segredos aqui. Use apenas referências a ENV (CLAUDE.md seção 9).
+
+default: &default
+  whatsapp:
+    # provider: "meta_cloud"  # <- no futuro, controlado por ENV abaixo
+    provider: "<%= ENV.fetch('WHATSAPP_PROVIDER', 'null') %>"
+    providers:
+      # meta_cloud: "Aionis::Integrations::Whatsapp::MetaCloudProvider"
+    settings:
+      phone_number_id: "<%= ENV['WHATSAPP_PHONE_NUMBER_ID'] %>"
+      access_token:    "<%= ENV['WHATSAPP_ACCESS_TOKEN'] %>"
+      verify_token:    "<%= ENV['WHATSAPP_VERIFY_TOKEN'] %>"
+
+  open_finance:
+    provider: "<%= ENV.fetch('OPEN_FINANCE_PROVIDER', 'null') %>"
+    providers: {}
+    settings:
+      client_id:     "<%= ENV['OPEN_FINANCE_CLIENT_ID'] %>"
+      client_secret: "<%= ENV['OPEN_FINANCE_CLIENT_SECRET'] %>"
+
+  ocr:
+    provider: "<%= ENV.fetch('OCR_PROVIDER', 'null') %>"
+    providers:
+      # tesseract: "Aionis::Integrations::Ocr::TesseractProvider"
+    settings:
+      endpoint: "<%= ENV['OCR_ENDPOINT'] %>"
+      timeout:  "<%= ENV.fetch('OCR_TIMEOUT', '30') %>"
+
+  ai:
+    provider: "<%= ENV.fetch('AI_PROVIDER', 'null') %>"
+    providers:
+      # anthropic: "Aionis::Integrations::Ai::AnthropicProvider"
+    settings:
+      api_key: "<%= ENV['AI_API_KEY'] %>"
+      model:   "<%= ENV.fetch('AI_MODEL', 'claude-haiku-4-5-20251001') %>"
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
