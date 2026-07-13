@@ -204,7 +204,7 @@
       <div>
         <h3 class="text-sm font-semibold text-slate-800">Histórico de extrações</h3>
         <p class="text-xs text-slate-400 mt-0.5">
-          O pipeline interno já está preparado. A leitura automática por OCR/IA será implementada em uma próxima etapa.
+          XMLs fiscais (NF-e/NFC-e) são lidos automaticamente. A leitura por OCR/IA de PDFs e imagens virá em uma próxima etapa.
         </p>
       </div>
       <span class="text-xs text-slate-400 font-medium"><%= @extractions.size %> <%= @extractions.size == 1 ? "extração" : "extrações" %></span>
@@ -243,6 +243,39 @@
               <p class="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2 mt-2">
                 <%= extraction.extracted_data["message"] %>
               </p>
+            <% end %>
+
+            <%# Dados estruturados extraídos do XML fiscal %>
+            <% if extraction.suggested_transaction_data.present? %>
+              <% s = extraction.suggested_transaction_data %>
+              <div class="bg-teal-50/60 border border-teal-100 rounded-lg px-3 py-3 mt-2 space-y-1.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <% if s["amount_cents"].present? %>
+                    <p class="text-slate-600">Valor: <strong class="text-slate-900"><%= format_brl(s["amount_cents"]) %></strong></p>
+                  <% end %>
+                  <% if s["transacted_on"].present? %>
+                    <p class="text-slate-600">Data: <strong class="text-slate-900"><%= (Date.parse(s["transacted_on"]).strftime("%d/%m/%Y") rescue s["transacted_on"]) %></strong></p>
+                  <% end %>
+                  <% if s["counterparty_name_snapshot"].present? %>
+                    <p class="text-slate-600">Emitente: <strong class="text-slate-900"><%= s["counterparty_name_snapshot"] %></strong></p>
+                  <% end %>
+                  <% if s["counterparty_tax_id_snapshot"].present? %>
+                    <p class="text-slate-600">CPF/CNPJ: <strong class="text-slate-900"><%= s["counterparty_tax_id_snapshot"] %></strong></p>
+                  <% end %>
+                </div>
+                <% if s["description"].present? %>
+                  <p class="text-xs text-slate-500 pt-1"><%= s["description"] %></p>
+                <% end %>
+                <div class="pt-1">
+                  <%= link_to new_workspace_financial_transaction_path(current_workspace, document_id: @document.id),
+                        class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white text-xs font-medium rounded-lg hover:bg-teal-700 transition-colors" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Revisar e criar lançamento
+                  <% end %>
+                </div>
+              </div>
             <% end %>
 
             <% if extraction.error_message.present? %>

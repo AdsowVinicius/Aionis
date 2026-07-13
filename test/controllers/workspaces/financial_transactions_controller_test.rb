@@ -213,6 +213,55 @@ class Workspaces::FinancialTransactionsControllerTest < ActionDispatch::Integrat
     assert_equal doc.id, FinancialTransaction.last.document_id
   end
 
+  # V2b. new?document_id pré-preenche o formulário a partir da extração fiscal
+  test "GET new com document_id pré-preenche dados da extração de XML" do
+    doc = @workspace.documents.new(source: "web", status: "review")
+    doc.save!(validate: false)
+    doc.document_extractions.create!(
+      workspace_id: @workspace.id,
+      status: "extracted",
+      processor_name: "fiscal_xml_parser",
+      confidence_score: 100,
+      suggested_transaction_data: {
+        "kind" => "expense",
+        "description" => "Loja do Bairro — NF 123",
+        "amount_cents" => 15_000,
+        "transacted_on" => "2024-01-15",
+        "counterparty_name_snapshot" => "Loja do Bairro Comercio LTDA",
+        "counterparty_tax_id_snapshot" => "11.222.333/0001-81",
+        "counterparty_tax_id_status" => "informed"
+      }
+    )
+
+    get new_workspace_financial_transaction_path(@workspace, document_id: doc.id)
+    assert_response :success
+    assert_match "Loja do Bairro — NF 123", response.body
+    assert_match "Loja do Bairro Comercio LTDA", response.body
+    # valor 15000 centavos = 150,00 pré-preenchido no campo
+    assert_match "150,00", response.body
+  end
+
+  # V2c. Prefill vincula fornecedor existente quando CNPJ confere
+  test "GET new com document_id vincula fornecedor existente pelo CNPJ" do
+    cp = @workspace.counterparties.create!(
+      name: "Loja do Bairro", kind: "supplier", tax_id: "11.222.333/0001-81"
+    )
+    doc = @workspace.documents.new(source: "web", status: "review")
+    doc.save!(validate: false)
+    doc.document_extractions.create!(
+      workspace_id: @workspace.id, status: "extracted",
+      suggested_transaction_data: {
+        "amount_cents" => 15_000,
+        "counterparty_tax_id_snapshot" => "11.222.333/0001-81"
+      }
+    )
+
+    get new_workspace_financial_transaction_path(@workspace, document_id: doc.id)
+    assert_response :success
+    # o select de fornecedor deve vir com o fornecedor existente selecionado
+    assert_match(/option selected[^>]*value="#{cp.id}"|value="#{cp.id}"[^>]*selected/, response.body)
+  end
+
   # V3. Cria lançamento com fornecedor/cliente do mesmo workspace
   test "POST create com counterparty_id do mesmo workspace vincula fornecedor" do
     cp = @workspace.counterparties.create!(name: "Fornecedor Vínculo", kind: "supplier")

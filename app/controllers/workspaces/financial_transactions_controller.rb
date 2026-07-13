@@ -97,6 +97,7 @@ module Workspaces
         doc = current_workspace.documents.find_by(id: params[:document_id])
         raise ActiveRecord::RecordNotFound unless doc
         @transaction.document = doc
+        prefill_from_extraction(doc)
       end
 
       if params[:counterparty_id].present?
@@ -112,6 +113,51 @@ module Workspaces
       end
     end
 
+    # Pré-preenche o lançamento a partir da última extração do documento
+    # (parser fiscal de XML). Só preenche campos que o usuário ainda não passou
+    # explicitamente e que a extração ofereceu. CPF/CNPJ permanece opcional.
+    def prefill_from_extraction(doc)
+      extraction = doc.latest_extraction
+      suggestion = extraction&.suggested_transaction_data
+      return if suggestion.blank?
+
+      @suggested_from_extraction = true
+      @suggested_confidence      = extraction.confidence_score
+
+      @transaction.kind          = suggestion["kind"] if suggestion["kind"].present?
+      @transaction.description   = suggestion["description"] if suggestion["description"].present?
+
+      if suggestion["amount_cents"].present?
+        @transaction.amount_cents = suggestion["amount_cents"].to_i
+      end
+
+      if suggestion["transacted_on"].present?
+        @transaction.transacted_on = Date.parse(suggestion["transacted_on"]) rescue nil
+      end
+
+      @transaction.counterparty_name_snapshot   = suggestion["counterparty_name_snapshot"]
+      @transaction.counterparty_tax_id_snapshot = suggestion["counterparty_tax_id_snapshot"]
+      @transaction.counterparty_tax_id_status   = suggestion["counterparty_tax_id_status"]
+
+      # Se houver CPF/CNPJ válido, tenta vincular a um fornecedor já existente
+      link_existing_counterparty(doc, suggestion["counterparty_tax_id_snapshot"])
+    end
+
+    def link_existing_counterparty(doc, tax_id_formatted)
+      return if @transaction.counterparty_id.present?
+
+      digits = tax_id_formatted.to_s.gsub(/\D/, "")
+      if digits.present?
+        cp = current_workspace.counterparties.find do |c|
+          c.tax_id.to_s.gsub(/\D/, "") == digits
+        end
+        @transaction.counterparty = cp if cp
+      end
+
+      # Fallback: fornecedor já associado ao documento
+      @transaction.counterparty ||= doc.counterparty
+    end
+
     def load_form_data
       @categories     = Category.for_workspace(current_workspace).order(:name)
       @counterparties = current_workspace.counterparties.order(:name)
@@ -121,7 +167,8 @@ module Workspaces
     def transaction_params
       params.require(:financial_transaction).permit(
         :kind, :description, :amount_brl, :transacted_on, :status,
-        :category_id, :counterparty_id, :document_id
+        :category_id, :counterparty_id, :document_id,
+        :counterparty_name_snapshot, :counterparty_tax_id_snapshot, :counterparty_tax_id_status
       )
     end
   end

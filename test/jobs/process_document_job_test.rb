@@ -76,4 +76,65 @@ class ProcessDocumentJobTest < ActiveSupport::TestCase
     end
     assert_equal 0, DocumentExtraction.count
   end
+
+  # --- Pipeline de XML fiscal ---
+
+  NFE_PATH = Rails.root.join("test/fixtures/files/sample_nfe.xml")
+
+  def build_xml_document
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.file.attach(
+      io:           File.open(NFE_PATH),
+      filename:     "nfe.xml",
+      content_type: "text/xml"
+    )
+    doc.save!
+    doc
+  end
+
+  test "processa XML fiscal usando o parser interno" do
+    doc = build_xml_document
+    ProcessDocumentJob.perform_now(doc.id)
+    ext = doc.document_extractions.last
+
+    assert_equal "fiscal_xml_parser", ext.processor_name
+    assert_equal "extracted", ext.status
+    assert_equal 100, ext.confidence_score
+    assert_equal "review", doc.reload.status
+  end
+
+  test "XML fiscal preenche suggested_transaction_data" do
+    doc = build_xml_document
+    ProcessDocumentJob.perform_now(doc.id)
+    s = doc.document_extractions.last.suggested_transaction_data
+
+    assert_equal "expense", s["kind"]
+    assert_equal 15_000,    s["amount_cents"]
+    assert_equal "2024-01-15", s["transacted_on"]
+    assert_equal "Loja do Bairro Comercio LTDA", s["counterparty_name_snapshot"]
+  end
+
+  test "XML fiscal guarda dados extraidos com Date serializada" do
+    doc = build_xml_document
+    ProcessDocumentJob.perform_now(doc.id)
+    data = doc.document_extractions.last.extracted_data
+
+    assert_equal "2024-01-15", data["issued_on"]
+    assert_equal 15_000,       data["amount_cents"]
+  end
+
+  test "XML nao fiscal fica em needs_review sem quebrar o job" do
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.file.attach(
+      io:           StringIO.new("<foo><bar>x</bar></foo>"),
+      filename:     "outro.xml",
+      content_type: "application/xml"
+    )
+    doc.save!
+
+    assert_nothing_raised { ProcessDocumentJob.perform_now(doc.id) }
+    ext = doc.document_extractions.last
+    assert_equal "needs_review", ext.status
+    assert_equal "review", doc.reload.status
+  end
 end
