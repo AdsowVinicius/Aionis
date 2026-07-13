@@ -34,10 +34,49 @@
     </div>
   <% end %>
 
+  <%# Sugestão do Motor de Classificação Financeira %>
+  <% if @classification_suggestion&.present? && @classification_suggestion.category %>
+    <% s = @classification_suggestion %>
+    <%
+      tier =
+        if s.auto_applicable?
+          { label: "alta", box: "bg-emerald-50 border-emerald-200", icon: "text-emerald-600", title: "text-emerald-800", text: "text-emerald-700" }
+        elsif s.needs_confirmation?
+          { label: "média", box: "bg-amber-50 border-amber-200", icon: "text-amber-600", title: "text-amber-800", text: "text-amber-700" }
+        else
+          { label: "baixa", box: "bg-slate-50 border-slate-200", icon: "text-slate-500", title: "text-slate-700", text: "text-slate-500" }
+        end
+    %>
+    <div class="border rounded-lg p-4 <%= tier[:box] %>">
+      <div class="flex items-start gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0 mt-0.5 <%= tier[:icon] %>" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        </svg>
+        <div class="min-w-0">
+          <p class="text-sm font-medium <%= tier[:title] %>">
+            Classificação sugerida: <strong><%= s.category.name %></strong>
+            <span class="font-normal <%= tier[:text] %>">— confiança <%= tier[:label] %> (<%= s.confidence %>%)</span>
+          </p>
+          <p class="text-xs mt-0.5 <%= tier[:text] %>">
+            <%= s.reasons.join(" · ") %>.
+            <% unless s.auto_applicable? %>Confira e ajuste se necessário antes de salvar.<% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <%# Snapshots do fornecedor extraídos do documento (CPF/CNPJ opcional) %>
   <%= f.hidden_field :counterparty_name_snapshot %>
   <%= f.hidden_field :counterparty_tax_id_snapshot %>
   <%= f.hidden_field :counterparty_tax_id_status %>
+
+  <%# Dimensões de classificação (motor interno) — persistidas junto ao lançamento %>
+  <%= f.hidden_field :cost_type %>
+  <%= f.hidden_field :essentiality %>
+  <%= f.hidden_field :scope %>
+  <%= f.hidden_field :recurrence %>
+  <%= f.hidden_field :cost_center %>
 
   <%# Tipo %>
   <div>

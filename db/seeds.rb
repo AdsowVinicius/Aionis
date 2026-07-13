@@ -71,4 +71,50 @@ categories_config.each do |_key, attrs|
 end
 
 puts "\nTotal de categorias globais: #{Category.global.count}\n\n"
+
+# ---------------------------------------------------------------------------
+# Regras globais de classificação — carregadas de config/aionis/category_rules.yml
+# workspace_id nulo = regra global. Idempotente: find_or_initialize_by name (global).
+# category: nome exato de uma categoria global.
+# ---------------------------------------------------------------------------
+rules_path = Rails.root.join("config", "aionis", "category_rules.yml")
+
+if File.exist?(rules_path)
+  rules_config = YAML.load_file(rules_path)
+
+  puts "--- Regras globais de classificação ---"
+  rules_config.each do |_key, attrs|
+    category =
+      if attrs["category"].present?
+        Category.find_by(name: attrs["category"], workspace_id: nil)
+      end
+
+    if attrs["category"].present? && category.nil?
+      puts "  [ignorada] #{attrs['name']} — categoria '#{attrs['category']}' não encontrada"
+      next
+    end
+
+    rule = CategoryRule.find_or_initialize_by(name: attrs["name"], workspace_id: nil)
+    novo = rule.new_record?
+    rule.assign_attributes(
+      priority:     attrs["priority"] || 0,
+      active:       attrs.fetch("active", true),
+      kind:         attrs["kind"],
+      keywords:     attrs["keywords"],
+      category_id:  category&.id,
+      cost_type:    attrs["cost_type"],
+      essentiality: attrs["essentiality"],
+      scope:        attrs["scope"],
+      recurrence:   attrs["recurrence"],
+      cost_center:  attrs["cost_center"],
+      confidence:   attrs["confidence"] || 70
+    )
+    rule.save!
+    acao = novo ? "criada" : "atualizada"
+    puts "  [#{acao}] #{rule.name} (prioridade #{rule.priority})"
+  end
+
+  puts "\nTotal de regras globais: #{CategoryRule.global.count}\n\n"
+end
+
 puts "=== Seeds concluídos ===\n"

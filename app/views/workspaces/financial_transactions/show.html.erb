@@ -111,6 +111,44 @@
     </dl>
   </div>
 
+  <%# Classificação financeira (motor interno) %>
+  <% if @transaction.classification_source.present? && @transaction.classification_source != "none" %>
+    <% tier = confidence_tier(@transaction.classification_confidence) %>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
+      <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+        <h3 class="text-sm font-semibold text-slate-800">Classificação financeira</h3>
+        <% if @transaction.classification_confidence.present? %>
+          <span class="inline-flex items-center gap-1 border px-2.5 py-1 rounded-full text-xs font-medium <%= tier[1] %>">
+            Confiança <%= tier[0] %> · <%= @transaction.classification_confidence %>%
+          </span>
+        <% end %>
+      </div>
+      <dl class="divide-y divide-slate-100">
+        <% {
+             "Tipo de custo"   => (@transaction.cost_type.present?    ? cost_type_label(@transaction.cost_type) : nil),
+             "Essencialidade"  => (@transaction.essentiality.present?  ? essentiality_label(@transaction.essentiality) : nil),
+             "Escopo"          => (@transaction.scope.present?         ? scope_label(@transaction.scope) : nil),
+             "Recorrência"     => (@transaction.recurrence.present?    ? recurrence_label(@transaction.recurrence) : nil),
+             "Centro de custo" => @transaction.cost_center.presence,
+             "Origem"          => classification_source_label(@transaction.classification_source)
+           }.each do |label, value| %>
+          <% next if value.blank? %>
+          <div class="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:gap-4">
+            <dt class="text-xs sm:text-sm text-slate-500 sm:w-44 sm:shrink-0 mb-0.5 sm:mb-0"><%= label %></dt>
+            <dd class="text-sm font-medium text-slate-800"><%= value %></dd>
+          </div>
+        <% end %>
+      </dl>
+      <% if @transaction.classification_reasons.present? %>
+        <div class="px-4 md:px-6 py-3 bg-slate-50/60">
+          <p class="text-xs text-slate-500">
+            <%= Array(@transaction.classification_reasons).join(" · ") %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
   <%# Ações %>
   <div class="flex flex-wrap items-center gap-2 md:gap-3">
     <%= link_to edit_workspace_financial_transaction_path(current_workspace, @transaction),

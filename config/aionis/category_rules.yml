@@ -1,0 +1,141 @@
+# Regras globais de classificação (workspace_id nulo).
+# Motor: Aionis::ClassificationEngine. Para alterar: edite e rode rails db:seed.
+#
+# Campos:
+#   name         nome da regra (identidade da seed — deve ser único entre globais)
+#   priority     maior vence em caso de múltiplos matches (default 0)
+#   kind         income | expense (vazio = qualquer)
+#   keywords     palavras separadas por vírgula, casadas na descrição (sem acento)
+#   category     nome EXATO de uma categoria global (config/aionis/categories.yml)
+#   scope        personal | business | mixed | review
+#   recurrence   recurring | occasional | one_off
+#   cost_center  centro de custo sugerido (texto livre)
+#   confidence   confiança base 0..100 (default 70)
+#
+# cost_type e essentiality vêm da categoria; só preencha aqui para sobrescrever.
+
+impostos:
+  name: "Impostos e tributos"
+  priority: 90
+  kind: "expense"
+  keywords: "imposto, das, darf, gps, inss, iss, icms, simples nacional, tributo, guia de recolhimento, fgts"
+  category: "Impostos"
+  recurrence: "recurring"
+  confidence: 80
+
+energia:
+  name: "Energia elétrica"
+  priority: 80
+  kind: "expense"
+  keywords: "energia, conta de luz, cemig, enel, cpfl, light, copel, celesc, energisa, eletropaulo, neoenergia, equatorial"
+  category: "Energia"
+  recurrence: "recurring"
+  confidence: 80
+
+agua:
+  name: "Água e saneamento"
+  priority: 80
+  kind: "expense"
+  keywords: "agua, saneamento, sabesp, copasa, sanepar, caesb, embasa, cedae, aegea"
+  category: "Água"
+  recurrence: "recurring"
+  confidence: 80
+
+internet:
+  name: "Internet e telecomunicações"
+  priority: 80
+  kind: "expense"
+  keywords: "internet, banda larga, telefon, vivo, claro, tim, oi fibra, net virtua, telecom"
+  category: "Internet"
+  recurrence: "recurring"
+  confidence: 78
+
+software:
+  name: "Software e assinaturas"
+  priority: 75
+  kind: "expense"
+  keywords: "software, assinatura, saas, licenca, google workspace, microsoft, office 365, aws, amazon web, adobe, figma, slack, notion, dropbox, canva"
+  category: "Software"
+  recurrence: "recurring"
+  confidence: 75
+
+contador:
+  name: "Contabilidade"
+  priority: 80
+  kind: "expense"
+  keywords: "contador, contabil, contabilidade, honorarios contabeis, escritorio contabil"
+  category: "Contador"
+  recurrence: "recurring"
+  confidence: 80
+
+tarifas_bancarias:
+  name: "Tarifas bancárias"
+  priority: 75
+  kind: "expense"
+  keywords: "tarifa, taxa bancaria, manutencao de conta, ted, doc, iof, pacote de servicos, anuidade"
+  category: "Tarifas bancárias"
+  recurrence: "recurring"
+  confidence: 75
+
+combustivel:
+  name: "Combustível"
+  priority: 85
+  kind: "expense"
+  keywords: "posto, combustivel, gasolina, etanol, alcool, diesel, ipiranga, shell, petrobras br, ale combustiveis"
+  category: "Combustível"
+  recurrence: "occasional"
+  confidence: 78
+
+transporte:
+  name: "Transporte e mobilidade"
+  priority: 70
+  kind: "expense"
+  keywords: "uber, 99app, 99 pop, taxi, pedagio, sem parar, estacionamento, onibus, passagem, rodoviaria, transporte"
+  category: "Transporte"
+  recurrence: "occasional"
+  confidence: 72
+
+alimentacao:
+  name: "Alimentação"
+  priority: 70
+  kind: "expense"
+  keywords: "restaurante, lanche, lanchonete, ifood, rappi, mercado, supermercado, padaria, alimentacao, refeicao, cafe"
+  category: "Alimentação"
+  recurrence: "occasional"
+  confidence: 72
+
+materiais:
+  name: "Materiais e suprimentos"
+  priority: 65
+  kind: "expense"
+  keywords: "material, papelaria, ferragem, materiais de construcao, suprimentos, insumo"
+  category: "Materiais"
+  recurrence: "occasional"
+  confidence: 68
+
+manutencao:
+  name: "Manutenção e reparos"
+  priority: 68
+  kind: "expense"
+  keywords: "manutencao, conserto, reparo, reforma, oficina, assistencia tecnica"
+  category: "Manutenção"
+  recurrence: "occasional"
+  confidence: 70
+
+equipamentos:
+  name: "Equipamentos"
+  priority: 68
+  kind: "expense"
+  keywords: "equipamento, notebook, computador, celular, smartphone, maquina, mobiliario, movel, impressora, monitor"
+  category: "Equipamentos"
+  recurrence: "one_off"
+  confidence: 70
+
+receitas:
+  name: "Receitas e vendas"
+  priority: 60
+  kind: "income"
+  keywords: "recebimento, venda, pix recebido, transferencia recebida, servico prestado, consultoria, honorarios, mensalidade, nota fiscal de servico"
+  category: "Receitas"
+  recurrence: "recurring"
+  confidence: 65

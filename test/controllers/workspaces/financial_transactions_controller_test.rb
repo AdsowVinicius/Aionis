@@ -262,6 +262,60 @@ class Workspaces::FinancialTransactionsControllerTest < ActionDispatch::Integrat
     assert_match(/option selected[^>]*value="#{cp.id}"|value="#{cp.id}"[^>]*selected/, response.body)
   end
 
+  # C1. Motor classifica automaticamente ao criar (regra por palavra-chave)
+  test "POST create classifica automaticamente via regra" do
+    cat = Category.create!(name: "Energia CTRL", kind: "expense",
+                           cost_type: "fixed", essentiality: "essential")
+    CategoryRule.create!(name: "Energia CTRL rule", keywords: "energia, luz",
+                         kind: "expense", category: cat, recurrence: "recurring", confidence: 80)
+
+    post workspace_financial_transactions_path(@workspace), params: {
+      financial_transaction: {
+        kind: "expense", description: "Conta de energia eletrica", amount_brl: "300", status: "pending"
+      }
+    }
+    tx = FinancialTransaction.last
+    assert_equal cat.id, tx.category_id
+    assert_equal "fixed", tx.cost_type
+    assert_equal "essential", tx.essentiality
+    assert_equal "recurring", tx.recurrence
+    assert_equal "rule", tx.classification_source
+    assert_operator tx.classification_confidence, :>=, 61
+    assert tx.classification_reasons.present?
+  end
+
+  # C2. Categoria escolhida manualmente = correção (source manual, confiança 100)
+  test "POST create com categoria manual marca classificação manual" do
+    cat = Category.create!(name: "Software CTRL", kind: "expense",
+                           cost_type: "fixed", essentiality: "operational_important")
+
+    post workspace_financial_transactions_path(@workspace), params: {
+      financial_transaction: {
+        kind: "expense", description: "Assinatura qualquer", amount_brl: "50",
+        status: "pending", category_id: cat.id
+      }
+    }
+    tx = FinancialTransaction.last
+    assert_equal cat.id, tx.category_id
+    assert_equal "manual", tx.classification_source
+    assert_equal 100, tx.classification_confidence
+    assert_equal "fixed", tx.cost_type
+  end
+
+  # C3. Sem regra nem histórico: cria normalmente, sem categoria (source none)
+  test "POST create sem match cria lançamento sem categoria" do
+    assert_difference("FinancialTransaction.count") do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "xyzabc sem correspondencia", amount_brl: "10", status: "pending"
+        }
+      }
+    end
+    tx = FinancialTransaction.last
+    assert_nil tx.category_id
+    assert_equal "none", tx.classification_source
+  end
+
   # V3. Cria lançamento com fornecedor/cliente do mesmo workspace
   test "POST create com counterparty_id do mesmo workspace vincula fornecedor" do
     cp = @workspace.counterparties.create!(name: "Fornecedor Vínculo", kind: "supplier")

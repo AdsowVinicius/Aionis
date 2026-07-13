@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_132709) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_13_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,6 +55,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_132709) do
     t.index ["parent_id"], name: "index_categories_on_parent_id"
     t.index ["workspace_id", "name"], name: "index_categories_on_workspace_id_and_name"
     t.index ["workspace_id"], name: "index_categories_on_workspace_id"
+  end
+
+  create_table "category_rules", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.integer "category_id"
+    t.integer "confidence", default: 70, null: false
+    t.string "cost_center"
+    t.string "cost_type"
+    t.integer "counterparty_id"
+    t.datetime "created_at", null: false
+    t.string "essentiality"
+    t.string "keywords"
+    t.string "kind"
+    t.string "name", null: false
+    t.integer "priority", default: 0, null: false
+    t.string "recurrence"
+    t.string "scope"
+    t.string "tax_id"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id"
+    t.index ["counterparty_id"], name: "index_category_rules_on_counterparty_id"
+    t.index ["priority"], name: "index_category_rules_on_priority"
+    t.index ["tax_id"], name: "index_category_rules_on_tax_id"
+    t.index ["workspace_id", "active"], name: "index_category_rules_on_workspace_id_and_active"
+    t.index ["workspace_id"], name: "index_category_rules_on_workspace_id"
   end
 
   create_table "counterparties", force: :cascade do |t|
@@ -109,6 +134,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_132709) do
   create_table "financial_transactions", force: :cascade do |t|
     t.integer "amount_cents", null: false
     t.integer "category_id"
+    t.integer "classification_confidence"
+    t.jsonb "classification_reasons", default: [], null: false
+    t.string "classification_source"
+    t.string "cost_center"
+    t.string "cost_type"
     t.integer "counterparty_id"
     t.string "counterparty_name_snapshot"
     t.string "counterparty_tax_id_snapshot"
@@ -117,9 +147,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_132709) do
     t.string "description", null: false
     t.integer "document_id"
     t.date "due_on"
+    t.string "essentiality"
     t.string "kind", null: false
     t.text "notes"
     t.string "origin", default: "manual", null: false
+    t.string "recurrence"
+    t.string "scope"
     t.date "settled_on"
     t.string "settlement_status"
     t.string "status", default: "pending", null: false
@@ -205,6 +238,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_132709) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "categories", "workspaces"
+  add_foreign_key "category_rules", "workspaces"
   add_foreign_key "counterparties", "workspaces"
   add_foreign_key "document_extractions", "documents"
   add_foreign_key "document_extractions", "workspaces"

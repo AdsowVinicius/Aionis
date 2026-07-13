@@ -50,12 +50,14 @@ module Workspaces
         status: "pending"
       )
       prefill_from_params
+      suggest_classification
       load_form_data
     end
 
     def create
       @transaction = current_workspace.financial_transactions.new(transaction_params)
       @transaction.origin = "manual"
+      classify(@transaction)
       if @transaction.save
         redirect_to workspace_financial_transactions_path(current_workspace),
                     notice: "Lançamento criado com sucesso."
@@ -71,7 +73,9 @@ module Workspaces
 
     def update
       # origin não pode ser alterado pelo usuário
-      if @transaction.update(transaction_params)
+      @transaction.assign_attributes(transaction_params)
+      classify(@transaction)
+      if @transaction.save
         redirect_to workspace_financial_transaction_path(current_workspace, @transaction),
                     notice: "Lançamento atualizado."
       else
@@ -164,10 +168,44 @@ module Workspaces
       @documents      = current_workspace.documents.with_attached_file.order(created_at: :desc)
     end
 
+    # Sugestão do motor de classificação para exibir no formulário de novo
+    # lançamento. Só roda quando há descrição e categoria ainda em branco.
+    # Pré-preenche os campos (apenas os vazios) quando a confiança é média+ (>=61).
+    def suggest_classification
+      return if @transaction.description.blank? || @transaction.category_id.present?
+
+      @classification_suggestion = Aionis::ClassificationEngine.for_transaction(@transaction).call
+      if @classification_suggestion.confidence >= 61
+        @transaction.apply_classification(@classification_suggestion, only_blank: true)
+      end
+    end
+
+    # Classifica o lançamento antes de salvar. Categoria escolhida pelo usuário
+    # é tratada como correção manual (alta confiança e vira histórico); caso
+    # contrário aplica a sugestão do motor. Nunca bloqueia — categoria é opcional.
+    def classify(transaction)
+      suggestion = Aionis::ClassificationEngine.for_transaction(transaction).call
+
+      if transaction.category_id.present?
+        category = Category.for_workspace(current_workspace).find_by(id: transaction.category_id)
+        transaction.cost_type    ||= category&.cost_type
+        transaction.essentiality ||= category&.essentiality
+        transaction.scope        ||= suggestion.scope
+        transaction.recurrence   ||= suggestion.recurrence
+        transaction.cost_center  ||= suggestion.cost_center
+        transaction.classification_confidence = 100
+        transaction.classification_source     = "manual"
+        transaction.classification_reasons    = ["Categoria definida manualmente pelo usuário"]
+      else
+        transaction.apply_classification(suggestion, only_blank: true)
+      end
+    end
+
     def transaction_params
       params.require(:financial_transaction).permit(
         :kind, :description, :amount_brl, :transacted_on, :status,
         :category_id, :counterparty_id, :document_id,
+        :cost_type, :essentiality, :scope, :recurrence, :cost_center,
         :counterparty_name_snapshot, :counterparty_tax_id_snapshot, :counterparty_tax_id_status
       )
     end

@@ -19,9 +19,21 @@ class FinancialTransaction < ApplicationRecord
     cancelled: "cancelled"
   }, prefix: :settlement
 
+  # Dimensões de classificação (motor interno). Validadas apenas quando
+  # presentes — nunca obrigatórias (lançamento pendente pode não ter categoria).
+  COST_TYPES     = %w[fixed variable semi_variable one_time].freeze
+  ESSENTIALITIES = %w[essential operational_important non_essential superfluous review].freeze
+  SCOPES         = %w[personal business mixed review].freeze
+  RECURRENCES    = %w[recurring occasional one_off].freeze
+
   validates :kind, :description, :amount_cents, :origin, :status, presence: true
   validates :amount_cents, numericality: { greater_than: 0 }
   validates :due_on, presence: true, if: :settlement_status?
+
+  validates :cost_type,    inclusion: { in: COST_TYPES },     allow_blank: true
+  validates :essentiality, inclusion: { in: ESSENTIALITIES }, allow_blank: true
+  validates :scope,        inclusion: { in: SCOPES },         allow_blank: true
+  validates :recurrence,   inclusion: { in: RECURRENCES },    allow_blank: true
 
   validate :document_belongs_to_workspace,     if: -> { document_id.present? }
   validate :counterparty_belongs_to_workspace, if: -> { counterparty_id.present? }
@@ -59,6 +71,29 @@ class FinancialTransaction < ApplicationRecord
   # Computado em runtime — não persiste em banco
   def overdue?
     settlement_open? && due_on.present? && due_on < Date.current
+  end
+
+  # Aplica uma sugestão do motor de classificação. Por padrão só preenche
+  # campos ainda vazios (respeita escolhas do usuário); sempre registra a
+  # confiança, a origem e os motivos da classificação.
+  def apply_classification(suggestion, only_blank: true)
+    assign = ->(attr, value) {
+      return if value.blank?
+      return if only_blank && self[attr].present?
+      self[attr] = value
+    }
+
+    assign.call(:category_id,  suggestion.category_id)
+    assign.call(:cost_type,    suggestion.cost_type)
+    assign.call(:essentiality, suggestion.essentiality)
+    assign.call(:scope,        suggestion.scope)
+    assign.call(:recurrence,   suggestion.recurrence)
+    assign.call(:cost_center,  suggestion.cost_center)
+
+    self.classification_confidence = suggestion.confidence
+    self.classification_source     = suggestion.source
+    self.classification_reasons    = suggestion.reasons
+    self
   end
 
   # Liquida a conta: marca settled, registra data, confirma o lançamento
