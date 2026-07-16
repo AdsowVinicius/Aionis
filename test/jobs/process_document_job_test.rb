@@ -21,6 +21,8 @@ class ProcessDocumentJobTest < ActiveSupport::TestCase
     @document.save!
   end
 
+  teardown { Aionis::Integrations.reset! }
+
   # 3. Job muda documento para processing e depois review
   test "muda documento para processing depois para review" do
     ProcessDocumentJob.perform_now(@document.id)
@@ -164,5 +166,26 @@ class ProcessDocumentJobTest < ActiveSupport::TestCase
     ProcessDocumentJob.perform_now(@document.id)
     log = AuditLog.where(document_id: @document.id).last
     assert_nil log.user_id
+  end
+
+  # Caminho de OCR real, com provedor injetado (sem depender de tesseract).
+  class FakeOcr
+    def extract(io:, content_type:, filename: nil)
+      Aionis::Integrations::Result.ok(
+        provider: "tesseract",
+        data: { "text" => "MERCADO SOL\nTOTAL 30,00", "confidence" => 85, "pages" => 1, "words" => 3 }
+      )
+    end
+  end
+
+  test "job processa PDF via OCR quando o provedor está ativo" do
+    Aionis::Integrations.override(:ocr, FakeOcr.new)
+    ProcessDocumentJob.perform_now(@document.id)
+
+    ext = @document.document_extractions.last
+    assert_equal "tesseract", ext.processor_name
+    assert_match "MERCADO SOL", ext.raw_text
+    assert_equal 3_000, ext.suggested_transaction_data["amount_cents"]
+    assert_equal "review", @document.reload.status
   end
 end

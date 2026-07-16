@@ -38,3 +38,7 @@
 !/app/assets/builds/.keep
 desktop.ini
 **/desktop.ini
+
+# Python (worker de OCR)
+__pycache__/
+*.pyc

@@ -29,12 +29,17 @@ default: &default
       client_secret: "<%= ENV['OPEN_FINANCE_CLIENT_SECRET'] %>"
 
   ocr:
+    # Ative com OCR_PROVIDER=tesseract (requer python3 + opencv + pytesseract +
+    # pymupdf + binário tesseract com idioma 'por'). Sem isso, fica em "null".
     provider: "<%= ENV.fetch('OCR_PROVIDER', 'null') %>"
     providers:
-      # tesseract: "Aionis::Integrations::Ocr::TesseractProvider"
+      tesseract: "Aionis::Integrations::Ocr::TesseractProvider"
     settings:
-      endpoint: "<%= ENV['OCR_ENDPOINT'] %>"
-      timeout:  "<%= ENV.fetch('OCR_TIMEOUT', '30') %>"
+      python_bin:  "<%= ENV.fetch('OCR_PYTHON_BIN', 'python3') %>"
+      worker_path: "<%= ENV['OCR_WORKER_PATH'] %>"
+      lang:        "<%= ENV.fetch('OCR_LANG', 'por') %>"
+      timeout:     "<%= ENV.fetch('OCR_TIMEOUT', '30') %>"
+      dpi:         "<%= ENV.fetch('OCR_DPI', '200') %>"
 
   ai:
     provider: "<%= ENV.fetch('AI_PROVIDER', 'null') %>"
