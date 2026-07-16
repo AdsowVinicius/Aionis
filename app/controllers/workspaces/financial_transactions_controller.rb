@@ -141,6 +141,9 @@ module Workspaces
 
       @suggested_from_extraction = true
       @suggested_confidence      = extraction.confidence_score
+      # Texto bruto do OCR alimenta o motor de classificação (palavras-chave),
+      # sem virar a descrição do lançamento.
+      @classification_context_text = extraction.raw_text.presence
 
       @transaction.kind          = suggestion["kind"] if suggestion["kind"].present?
       @transaction.description   = suggestion["description"] if suggestion["description"].present?
@@ -188,7 +191,9 @@ module Workspaces
     def suggest_classification
       return if @transaction.description.blank? || @transaction.category_id.present?
 
-      @classification_suggestion = Aionis::ClassificationEngine.for_transaction(@transaction).call
+      @classification_suggestion = Aionis::ClassificationEngine.for_transaction(
+        @transaction, extra_text: @classification_context_text
+      ).call
       if @classification_suggestion.confidence >= 61
         @transaction.apply_classification(@classification_suggestion, only_blank: true)
       end
@@ -199,7 +204,9 @@ module Workspaces
     # contrário aplica a sugestão do motor. Nunca bloqueia — categoria é opcional.
     # Retorna { suggestion:, manual:, auto_applied: } para a auditoria.
     def classify(transaction)
-      suggestion = Aionis::ClassificationEngine.for_transaction(transaction).call
+      suggestion = Aionis::ClassificationEngine.for_transaction(
+        transaction, extra_text: classification_context_text(transaction)
+      ).call
 
       if transaction.category_id.present?
         category = Category.for_workspace(current_workspace).find_by(id: transaction.category_id)
@@ -216,6 +223,15 @@ module Workspaces
         transaction.apply_classification(suggestion, only_blank: true)
         { suggestion: suggestion, manual: false, auto_applied: transaction.category_id.present? }
       end
+    end
+
+    # Texto bruto do OCR do documento vinculado (se houver), usado como contexto
+    # de palavras-chave para o motor de classificação.
+    def classification_context_text(transaction)
+      return @classification_context_text if defined?(@classification_context_text) && @classification_context_text
+      return nil if transaction.document_id.blank?
+
+      transaction.document&.latest_extraction&.raw_text.presence
     end
 
     # Metadados de classificação anexados ao log de criação.

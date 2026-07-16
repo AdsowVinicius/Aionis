@@ -35,6 +35,31 @@ class Aionis::ClassificationEngineTest < ActiveSupport::TestCase
     assert_operator s.confidence, :>=, 61
   end
 
+  test "casa palavra-chave presente apenas no extra_text (OCR bruto)" do
+    CategoryRule.create!(name: "Farmácia", keywords: "dipirona, paracetamol",
+                         kind: "expense", category: @fuel, confidence: 75)
+
+    # Descrição não contém a palavra-chave; o extra_text (texto do OCR) contém.
+    s = Aionis::ClassificationEngine.new(
+      workspace: @workspace, description: "Drogaria SP — Documento digitalizado",
+      kind: "expense", extra_text: "DROGARIA SP\nDipirona 500mg\nTOTAL 12,00"
+    ).call
+
+    assert_equal @fuel.id, s.category_id
+    assert_equal "rule", s.source
+  end
+
+  test "sem extra_text, palavra-chave fora da descrição não casa" do
+    CategoryRule.create!(name: "Farmácia", keywords: "dipirona",
+                         kind: "expense", category: @fuel, confidence: 75)
+
+    s = Aionis::ClassificationEngine.new(
+      workspace: @workspace, description: "Drogaria SP", kind: "expense"
+    ).call
+
+    assert_nil s.category_id
+  end
+
   test "não casa quando kind diverge" do
     CategoryRule.create!(name: "Só despesa", keywords: "gasolina", kind: "expense", category: @fuel)
     s = engine(description: "gasolina", kind: "income").call

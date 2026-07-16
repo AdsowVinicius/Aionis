@@ -20,7 +20,9 @@ module Aionis
   #   suggestion.category_id, suggestion.confidence, suggestion.reasons, ...
   class ClassificationEngine
     # Contexto imutável extraído do lançamento (ou de atributos avulsos).
-    Context = Struct.new(:workspace, :description, :kind, :counterparty_id, :tax_id_digits, :exclude_id, keyword_init: true)
+    # extra_text: texto adicional (ex.: OCR bruto) usado apenas para casar
+    # palavras-chave de regras — não vira descrição do lançamento.
+    Context = Struct.new(:workspace, :description, :kind, :counterparty_id, :tax_id_digits, :exclude_id, :extra_text, keyword_init: true)
 
     Suggestion = Struct.new(
       :category_id, :category, :cost_type, :essentiality, :scope,
@@ -33,7 +35,7 @@ module Aionis
       def low_confidence?    = confidence.to_i <= 60
     end
 
-    def self.for_transaction(transaction, exclude_learned: false)
+    def self.for_transaction(transaction, exclude_learned: false, extra_text: nil)
       digits = transaction.counterparty&.tax_id.presence ||
                transaction.counterparty_tax_id_snapshot.presence
       new(
@@ -43,11 +45,12 @@ module Aionis
         counterparty_id: transaction.counterparty_id,
         tax_id:          digits,
         exclude_id:      transaction.id,
-        exclude_learned: exclude_learned
+        exclude_learned: exclude_learned,
+        extra_text:      extra_text
       )
     end
 
-    def initialize(workspace:, description:, kind:, counterparty_id: nil, tax_id: nil, exclude_id: nil, exclude_learned: false)
+    def initialize(workspace:, description:, kind:, counterparty_id: nil, tax_id: nil, exclude_id: nil, exclude_learned: false, extra_text: nil)
       @exclude_learned = exclude_learned
       @context = Context.new(
         workspace:       workspace,
@@ -55,7 +58,8 @@ module Aionis
         kind:            kind.to_s,
         counterparty_id: counterparty_id,
         tax_id_digits:   tax_id.to_s.gsub(/\D/, "").presence,
-        exclude_id:      exclude_id
+        exclude_id:      exclude_id,
+        extra_text:      extra_text.to_s
       )
     end
 

@@ -98,8 +98,15 @@ class CategoryRule < ApplicationRecord
   end
 
   def keywords_match?(context)
-    text = self.class.normalize(context.description)
+    text = self.class.normalize(match_text(context))
     return false if text.blank?
     keyword_list.any? { |kw| text.include?(kw) }
+  end
+
+  # Casa palavras-chave na descrição E em texto extra opcional (ex.: OCR bruto),
+  # quando o contexto o fornecer. Retrocompatível com contextos sem extra_text.
+  def match_text(context)
+    extra = context.respond_to?(:extra_text) ? context.extra_text.to_s : ""
+    "#{context.description}\n#{extra}"
   end
 end

@@ -106,7 +106,7 @@ module Aionis
       return process_placeholder(PLACEHOLDER_MESSAGE, provider: result.provider) if text.blank?
 
       normalized = Aionis::OcrNormalizer.call(text, ocr_confidence: result.data["confidence"].to_i)
-      classification = classify(normalized)
+      classification = classify(normalized, extra_text: text)
 
       extraction.update!(
         status:                     normalized.confidence >= 61 ? "extracted" : "needs_review",
@@ -123,8 +123,9 @@ module Aionis
                        confidence: normalized.confidence)
     end
 
-    # Rule Engine: sugestão preliminar de categoria a partir do texto normalizado.
-    def classify(normalized)
+    # Rule Engine: sugestão preliminar de categoria. Usa o texto completo do OCR
+    # (extra_text) para casar palavras-chave que não estão na descrição curta.
+    def classify(normalized, extra_text: nil)
       return {} unless normalized.success?
 
       suggestion = normalized.suggested_transaction_data
@@ -132,7 +133,8 @@ module Aionis
         workspace:   document.workspace,
         description: suggestion["description"],
         kind:        suggestion["kind"],
-        tax_id:      suggestion["counterparty_tax_id_snapshot"]
+        tax_id:      suggestion["counterparty_tax_id_snapshot"],
+        extra_text:  extra_text
       ).call
     end
 

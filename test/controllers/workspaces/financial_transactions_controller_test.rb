@@ -13,6 +13,24 @@ class Workspaces::FinancialTransactionsControllerTest < ActionDispatch::Integrat
     sign_in @user
   end
 
+  teardown { Aionis::Integrations.reset! }
+
+  PNG_PATH = Rails.root.join("test/fixtures/files/sample.png")
+
+  class FakeOcr
+    def initialize(text:, confidence: 90)
+      @text = text
+      @confidence = confidence
+    end
+
+    def extract(io:, content_type:, filename: nil)
+      Aionis::Integrations::Result.ok(
+        provider: "tesseract",
+        data: { "text" => @text, "confidence" => @confidence, "pages" => 1, "words" => @text.split.size }
+      )
+    end
+  end
+
   # 1. Cria lançamento manual sem document_id
   test "cria lançamento manual sem document_id" do
     assert_difference("FinancialTransaction.count") do
@@ -525,6 +543,57 @@ class Workspaces::FinancialTransactionsControllerTest < ActionDispatch::Integrat
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
+  end
+
+  # 10. OCR: palavra-chave presente só no texto escaneado classifica no formulário
+  test "OCR classifica lançamento pelo texto escaneado ao abrir o formulário" do
+    categoria = Category.create!(name: "Saúde #{SecureRandom.hex(2)}", kind: "expense",
+                                 cost_type: "variable", essentiality: "essential")
+    CategoryRule.create!(name: "Farmácia", keywords: "dipirona, paracetamol",
+                         kind: "expense", category: categoria, workspace: @workspace,
+                         origin: "manual", confidence: 78)
+
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.file.attach(io: File.open(PNG_PATH), filename: "recibo.png", content_type: "image/png")
+    doc.save!
+
+    # "dipirona" só aparece no corpo do OCR, não no nome do fornecedor/descrição.
+    Aionis::Integrations.override(:ocr, FakeOcr.new(
+      text: "DROGARIA SAO PAULO\nDipirona 500mg 12,00\nTOTAL R$ 25,00", confidence: 92
+    ))
+    ProcessDocumentJob.perform_now(doc.id)
+
+    get new_workspace_financial_transaction_path(@workspace, document_id: doc.id)
+    assert_response :success
+    assert_match "Classificação sugerida", @response.body
+    assert_match categoria.name, @response.body
+  end
+
+  # 11. OCR: lançamento criado a partir do documento persiste a categoria sugerida
+  test "OCR: criar lançamento a partir do documento persiste a categoria sugerida" do
+    categoria = Category.create!(name: "Combustível #{SecureRandom.hex(2)}", kind: "expense",
+                                 cost_type: "variable", essentiality: "operational_important")
+    CategoryRule.create!(name: "Combustível", keywords: "gasolina, etanol",
+                         kind: "expense", category: categoria, workspace: @workspace,
+                         origin: "manual", confidence: 80)
+
+    doc = @workspace.documents.new(source: "web", status: "pending")
+    doc.file.attach(io: File.open(PNG_PATH), filename: "nota.png", content_type: "image/png")
+    doc.save!
+    Aionis::Integrations.override(:ocr, FakeOcr.new(
+      text: "POSTO AVENIDA\nGasolina comum 100,00\nTOTAL R$ 100,00", confidence: 90
+    ))
+    ProcessDocumentJob.perform_now(doc.id)
+
+    post workspace_financial_transactions_path(@workspace), params: {
+      financial_transaction: {
+        kind: "expense", description: "Posto Avenida — Documento digitalizado",
+        amount_brl: "100,00", status: "pending", document_id: doc.id
+      }
+    }
+    tx = FinancialTransaction.order(:created_at).last
+    assert_equal categoria.id, tx.category_id
+    assert_equal "rule", tx.classification_source
   end
 
   # 9. Correção manual de categoria ensina uma regra de classificação
