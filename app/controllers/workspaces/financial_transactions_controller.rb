@@ -57,8 +57,14 @@ module Workspaces
     def create
       @transaction = current_workspace.financial_transactions.new(transaction_params)
       @transaction.origin = "manual"
-      classify(@transaction)
-      if @transaction.save
+      classification = classify(@transaction)
+
+      saved = AuditLog.annotate(metadata: classification_metadata(@transaction)) do
+        @transaction.save
+      end
+
+      if saved
+        record_auto_classification(@transaction, classification)
         learn_from_correction(@transaction)
         redirect_to workspace_financial_transactions_path(current_workspace),
                     notice: "Lançamento criado com sucesso."
@@ -75,8 +81,14 @@ module Workspaces
     def update
       # origin não pode ser alterado pelo usuário
       @transaction.assign_attributes(transaction_params)
-      classify(@transaction)
-      if @transaction.save
+      classification = classify(@transaction)
+
+      saved = AuditLog.annotate(**update_annotation(@transaction)) do
+        @transaction.save
+      end
+
+      if saved
+        record_auto_classification(@transaction, classification)
         learn_from_correction(@transaction)
         redirect_to workspace_financial_transaction_path(current_workspace, @transaction),
                     notice: "Lançamento atualizado."
@@ -185,6 +197,7 @@ module Workspaces
     # Classifica o lançamento antes de salvar. Categoria escolhida pelo usuário
     # é tratada como correção manual (alta confiança e vira histórico); caso
     # contrário aplica a sugestão do motor. Nunca bloqueia — categoria é opcional.
+    # Retorna { suggestion:, manual:, auto_applied: } para a auditoria.
     def classify(transaction)
       suggestion = Aionis::ClassificationEngine.for_transaction(transaction).call
 
@@ -198,9 +211,56 @@ module Workspaces
         transaction.classification_confidence = 100
         transaction.classification_source     = "manual"
         transaction.classification_reasons    = ["Categoria definida manualmente pelo usuário"]
+        { suggestion: suggestion, manual: true, auto_applied: false }
       else
         transaction.apply_classification(suggestion, only_blank: true)
+        { suggestion: suggestion, manual: false, auto_applied: transaction.category_id.present? }
       end
+    end
+
+    # Metadados de classificação anexados ao log de criação.
+    def classification_metadata(transaction)
+      {
+        classification_source:     transaction.classification_source,
+        classification_confidence: transaction.classification_confidence
+      }
+    end
+
+    # Define action/reason do log conforme a intenção do update.
+    def update_annotation(transaction)
+      if transaction.status_changed? && transaction.status == "confirmed"
+        { action: "confirm", reason: "Lançamento confirmado pelo usuário" }
+      elsif transaction.category_id_changed? && transaction.classification_source == "manual"
+        { action: "reclassify", reason: "Reclassificado manualmente pelo usuário" }
+      else
+        {} # concern usa a ação padrão "update"
+      end
+    end
+
+    # Registra um evento de decisão do motor quando a classificação foi
+    # aplicada automaticamente (não escolhida pelo usuário). Distingue regra
+    # (rule_execution) de histórico/genérico (auto_classify).
+    def record_auto_classification(transaction, classification)
+      return unless classification[:auto_applied]
+
+      suggestion = classification[:suggestion]
+      by_rule    = suggestion.source.to_s.start_with?("rule")
+
+      AuditLog.log(
+        action:                by_rule ? "rule_execution" : "auto_classify",
+        origin:                by_rule ? "rule" : "system",
+        workspace:             current_workspace,
+        user:                  current_user,
+        financial_transaction: transaction,
+        auditable:             transaction,
+        confidence:            suggestion.confidence,
+        reason:                "Classificação automática (#{suggestion.source})",
+        metadata:              {
+          category_id: suggestion.category_id,
+          source:      suggestion.source,
+          reasons:     suggestion.reasons
+        }
+      )
     end
 
     # Aprende (ou reforça) uma regra de classificação a partir da correção

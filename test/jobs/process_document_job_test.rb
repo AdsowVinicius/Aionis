@@ -137,4 +137,32 @@ class ProcessDocumentJobTest < ActiveSupport::TestCase
     assert_equal "needs_review", ext.status
     assert_equal "review", doc.reload.status
   end
+
+  # --- Auditoria do processamento ---
+
+  test "processamento de XML gera log document_processing" do
+    doc = build_xml_document
+    ProcessDocumentJob.perform_now(doc.id)
+
+    log = AuditLog.where(action: "document_processing", document_id: doc.id).last
+    assert_not_nil log
+    assert_equal "job", log.origin
+    assert_equal "fiscal_xml_parser", log.provider
+    assert_equal doc.workspace_id, log.workspace_id
+  end
+
+  test "processamento de PDF gera log de OCR indisponível" do
+    ProcessDocumentJob.perform_now(@document.id)
+
+    ocr = AuditLog.where(action: "ocr", document_id: @document.id).last
+    assert_not_nil ocr
+    assert_equal "ocr", ocr.origin
+    assert_equal 0, ocr.confidence
+  end
+
+  test "logs de job não têm usuário (origem sistema)" do
+    ProcessDocumentJob.perform_now(@document.id)
+    log = AuditLog.where(document_id: @document.id).last
+    assert_nil log.user_id
+  end
 end

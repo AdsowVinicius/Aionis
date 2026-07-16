@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         member { patch :settle }
       end
       resources :alerts, only: [:index]
+      resources :audit_logs, only: [:index, :show]
       resource  :subscription, only: [:show, :edit, :update]
       resource  :settings,    only: :show
     end

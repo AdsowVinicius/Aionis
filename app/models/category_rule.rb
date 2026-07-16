@@ -1,4 +1,6 @@
 class CategoryRule < ApplicationRecord
+  include Auditable
+
   # workspace_id nulo = regra global do sistema
   belongs_to :workspace,    optional: true
   belongs_to :category,     optional: true

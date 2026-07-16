@@ -1,4 +1,6 @@
 class Category < ApplicationRecord
+  include Auditable
+
   # workspace_id pode ser nil = categoria global do sistema
   belongs_to :workspace, optional: true
   belongs_to :parent, class_name: "Category", optional: true, foreign_key: :parent_id

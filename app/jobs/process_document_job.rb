@@ -23,6 +23,8 @@ class ProcessDocumentJob < ApplicationJob
   rescue => e
     extraction&.update(status: "failed", error_message: e.message, finished_at: Time.current)
     document&.update(status: "failed")
+    audit_processing(document, extraction, provider: "process_document_job",
+                     reason: "Falha no processamento: #{e.message}") if document
   end
 
   private
@@ -46,6 +48,8 @@ class ProcessDocumentJob < ApplicationJob
         finished_at:       Time.current
       )
       document.update!(status: "review")
+      audit_processing(document, extraction, provider: Aionis::FiscalXmlParser::PROCESSOR_NAME,
+                       reason: "XML sem dados extraíveis")
       return
     end
 
@@ -65,6 +69,8 @@ class ProcessDocumentJob < ApplicationJob
     )
 
     document.update!(status: "review")
+    audit_processing(document, extraction, provider: Aionis::FiscalXmlParser::PROCESSOR_NAME,
+                     reason: "XML fiscal processado")
   end
 
   def process_placeholder(document, extraction)
@@ -83,6 +89,41 @@ class ProcessDocumentJob < ApplicationJob
     )
 
     document.update!(status: "review")
+
+    # Evento de OCR: hoje o provedor é stub (sem leitura). Quando o provedor
+    # real (Tesseract) for ligado, ele registra aqui com provider/confiança.
+    AuditLog.log(
+      action:    "ocr",
+      origin:    "ocr",
+      workspace: document.workspace,
+      document:  document,
+      auditable: document,
+      provider:  "null",
+      confidence: 0,
+      reason:    "OCR indisponível para este tipo de arquivo",
+      metadata:  { content_type: content_type_of(document) }
+    )
+    audit_processing(document, extraction, provider: "placeholder",
+                     reason: "Documento sem extração automática (OCR pendente)")
+  end
+
+  # Log unificado de processamento de documento (origem "job").
+  def audit_processing(document, extraction, provider:, reason:)
+    AuditLog.log(
+      action:     "document_processing",
+      origin:     "job",
+      workspace:  document.workspace,
+      document:   document,
+      auditable:  document,
+      provider:   provider,
+      confidence: extraction&.confidence_score,
+      reason:     reason,
+      metadata:   { document_status: document.status, extraction_status: extraction&.status }
+    )
+  end
+
+  def content_type_of(document)
+    document.file.attached? ? document.file.blob.content_type : nil
   end
 
   # JSONB exige chaves string e valores serializáveis (Date -> ISO8601).

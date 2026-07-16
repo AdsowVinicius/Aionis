@@ -1,4 +1,6 @@
 class Document < ApplicationRecord
+  include Auditable
+
   belongs_to :workspace
   belongs_to :counterparty, optional: true
   has_many :financial_transactions, dependent: :nullify

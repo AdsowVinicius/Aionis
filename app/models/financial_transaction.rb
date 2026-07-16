@@ -1,4 +1,6 @@
 class FinancialTransaction < ApplicationRecord
+  include Auditable
+
   belongs_to :workspace
   belongs_to :document,     optional: true
   belongs_to :counterparty, optional: true

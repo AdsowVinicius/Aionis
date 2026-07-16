@@ -1,4 +1,6 @@
 class Counterparty < ApplicationRecord
+  include Auditable
+
   belongs_to :workspace
   has_many :documents, dependent: :nullify
   has_many :financial_transactions, dependent: :nullify

@@ -6,6 +6,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!
   before_action :configure_permitted_parameters, if: :devise_controller?
+  before_action :set_audit_context
 
   layout :choose_layout
 
@@ -14,6 +15,12 @@ class ApplicationController < ActionController::Base
   helper_method :current_workspace
 
   private
+
+  # Disponibiliza o usuário atual para a auditoria (concern Auditable / AuditLog),
+  # sem acoplar os models ao controller.
+  def set_audit_context
+    Current.user = current_user if user_signed_in?
+  end
 
   def choose_layout
     devise_controller? ? "application" : (user_signed_in? ? "authenticated" : "application")
