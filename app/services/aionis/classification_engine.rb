@@ -33,7 +33,7 @@ module Aionis
       def low_confidence?    = confidence.to_i <= 60
     end
 
-    def self.for_transaction(transaction)
+    def self.for_transaction(transaction, exclude_learned: false)
       digits = transaction.counterparty&.tax_id.presence ||
                transaction.counterparty_tax_id_snapshot.presence
       new(
@@ -42,11 +42,13 @@ module Aionis
         kind:            transaction.kind,
         counterparty_id: transaction.counterparty_id,
         tax_id:          digits,
-        exclude_id:      transaction.id
+        exclude_id:      transaction.id,
+        exclude_learned: exclude_learned
       )
     end
 
-    def initialize(workspace:, description:, kind:, counterparty_id: nil, tax_id: nil, exclude_id: nil)
+    def initialize(workspace:, description:, kind:, counterparty_id: nil, tax_id: nil, exclude_id: nil, exclude_learned: false)
+      @exclude_learned = exclude_learned
       @context = Context.new(
         workspace:       workspace,
         description:     description.to_s,
@@ -77,7 +79,9 @@ module Aionis
     # --- Passo 1: regras ---
 
     def best_matching_rule
-      candidates = CategoryRule.active.for_workspace(context.workspace).includes(:category).to_a
+      relation   = CategoryRule.active.for_workspace(context.workspace).includes(:category)
+      relation   = relation.where.not(origin: "learned") if @exclude_learned
+      candidates = relation.to_a
       matches = candidates.select { |r| r.matches?(context) }
       return nil if matches.empty?
 

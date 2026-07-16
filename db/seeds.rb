@@ -97,6 +97,7 @@ if File.exist?(rules_path)
     rule = CategoryRule.find_or_initialize_by(name: attrs["name"], workspace_id: nil)
     novo = rule.new_record?
     rule.assign_attributes(
+      origin:       "seed",
       priority:     attrs["priority"] || 0,
       active:       attrs.fetch("active", true),
       kind:         attrs["kind"],

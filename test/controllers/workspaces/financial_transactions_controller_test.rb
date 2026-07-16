@@ -526,4 +526,33 @@ class Workspaces::FinancialTransactionsControllerTest < ActionDispatch::Integrat
     get workspace_dashboard_path(@workspace)
     assert_response :success
   end
+
+  # 9. Correção manual de categoria ensina uma regra de classificação
+  test "classificar manualmente cria regra aprendida e classifica o próximo igual" do
+    categoria = Category.create!(name: "Transporte #{SecureRandom.hex(2)}", kind: "expense",
+                                 cost_type: "variable", essentiality: "operational_important")
+    fornecedor = @workspace.counterparties.create!(name: "Posto Aprendiz", kind: "supplier")
+
+    assert_difference -> { CategoryRule.learned.where(workspace_id: @workspace.id).count }, 1 do
+      post workspace_financial_transactions_path(@workspace), params: {
+        financial_transaction: {
+          kind: "expense", description: "abastecimento", amount_brl: "80,00",
+          status: "confirmed", counterparty_id: fornecedor.id, category_id: categoria.id
+        }
+      }
+    end
+
+    regra = CategoryRule.learned.find_by(workspace_id: @workspace.id, counterparty_id: fornecedor.id)
+    assert_equal categoria.id, regra.category_id
+
+    # Próximo lançamento do mesmo fornecedor já é sugerido automaticamente
+    get new_workspace_financial_transaction_path(@workspace), params: {
+      counterparty_id: fornecedor.id
+    }
+    assert_response :success
+    tx = @workspace.financial_transactions.new(description: "novo abastecimento",
+                                               kind: "expense", counterparty: fornecedor)
+    sugestao = Aionis::ClassificationEngine.for_transaction(tx).call
+    assert_equal categoria.id, sugestao.category_id
+  end
 end

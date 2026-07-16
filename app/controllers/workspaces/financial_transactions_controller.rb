@@ -59,6 +59,7 @@ module Workspaces
       @transaction.origin = "manual"
       classify(@transaction)
       if @transaction.save
+        learn_from_correction(@transaction)
         redirect_to workspace_financial_transactions_path(current_workspace),
                     notice: "Lançamento criado com sucesso."
       else
@@ -76,6 +77,7 @@ module Workspaces
       @transaction.assign_attributes(transaction_params)
       classify(@transaction)
       if @transaction.save
+        learn_from_correction(@transaction)
         redirect_to workspace_financial_transaction_path(current_workspace, @transaction),
                     notice: "Lançamento atualizado."
       else
@@ -199,6 +201,15 @@ module Workspaces
       else
         transaction.apply_classification(suggestion, only_blank: true)
       end
+    end
+
+    # Aprende (ou reforça) uma regra de classificação a partir da correção
+    # manual do usuário. Best-effort: nunca deve interromper o fluxo — se algo
+    # falhar, apenas registra e segue.
+    def learn_from_correction(transaction)
+      Aionis::RuleLearner.for(transaction).call
+    rescue => e
+      Rails.logger.warn("[RuleLearner] não aprendeu regra: #{e.class}: #{e.message}")
     end
 
     def transaction_params

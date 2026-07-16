@@ -9,6 +9,7 @@ class CategoryRule < ApplicationRecord
   RECURRENCES   = %w[recurring occasional one_off].freeze
   COST_TYPES    = %w[fixed variable semi_variable one_time].freeze
   ESSENTIALITIES = %w[essential operational_important non_essential superfluous review].freeze
+  ORIGINS       = %w[seed manual learned].freeze
 
   validates :name, presence: true
   validates :confidence, numericality: { in: 0..100 }
@@ -17,11 +18,13 @@ class CategoryRule < ApplicationRecord
   validates :recurrence,   inclusion: { in: RECURRENCES },    allow_blank: true
   validates :cost_type,    inclusion: { in: COST_TYPES },     allow_blank: true
   validates :essentiality, inclusion: { in: ESSENTIALITIES }, allow_blank: true
+  validates :origin,       inclusion: { in: ORIGINS }
 
   scope :active,        -> { where(active: true) }
   scope :global,        -> { where(workspace_id: nil) }
   scope :for_workspace, ->(ws) { where(workspace_id: [ws&.id, nil]) }
   scope :by_priority,   -> { order(priority: :desc, id: :asc) }
+  scope :learned,       -> { where(origin: "learned") }
 
   # Lista de palavras-chave normalizadas (minúsculas, sem acento)
   def keyword_list
@@ -33,6 +36,21 @@ class CategoryRule < ApplicationRecord
 
   def global?
     workspace_id.nil?
+  end
+
+  def learned?
+    origin == "learned"
+  end
+
+  # Dígitos do CPF/CNPJ (sem máscara) — usado para casar/deduplicar regras.
+  def tax_id_digits
+    tax_id.to_s.gsub(/\D/, "").presence
+  end
+
+  # Keywords normalizadas e ordenadas, unidas — assinatura estável de uma regra
+  # por palavra-chave para deduplicar regras aprendidas equivalentes.
+  def keywords_signature
+    keyword_list.sort.join(",")
   end
 
   # Verdadeiro quando TODAS as condições preenchidas casam com o contexto.

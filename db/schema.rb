@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_13_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,16 +69,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_13_120100) do
     t.string "keywords"
     t.string "kind"
     t.string "name", null: false
+    t.string "origin", default: "manual", null: false
     t.integer "priority", default: 0, null: false
     t.string "recurrence"
     t.string "scope"
     t.string "tax_id"
+    t.integer "times_reinforced", default: 0, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id"
     t.index ["counterparty_id"], name: "index_category_rules_on_counterparty_id"
     t.index ["priority"], name: "index_category_rules_on_priority"
     t.index ["tax_id"], name: "index_category_rules_on_tax_id"
     t.index ["workspace_id", "active"], name: "index_category_rules_on_workspace_id_and_active"
+    t.index ["workspace_id", "origin"], name: "index_category_rules_on_workspace_id_and_origin"
     t.index ["workspace_id"], name: "index_category_rules_on_workspace_id"
   end
 
