@@ -33,5 +33,8 @@ Rails.application.routes.draw do
     end
   end
 
+  # Webhook público do WhatsApp (Evolution) — sem autenticação de usuário.
+  post "/webhooks/whatsapp/:instance", to: "webhooks/whatsapp#create", as: :whatsapp_webhook
+
   get "up" => "rails/health#show", as: :rails_health_check
 end

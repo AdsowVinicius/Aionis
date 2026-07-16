@@ -12,14 +12,16 @@
 
 default: &default
   whatsapp:
-    # provider: "meta_cloud"  # <- no futuro, controlado por ENV abaixo
+    # Ative com WHATSAPP_PROVIDER=evolution (Evolution API self-hosted).
     provider: "<%= ENV.fetch('WHATSAPP_PROVIDER', 'null') %>"
     providers:
-      # meta_cloud: "Aionis::Integrations::Whatsapp::MetaCloudProvider"
+      evolution: "Aionis::Integrations::Whatsapp::EvolutionProvider"
     settings:
-      phone_number_id: "<%= ENV['WHATSAPP_PHONE_NUMBER_ID'] %>"
-      access_token:    "<%= ENV['WHATSAPP_ACCESS_TOKEN'] %>"
-      verify_token:    "<%= ENV['WHATSAPP_VERIFY_TOKEN'] %>"
+      base_url:      "<%= ENV['EVOLUTION_BASE_URL'] %>"
+      api_key:       "<%= ENV['EVOLUTION_API_KEY'] %>"
+      instance:      "<%= ENV['EVOLUTION_INSTANCE'] %>"
+      webhook_token: "<%= ENV['EVOLUTION_WEBHOOK_TOKEN'] %>"
+      timeout:       "<%= ENV.fetch('EVOLUTION_TIMEOUT', '15') %>"
 
   open_finance:
     provider: "<%= ENV.fetch('OPEN_FINANCE_PROVIDER', 'null') %>"

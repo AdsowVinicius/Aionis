@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_122000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -197,6 +197,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_130000) do
     t.index ["workspace_id"], name: "index_financial_transactions_on_workspace_id"
   end
 
+  create_table "incoming_messages", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "document_id"
+    t.string "from_number"
+    t.string "kind", default: "text", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "push_name"
+    t.datetime "received_at"
+    t.string "status", default: "received", null: false
+    t.text "text"
+    t.datetime "updated_at", null: false
+    t.string "wa_message_id", null: false
+    t.bigint "workspace_channel_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["document_id"], name: "index_incoming_messages_on_document_id"
+    t.index ["workspace_channel_id", "wa_message_id"], name: "index_incoming_messages_on_channel_and_wa_id", unique: true
+    t.index ["workspace_channel_id"], name: "index_incoming_messages_on_workspace_channel_id"
+    t.index ["workspace_id"], name: "index_incoming_messages_on_workspace_id"
+  end
+
+  create_table "outgoing_messages", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.text "error"
+    t.bigint "incoming_message_id"
+    t.string "provider_message_id"
+    t.datetime "sent_at"
+    t.string "status", default: "pending", null: false
+    t.string "to_number", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_channel_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["status"], name: "index_outgoing_messages_on_status"
+    t.index ["workspace_channel_id"], name: "index_outgoing_messages_on_workspace_channel_id"
+    t.index ["workspace_id"], name: "index_outgoing_messages_on_workspace_id"
+  end
+
   create_table "plans", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "includes_email_channel", default: false, null: false
@@ -240,6 +278,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_130000) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  create_table "workspace_channels", force: :cascade do |t|
+    t.string "channel_type", default: "whatsapp", null: false
+    t.datetime "created_at", null: false
+    t.string "external_id"
+    t.string "instance", null: false
+    t.datetime "last_event_at"
+    t.string "phone"
+    t.string "provider", default: "evolution", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.string "webhook_token"
+    t.bigint "workspace_id", null: false
+    t.index ["instance"], name: "index_workspace_channels_on_instance", unique: true
+    t.index ["workspace_id", "channel_type"], name: "index_workspace_channels_on_workspace_id_and_channel_type"
+    t.index ["workspace_id"], name: "index_workspace_channels_on_workspace_id"
   end
 
   create_table "workspace_users", force: :cascade do |t|

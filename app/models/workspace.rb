@@ -8,6 +8,9 @@ class Workspace < ApplicationRecord
   has_many :documents, dependent: :destroy
   has_many :document_extractions, dependent: :destroy
   has_many :financial_transactions, dependent: :destroy
+  has_many :workspace_channels, dependent: :destroy
+  has_many :incoming_messages, dependent: :destroy
+  has_many :outgoing_messages, dependent: :destroy
 
   enum :kind, { cpf: "cpf", mei: "mei", empresa: "empresa" }
   enum :status, { active: "active", suspended: "suspended", trial: "trial" }
