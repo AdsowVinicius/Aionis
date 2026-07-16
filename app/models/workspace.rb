@@ -11,6 +11,10 @@ class Workspace < ApplicationRecord
   has_many :workspace_channels, dependent: :destroy
   has_many :incoming_messages, dependent: :destroy
   has_many :outgoing_messages, dependent: :destroy
+  has_many :consents, dependent: :destroy
+  has_many :bank_accounts, dependent: :destroy
+  has_many :bank_transactions, dependent: :destroy
+  has_many :reconciliation_matches, dependent: :destroy
 
   enum :kind, { cpf: "cpf", mei: "mei", empresa: "empresa" }
   enum :status, { active: "active", suspended: "suspended", trial: "trial" }

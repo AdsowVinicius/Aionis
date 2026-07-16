@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_122000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_133000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,6 +68,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_122000) do
     t.index ["workspace_id", "origin"], name: "index_audit_logs_on_workspace_id_and_origin"
   end
 
+  create_table "bank_accounts", force: :cascade do |t|
+    t.bigint "balance_cents"
+    t.string "branch"
+    t.bigint "consent_id", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "BRL", null: false
+    t.string "external_id", null: false
+    t.string "institution"
+    t.string "kind"
+    t.datetime "last_synced_at"
+    t.string "name"
+    t.string "number"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["consent_id", "external_id"], name: "index_bank_accounts_on_consent_id_and_external_id", unique: true
+    t.index ["consent_id"], name: "index_bank_accounts_on_consent_id"
+    t.index ["workspace_id"], name: "index_bank_accounts_on_workspace_id"
+  end
+
+  create_table "bank_transactions", force: :cascade do |t|
+    t.bigint "amount_cents", null: false
+    t.bigint "bank_account_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "direction", null: false
+    t.string "external_id", null: false
+    t.bigint "financial_transaction_id"
+    t.date "posted_on"
+    t.jsonb "raw", default: {}, null: false
+    t.string "reconciliation_status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["bank_account_id", "external_id"], name: "index_bank_transactions_on_bank_account_id_and_external_id", unique: true
+    t.index ["bank_account_id"], name: "index_bank_transactions_on_bank_account_id"
+    t.index ["financial_transaction_id"], name: "index_bank_transactions_on_financial_transaction_id"
+    t.index ["reconciliation_status"], name: "index_bank_transactions_on_reconciliation_status"
+    t.index ["workspace_id"], name: "index_bank_transactions_on_workspace_id"
+  end
+
   create_table "categories", force: :cascade do |t|
     t.string "cost_type"
     t.datetime "created_at", null: false
@@ -109,6 +148,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_122000) do
     t.index ["workspace_id", "active"], name: "index_category_rules_on_workspace_id_and_active"
     t.index ["workspace_id", "origin"], name: "index_category_rules_on_workspace_id_and_origin"
     t.index ["workspace_id"], name: "index_category_rules_on_workspace_id"
+  end
+
+  create_table "consents", force: :cascade do |t|
+    t.text "connect_token"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.string "external_id"
+    t.datetime "last_synced_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "provider", default: "pluggy", null: false
+    t.string "redirect_url"
+    t.datetime "revoked_at"
+    t.jsonb "scopes", default: [], null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["provider", "external_id"], name: "index_consents_on_provider_and_external_id"
+    t.index ["workspace_id"], name: "index_consents_on_workspace_id"
   end
 
   create_table "counterparties", force: :cascade do |t|
@@ -251,6 +308,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_122000) do
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_plans_on_slug", unique: true
     t.index ["status"], name: "index_plans_on_status"
+  end
+
+  create_table "reconciliation_matches", force: :cascade do |t|
+    t.bigint "bank_transaction_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "financial_transaction_id", null: false
+    t.string "matched_by", default: "system", null: false
+    t.jsonb "reasons", default: [], null: false
+    t.integer "score", default: 0, null: false
+    t.string "status", default: "suggested", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["bank_transaction_id"], name: "index_reconciliation_matches_on_bank_transaction_id"
+    t.index ["financial_transaction_id"], name: "index_reconciliation_matches_on_financial_transaction_id"
+    t.index ["workspace_id"], name: "index_reconciliation_matches_on_workspace_id"
   end
 
   create_table "subscriptions", force: :cascade do |t|

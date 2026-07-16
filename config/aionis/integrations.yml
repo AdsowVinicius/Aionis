@@ -24,11 +24,19 @@ default: &default
       timeout:       "<%= ENV.fetch('EVOLUTION_TIMEOUT', '15') %>"
 
   open_finance:
+    # Ative com OPEN_FINANCE_PROVIDER=pluggy. Belvo/Quanto ficam prontos para
+    # plugar (basta implementar a classe e apontar aqui).
     provider: "<%= ENV.fetch('OPEN_FINANCE_PROVIDER', 'null') %>"
-    providers: {}
+    providers:
+      pluggy: "Aionis::Integrations::OpenFinance::PluggyProvider"
+      # belvo:  "Aionis::Integrations::OpenFinance::BelvoProvider"
+      # quanto: "Aionis::Integrations::OpenFinance::QuantoProvider"
     settings:
-      client_id:     "<%= ENV['OPEN_FINANCE_CLIENT_ID'] %>"
-      client_secret: "<%= ENV['OPEN_FINANCE_CLIENT_SECRET'] %>"
+      client_id:     "<%= ENV['PLUGGY_CLIENT_ID'] %>"
+      client_secret: "<%= ENV['PLUGGY_CLIENT_SECRET'] %>"
+      base_url:      "<%= ENV['PLUGGY_BASE_URL'] %>"
+      connect_url:   "<%= ENV['PLUGGY_CONNECT_URL'] %>"
+      timeout:       "<%= ENV.fetch('PLUGGY_TIMEOUT', '20') %>"
 
   ocr:
     # Ative com OCR_PROVIDER=tesseract (requer python3 + opencv + pytesseract +
