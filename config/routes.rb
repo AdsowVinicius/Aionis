@@ -13,6 +13,7 @@ Rails.application.routes.draw do
       resource  :dashboard,             only: :show,  controller: "dashboard"
       resources :financial_transactions
       resources :categories
+      resources :category_rules
       resources :counterparties
       resources :documents, only: [:index, :new, :create, :show, :destroy] do
         member do

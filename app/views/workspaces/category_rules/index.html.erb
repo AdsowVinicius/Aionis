@@ -1,0 +1,179 @@
+<% content_for :title, "Regras de classificação — #{current_workspace.name}" %>
+<% content_for :page_title, "Regras de classificação" %>
+
+<div class="max-w-6xl">
+
+  <%# Cabeçalho %>
+  <div class="flex items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
+    <div>
+      <h2 class="text-lg md:text-xl font-bold text-slate-900">Regras de classificação</h2>
+      <p class="text-slate-500 text-sm mt-0.5 hidden sm:block">Como o Aionis classifica seus lançamentos automaticamente. Inclui regras do sistema e as aprendidas com suas correções.</p>
+    </div>
+    <%= link_to new_workspace_category_rule_path(current_workspace),
+          class: "shrink-0 inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      <span class="hidden sm:inline">Nova regra</span>
+      <span class="sm:hidden">Nova</span>
+    <% end %>
+  </div>
+
+  <%# Cards de resumo %>
+  <div class="grid grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Sistema</p>
+      <p class="text-lg md:text-xl font-bold text-slate-600"><%= @global_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Regras padrão</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Manuais</p>
+      <p class="text-lg md:text-xl font-bold text-teal-600"><%= @manual_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Criadas por você</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+      <p class="text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide">Aprendidas</p>
+      <p class="text-lg md:text-xl font-bold text-indigo-600"><%= @learned_count %></p>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Com suas correções</p>
+    </div>
+  </div>
+
+  <%# Filtros %>
+  <div class="mb-4">
+    <%= form_with url: workspace_category_rules_path(current_workspace), method: :get, data: { turbo: false } do |f| %>
+      <div class="flex flex-wrap gap-2 md:gap-3">
+        <%= f.select :origin,
+              [["Todas as origens", ""], ["Sistema", "seed"], ["Manuais", "manual"], ["Aprendidas", "learned"]],
+              { selected: params[:origin] },
+              class: "px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white" %>
+        <%= f.select :kind,
+              [["Todas as naturezas", ""], ["Receita", "income"], ["Despesa", "expense"]],
+              { selected: params[:kind] },
+              class: "px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white" %>
+        <%= f.submit "Filtrar",
+              class: "px-3 md:px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" %>
+        <% if params[:origin].present? || params[:kind].present? %>
+          <%= link_to "Limpar", workspace_category_rules_path(current_workspace),
+                class: "px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Tabela / Estado vazio %>
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <% if @rules.empty? %>
+      <div class="p-8 md:p-12 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+        </svg>
+        <h3 class="text-base font-semibold text-slate-700 mb-1">
+          <% if params[:origin].present? || params[:kind].present? %>
+            Nenhuma regra para os filtros aplicados
+          <% else %>
+            Nenhuma regra encontrada
+          <% end %>
+        </h3>
+        <p class="text-sm text-slate-500 mb-4">Crie uma regra ou classifique lançamentos manualmente — o Aionis aprende sozinho.</p>
+        <% unless params[:origin].present? || params[:kind].present? %>
+          <%= link_to "Nova regra", new_workspace_category_rule_path(current_workspace),
+                class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors" %>
+        <% end %>
+      </div>
+    <% else %>
+
+      <%# Cards mobile %>
+      <div class="md:hidden divide-y divide-slate-100">
+        <% @rules.each do |rule| %>
+          <div class="px-4 py-3">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-slate-800 text-sm truncate"><%= rule.name %></p>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  <%= rule_kind_label(rule.kind) %>
+                  <% if rule.category %><span class="mx-1">·</span><%= rule.category.name %><% end %>
+                </p>
+              </div>
+              <div class="shrink-0"><%= rule_origin_badge(rule) %></div>
+            </div>
+            <p class="text-xs text-slate-500 mb-2 truncate"><%= rule_condition_summary(rule) %></p>
+            <% unless rule.global? %>
+              <div class="flex items-center gap-3">
+                <%= link_to "Editar", edit_workspace_category_rule_path(current_workspace, rule),
+                      class: "text-xs font-medium text-teal-600 hover:text-teal-700" %>
+                <%= button_to workspace_category_rule_path(current_workspace, rule),
+                      method: :delete,
+                      form: { data: { turbo_confirm: "Excluir a regra \"#{rule.name}\"?" } },
+                      class: "text-xs text-slate-400 hover:text-red-500 cursor-pointer bg-transparent border-0 p-0" do %>
+                  Excluir
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Tabela desktop %>
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Regra</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Condição</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Categoria</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Origem</th>
+              <th class="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Conf.</th>
+              <th class="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Prior.</th>
+              <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% @rules.each do |rule| %>
+              <tr class="hover:bg-slate-50/70 transition-colors <%= "opacity-60" unless rule.active? %>">
+                <td class="px-4 py-3 max-w-xs">
+                  <p class="font-medium text-slate-800 truncate"><%= rule.name %></p>
+                  <p class="text-xs text-slate-400"><%= rule_kind_label(rule.kind) %><%= " · inativa" unless rule.active? %></p>
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-500 max-w-xs">
+                  <span class="line-clamp-2"><%= rule_condition_summary(rule) %></span>
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-600">
+                  <%= rule.category&.name || content_tag(:span, "—", class: "text-slate-400") %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap"><%= rule_origin_badge(rule) %></td>
+                <td class="px-4 py-3 text-center text-xs text-slate-600"><%= rule.confidence %></td>
+                <td class="px-4 py-3 text-center text-xs text-slate-600"><%= rule.priority %></td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  <% if rule.global? %>
+                    <span class="text-xs text-slate-400 italic">Somente leitura</span>
+                  <% else %>
+                    <div class="inline-flex items-center gap-1">
+                      <%= link_to edit_workspace_category_rule_path(current_workspace, rule),
+                            class: "p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors",
+                            title: "Editar" do %>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                        </svg>
+                      <% end %>
+                      <%= button_to workspace_category_rule_path(current_workspace, rule),
+                            method: :delete,
+                            form: { data: { turbo_confirm: "Excluir a regra \"#{rule.name}\"?" } },
+                            class: "p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer bg-transparent border-0",
+                            title: "Excluir" do %>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+    <% end %>
+  </div>
+
+</div>

@@ -42,6 +42,42 @@ module ClassificationHelper
     }[source] || source
   end
 
+  RULE_ORIGIN_LABELS = {
+    "seed"    => "Sistema",
+    "manual"  => "Manual",
+    "learned" => "Aprendida"
+  }.freeze
+
+  def rule_origin_label(origin) = RULE_ORIGIN_LABELS[origin] || origin
+
+  # Natureza da regra → rótulo ("" = qualquer)
+  def rule_kind_label(kind)
+    { "income" => "Receita", "expense" => "Despesa" }[kind.to_s.presence] || "Qualquer"
+  end
+
+  # Badge de origem da regra → classes de estilo
+  def rule_origin_badge(rule)
+    label = rule_origin_label(rule.origin)
+    classes =
+      case rule.origin
+      when "seed"    then "bg-slate-100 text-slate-600 border-slate-200"
+      when "manual"  then "bg-teal-50 text-teal-700 border-teal-200"
+      when "learned" then "bg-indigo-50 text-indigo-700 border-indigo-200"
+      else                "bg-slate-100 text-slate-600 border-slate-200"
+      end
+    content_tag :span, label,
+                class: "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border #{classes}"
+  end
+
+  # Descrição legível da condição de casamento de uma regra
+  def rule_condition_summary(rule)
+    parts = []
+    parts << "Palavras: #{rule.keywords}"                     if rule.keywords.present?
+    parts << "CPF/CNPJ: #{rule.tax_id}"                       if rule.tax_id.present?
+    parts << "Fornecedor: #{rule.counterparty&.name}"         if rule.counterparty_id.present?
+    parts.presence&.join(" · ") || "Sem condição"
+  end
+
   # Faixa de confiança conforme CLAUDE.md → [rótulo, classes de badge]
   def confidence_tier(score)
     case score.to_i
