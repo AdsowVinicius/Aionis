@@ -1,0 +1,23 @@
+<%# locals: health (Aionis::Analytics::HealthScore::Result) %>
+<% band = health_band(health.band) %>
+<% circ = (2 * Math::PI * 52).round(1) %>
+<% offset = ((1 - health.score.to_i / 100.0) * circ).round(1) %>
+<div class="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col items-center justify-center text-center h-full">
+  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Saúde financeira</p>
+  <div class="relative w-40 h-40">
+    <svg viewBox="0 0 120 120" class="w-40 h-40 -rotate-90">
+      <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" stroke-width="12" />
+      <circle cx="60" cy="60" r="52" fill="none" stroke="<%= band[:stroke] %>" stroke-width="12"
+              stroke-linecap="round" stroke-dasharray="<%= circ %>" stroke-dashoffset="<%= offset %>" />
+    </svg>
+    <div class="absolute inset-0 flex flex-col items-center justify-center">
+      <span class="text-4xl font-bold <%= band[:text] %>"><%= health.score %></span>
+      <span class="text-xs text-slate-400">de 100</span>
+    </div>
+  </div>
+  <p class="mt-3 text-sm font-semibold <%= band[:text] %>"><%= band[:label] %></p>
+  <% factor = Array(health.factors).max_by { |f| f[:impact].to_i.abs } %>
+  <% if factor %>
+    <p class="text-xs text-slate-400 mt-1">Principal fator: <%= factor[:label] %></p>
+  <% end %>
+</div>

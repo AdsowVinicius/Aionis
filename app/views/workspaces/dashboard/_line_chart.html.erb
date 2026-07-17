@@ -1,0 +1,26 @@
+<%# locals: points (cash_flow: [{label, accumulated_cents}]) %>
+<% vals = points.map { |p| p[:accumulated_cents].to_i } %>
+<% min = vals.min.to_i %>
+<% max = vals.max.to_i %>
+<% range = (max - min).nonzero? || 1 %>
+<% n = points.size %>
+<% coords = points.each_with_index.map { |pt, i|
+     x = n > 1 ? (i.to_f / (n - 1) * 100).round(1) : 50.0
+     y = (38 - ((pt[:accumulated_cents].to_i - min).to_f / range) * 34).round(1)
+     [x, y]
+   } %>
+<% path = coords.map { |x, y| "#{x},#{y}" }.join(" ") %>
+<div class="w-full">
+  <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-32">
+    <% if coords.any? %>
+      <polygon fill="rgba(13,148,136,0.10)" points="0,40 <%= path %> 100,40" />
+      <polyline fill="none" stroke="#0d9488" stroke-width="1.5" vector-effect="non-scaling-stroke"
+                stroke-linejoin="round" stroke-linecap="round" points="<%= path %>" />
+    <% end %>
+  </svg>
+  <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+    <span><%= month_short(points.first[:label]) if points.any? %></span>
+    <span>Saldo acumulado: <strong class="text-slate-600"><%= format_brl(points.last&.dig(:accumulated_cents)) if points.any? %></strong></span>
+    <span><%= month_short(points.last[:label]) if points.any? %></span>
+  </div>
+</div>

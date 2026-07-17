@@ -1,0 +1,21 @@
+<%# locals: series (monthly_evolution: [{label, income_cents, expense_cents}]) %>
+<% max = series.flat_map { |m| [m[:income_cents].to_i, m[:expense_cents].to_i] }.max.to_i %>
+<div class="flex items-end gap-1.5 h-44">
+  <% series.each do |m| %>
+    <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0">
+      <div class="w-full flex items-end justify-center gap-0.5 h-full">
+        <div class="w-1/2 max-w-[14px] bg-teal-500/80 rounded-t transition-all"
+             style="height: <%= bar_width(m[:income_cents], max) %>"
+             title="Receita: <%= format_brl(m[:income_cents]) %>"></div>
+        <div class="w-1/2 max-w-[14px] bg-red-400/80 rounded-t transition-all"
+             style="height: <%= bar_width(m[:expense_cents], max) %>"
+             title="Despesa: <%= format_brl(m[:expense_cents]) %>"></div>
+      </div>
+      <span class="text-[10px] text-slate-400"><%= month_short(m[:label]) %></span>
+    </div>
+  <% end %>
+</div>
+<div class="flex items-center gap-4 mt-3 text-xs text-slate-500">
+  <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-teal-500/80"></span>Receitas</span>
+  <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-red-400/80"></span>Despesas</span>
+</div>

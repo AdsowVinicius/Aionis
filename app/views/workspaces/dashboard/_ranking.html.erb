@@ -1,0 +1,19 @@
+<%# locals: rows ([{name, total_cents, count}]) %>
+<% max = rows.map { |r| r[:total_cents].to_i }.max.to_i %>
+<% if rows.empty? %>
+  <p class="text-sm text-slate-400 py-6 text-center">Sem dados ainda.</p>
+<% else %>
+  <div class="space-y-3">
+    <% rows.each_with_index do |r, i| %>
+      <div>
+        <div class="flex items-center justify-between text-sm mb-1 gap-2">
+          <span class="text-slate-700 truncate"><%= r[:name].presence || "—" %></span>
+          <span class="text-slate-500 font-medium shrink-0"><%= format_brl(r[:total_cents]) %></span>
+        </div>
+        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full" style="width: <%= bar_width(r[:total_cents], max) %>; background-color: <%= chart_color(i) %>"></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

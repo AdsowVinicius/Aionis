@@ -97,36 +97,36 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "3.733,33", response.body  # despesa com cancelled = 3.733,33
   end
 
-  # 7. Conta documentos pendentes
-  test "exibe seção de documentos pendentes" do
+  # 7. Documentos recentes aparecem no dashboard (seção "Entradas recentes")
+  test "exibe documentos recentes" do
     2.times { d = @workspace.documents.new(source: "web", status: "pending"); d.save!(validate: false) }
     d = @workspace.documents.new(source: "web", status: "processed")
     d.save!(validate: false)
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Docs. pendentes", response.body
+    assert_match "Entradas recentes", response.body
   end
 
-  # 8. Conta documentos em revisão
-  test "exibe seção de documentos em revisão" do
+  # 8. Ter só documento (sem lançamento) já mostra o dashboard, não o empty state
+  test "documento em revisão não deixa o dashboard vazio" do
     d = @workspace.documents.new(source: "web", status: "review")
     d.save!(validate: false)
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Docs. em revisão", response.body
+    assert_match "Entradas recentes", response.body
   end
 
-  # 9. Conta lançamentos pendentes
-  test "exibe seção de lançamentos pendentes" do
-    tx(kind: "expense", amount_cents: 5_000, status: "pending")
+  # 9. Com dados, o dashboard mostra a saúde financeira e KPIs
+  test "exibe saúde financeira e KPIs quando há dados" do
     tx(kind: "expense", amount_cents: 5_000, status: "pending")
     tx(kind: "income",  amount_cents: 5_000, status: "confirmed")
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Lançamentos pendentes", response.body
+    assert_match "Saúde financeira", response.body
+    assert_match "Receita do mês", response.body
   end
 
   # 10. Top categorias de despesa do mês aparecem pelo nome
@@ -236,8 +236,8 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_not t.overdue?
   end
 
-  # 19. Dashboard mostra resumo e link de alertas quando há pendências críticas
-  test "dashboard mostra link Ver alertas quando há conta vencida" do
+  # 19. Dashboard destaca contas a pagar vencidas
+  test "dashboard destaca contas a pagar vencidas" do
     @workspace.financial_transactions.create!(
       kind: "expense", description: "Conta vencida",
       amount_cents: 10_000, origin: "manual", status: "pending",
@@ -246,7 +246,7 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Ver alertas", response.body
+    assert_match "Contas a pagar vencidas", response.body
   end
 
   # 12. Não mistura dados de outro workspace
