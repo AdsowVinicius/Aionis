@@ -17,7 +17,9 @@ Rails.application.routes.draw do
       resources :counterparties
       resources :documents, only: [:index, :new, :create, :show, :destroy] do
         member do
-          post :trigger
+          post  :trigger
+          get   :review
+          post  :confirm
         end
       end
       resources :payables do

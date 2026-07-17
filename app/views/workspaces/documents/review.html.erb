@@ -1,0 +1,163 @@
+<% content_for :title, "Revisar leitura — Documento ##{@document.id}" %>
+<% content_for :page_title, "Revisar leitura do documento" %>
+
+<% extraction = @extraction %>
+<% suggestion  = extraction&.suggested_transaction_data || {} %>
+<% tier_label, tier_css = confidence_tier(extraction&.confidence_score) %>
+
+<div class="max-w-2xl">
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to workspace_document_path(current_workspace, @document),
+          class: "text-slate-400 hover:text-slate-600 transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+    <% end %>
+    <h2 class="text-xl font-bold text-slate-900">Revisar leitura do documento</h2>
+  </div>
+
+  <% if extraction.nil? || suggestion["amount_cents"].blank? %>
+    <%# Sem leitura utilizável — orienta reprocessar ou lançar manualmente %>
+    <div class="bg-white rounded-xl border border-slate-200 p-8 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 text-slate-300 mx-auto mb-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      </svg>
+      <h3 class="text-base font-semibold text-slate-700 mb-1">Não conseguimos ler um valor neste documento</h3>
+      <p class="text-sm text-slate-500 mb-5">
+        A leitura automática não encontrou um valor confiável. Você pode reprocessar (envie uma imagem mais nítida se possível) ou criar o lançamento manualmente.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <%= button_to trigger_workspace_document_path(current_workspace, @document),
+              method: :post,
+              class: "inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer border-0" do %>
+          Reprocessar documento
+        <% end %>
+        <%= link_to "Criar lançamento manualmente",
+              new_workspace_financial_transaction_path(current_workspace, document_id: @document.id),
+              class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors" %>
+      </div>
+    </div>
+  <% else %>
+    <%# Faixa de confiança %>
+    <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-xs text-slate-400 mb-1">Confiança da leitura automática</p>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border <%= tier_css %>">
+            Confiança <%= tier_label.downcase %>
+          </span>
+          <% if extraction.confidence_score %>
+            <span class="text-sm font-bold text-slate-800"><%= extraction.confidence_score %>%</span>
+          <% end %>
+        </div>
+      </div>
+      <% if extraction.processor_name.present? %>
+        <span class="text-xs text-slate-400 text-right">
+          <%= extraction.processor_name %><% if extraction.processor_version.present? %> v<%= extraction.processor_version %><% end %>
+        </span>
+      <% end %>
+    </div>
+
+    <% if tier_label == "Baixa" %>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-sm text-amber-800">
+        A confiança está baixa. Confira os campos abaixo com atenção antes de confirmar — ou edite antes de criar o lançamento.
+      </div>
+    <% end %>
+
+    <%# Preview da imagem, quando houver %>
+    <% if @document.file.attached? && @document.file.blob.content_type.start_with?("image/") %>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 mb-4 text-center">
+        <%= image_tag url_for(@document.file),
+              class: "max-h-64 max-w-full mx-auto rounded-lg object-contain",
+              alt: @document.file.blob.filename.to_s %>
+      </div>
+    <% end %>
+
+    <%# Campos extraídos %>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h3 class="text-sm font-semibold text-slate-800">Campos identificados</h3>
+      </div>
+      <dl class="divide-y divide-slate-100">
+        <div class="px-6 py-3 flex gap-4">
+          <dt class="text-sm text-slate-500 w-44 shrink-0">Tipo</dt>
+          <dd class="text-sm font-medium text-slate-800"><%= suggestion["kind"] == "income" ? "Receita" : "Despesa" %></dd>
+        </div>
+        <div class="px-6 py-3 flex gap-4">
+          <dt class="text-sm text-slate-500 w-44 shrink-0">Valor</dt>
+          <dd class="text-sm font-semibold text-slate-900"><%= format_brl(suggestion["amount_cents"]) %></dd>
+        </div>
+        <% if suggestion["transacted_on"].present? %>
+          <div class="px-6 py-3 flex gap-4">
+            <dt class="text-sm text-slate-500 w-44 shrink-0">Data</dt>
+            <dd class="text-sm font-medium text-slate-800"><%= (Date.parse(suggestion["transacted_on"]).strftime("%d/%m/%Y") rescue suggestion["transacted_on"]) %></dd>
+          </div>
+        <% end %>
+        <% if suggestion["counterparty_name_snapshot"].present? %>
+          <div class="px-6 py-3 flex gap-4">
+            <dt class="text-sm text-slate-500 w-44 shrink-0">Fornecedor/Cliente</dt>
+            <dd class="text-sm font-medium text-slate-800"><%= suggestion["counterparty_name_snapshot"] %></dd>
+          </div>
+        <% end %>
+        <% if suggestion["counterparty_tax_id_snapshot"].present? %>
+          <div class="px-6 py-3 flex gap-4">
+            <dt class="text-sm text-slate-500 w-44 shrink-0">CPF/CNPJ</dt>
+            <dd class="text-sm font-medium text-slate-800"><%= suggestion["counterparty_tax_id_snapshot"] %></dd>
+          </div>
+        <% end %>
+        <% if suggestion["description"].present? %>
+          <div class="px-6 py-3 flex gap-4">
+            <dt class="text-sm text-slate-500 w-44 shrink-0">Descrição</dt>
+            <dd class="text-sm text-slate-700"><%= suggestion["description"] %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+
+    <%# Texto bruto do OCR (recolhível) %>
+    <% if extraction.raw_text.present? %>
+      <details class="bg-white rounded-xl border border-slate-200 mb-4 group">
+        <summary class="px-6 py-4 cursor-pointer text-sm font-semibold text-slate-800 flex items-center justify-between list-none">
+          Texto lido do documento
+          <span class="text-xs text-slate-400 group-open:hidden">mostrar</span>
+          <span class="text-xs text-slate-400 hidden group-open:inline">ocultar</span>
+        </summary>
+        <div class="px-6 pb-4">
+          <pre class="text-xs text-slate-600 bg-slate-50 rounded-lg p-3 whitespace-pre-wrap max-h-72 overflow-y-auto"><%= extraction.raw_text %></pre>
+        </div>
+      </details>
+    <% end %>
+
+    <%# Ações %>
+    <div class="flex flex-wrap items-center gap-3">
+      <%= button_to confirm_workspace_document_path(current_workspace, @document),
+            method: :post,
+            class: "inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors cursor-pointer border-0" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+        Confirmar lançamento
+      <% end %>
+
+      <%= link_to new_workspace_financial_transaction_path(current_workspace, document_id: @document.id),
+            class: "inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+        </svg>
+        Editar antes de criar
+      <% end %>
+
+      <%= button_to trigger_workspace_document_path(current_workspace, @document),
+            method: :post,
+            class: "inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+        Reprocessar
+      <% end %>
+
+      <%= link_to "← Voltar ao documento", workspace_document_path(current_workspace, @document),
+            class: "px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>

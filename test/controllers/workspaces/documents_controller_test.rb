@@ -172,4 +172,87 @@ class Workspaces::DocumentsControllerTest < ActionDispatch::IntegrationTest
     doc.save!(validate: false)
     assert doc.persisted?
   end
+
+  # --- Revisão de leitura (OCR/IA) ---
+
+  def document_with_extraction(confidence: 90, amount_cents: 12_000)
+    doc = @workspace.documents.new(source: "web", status: "review")
+    doc.save!(validate: false)
+    doc.document_extractions.create!(
+      workspace: @workspace, status: "extracted",
+      confidence_score: confidence, processor_name: "tesseract", processor_version: "0.1",
+      raw_text: "MERCADO DO BAIRRO\nTOTAL 120,00",
+      suggested_transaction_data: {
+        "kind" => "expense", "description" => "Compra no mercado",
+        "amount_cents" => amount_cents, "transacted_on" => Date.current.iso8601,
+        "counterparty_name_snapshot" => "Mercado do Bairro"
+      }
+    )
+    doc
+  end
+
+  # 11. GET review renderiza a tela de revisão com os campos extraídos
+  test "GET review mostra campos extraídos e texto bruto" do
+    doc = document_with_extraction
+    get review_workspace_document_path(@workspace, doc)
+    assert_response :success
+    assert_match "Compra no mercado", response.body
+    assert_match "MERCADO DO BAIRRO", response.body
+  end
+
+  # 12. GET review sem valor legível orienta reprocessar/lançar manualmente
+  test "GET review sem valor mostra orientação" do
+    doc = @workspace.documents.new(source: "web", status: "review")
+    doc.save!(validate: false)
+    doc.document_extractions.create!(workspace: @workspace, status: "needs_review",
+                                     confidence_score: 0, processor_name: "placeholder")
+    get review_workspace_document_path(@workspace, doc)
+    assert_response :success
+    assert_match "Não conseguimos ler um valor", response.body
+  end
+
+  # 13. POST confirm cria a FinancialTransaction a partir da extração
+  test "POST confirm cria lançamento confirmado" do
+    doc = document_with_extraction(amount_cents: 12_000)
+    assert_difference("FinancialTransaction.count", 1) do
+      post confirm_workspace_document_path(@workspace, doc)
+    end
+    tx = FinancialTransaction.last
+    assert_equal "confirmed",  tx.status
+    assert_equal "document",   tx.origin
+    assert_equal doc.id,       tx.document_id
+    assert_equal 12_000,       tx.amount_cents
+    assert_redirected_to workspace_financial_transaction_path(@workspace, tx)
+  end
+
+  # 14. POST confirm sem valor não cria lançamento e volta para revisão
+  test "POST confirm sem valor não cria lançamento" do
+    doc = @workspace.documents.new(source: "web", status: "review")
+    doc.save!(validate: false)
+    doc.document_extractions.create!(workspace: @workspace, status: "needs_review",
+                                     confidence_score: 0, processor_name: "placeholder")
+    assert_no_difference("FinancialTransaction.count") do
+      post confirm_workspace_document_path(@workspace, doc)
+    end
+    assert_redirected_to review_workspace_document_path(@workspace, doc)
+  end
+
+  # 15. POST confirm registra AuditLog da confirmação
+  test "POST confirm registra auditoria" do
+    doc = document_with_extraction
+    assert_difference("AuditLog.where(action: 'confirm').count", 1) do
+      post confirm_workspace_document_path(@workspace, doc)
+    end
+  end
+
+  # 16. Não revisa documento de outro workspace
+  test "GET review não acessa documento de outro workspace" do
+    other_user = User.create!(name: "Outro Rev", email: "other_rev_#{SecureRandom.hex(4)}@aionis.test", password: "senha1234")
+    other_ws = Workspace.create!(name: "Outro WS Rev", kind: "cpf", owner: other_user)
+    other_doc = other_ws.documents.new(source: "web", status: "review")
+    other_doc.save!(validate: false)
+
+    get review_workspace_document_path(@workspace, other_doc)
+    assert_response :not_found
+  end
 end

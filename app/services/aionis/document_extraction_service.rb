@@ -21,6 +21,12 @@ module Aionis
       "Leitura automática por OCR/IA indisponível para este tipo de arquivo. " \
       "Envie o XML fiscal para extração automática, ou crie o lançamento manualmente."
 
+    # OCR foi executado, mas não retornou texto legível (imagem ruim, em branco
+    # ou ilegível). Difere de "OCR indisponível" para não confundir o usuário.
+    OCR_EMPTY_MESSAGE =
+      "A leitura automática não encontrou texto legível neste documento. " \
+      "Tente reprocessar com uma imagem mais nítida ou crie o lançamento manualmente."
+
     def self.call(document) = new(document).call
 
     def initialize(document)
@@ -103,7 +109,11 @@ module Aionis
       audit_ocr(result)
 
       text = result.data["text"].to_s if result.success?
-      return process_placeholder(PLACEHOLDER_MESSAGE, provider: result.provider) if text.blank?
+      if text.blank?
+        # Distingue OCR indisponível (falha do provedor) de OCR sem texto legível.
+        message = result.success? ? OCR_EMPTY_MESSAGE : PLACEHOLDER_MESSAGE
+        return process_placeholder(message, provider: result.provider)
+      end
 
       normalized = Aionis::OcrNormalizer.call(text, ocr_confidence: result.data["confidence"].to_i)
       classification = classify(normalized, extra_text: text)
