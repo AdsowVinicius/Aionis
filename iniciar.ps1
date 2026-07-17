@@ -114,6 +114,14 @@ Write-Host "  Ctrl+C para parar                             " -ForegroundColor G
 Write-Host "═══════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-# Inicia Rails server + Tailwind watcher via foreman
-# foreman lê Procfile.dev: web (Rails) + css (Tailwind watcher)
-& foreman start -f Procfile.dev
+# Compila o CSS uma vez. NÃO usamos o watcher via foreman: no Windows o
+# 'tailwindcss:watch' sai sozinho (code 0) e o foreman derruba o servidor junto,
+# além de quebrar no kill (Errno::EINVAL). Rodar o server isolado é estável.
+Write-Host "► Compilando CSS (Tailwind)..." -NoNewline
+& rails tailwindcss:build | Out-Null
+Write-Host " OK" -ForegroundColor Green
+Write-Host "  (Para recompilar o CSS após editar estilos: rails tailwindcss:build)" -ForegroundColor Gray
+Write-Host ""
+
+# Inicia apenas o Rails server (foreground; Ctrl+C para parar).
+& rails server -p 3000
