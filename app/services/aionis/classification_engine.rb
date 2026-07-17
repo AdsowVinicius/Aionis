@@ -35,7 +35,7 @@ module Aionis
       def low_confidence?    = confidence.to_i <= 60
     end
 
-    def self.for_transaction(transaction, exclude_learned: false, extra_text: nil)
+    def self.for_transaction(transaction, exclude_learned: false, extra_text: nil, allow_ai: false)
       digits = transaction.counterparty&.tax_id.presence ||
                transaction.counterparty_tax_id_snapshot.presence
       new(
@@ -46,12 +46,14 @@ module Aionis
         tax_id:          digits,
         exclude_id:      transaction.id,
         exclude_learned: exclude_learned,
-        extra_text:      extra_text
+        extra_text:      extra_text,
+        allow_ai:        allow_ai
       )
     end
 
-    def initialize(workspace:, description:, kind:, counterparty_id: nil, tax_id: nil, exclude_id: nil, exclude_learned: false, extra_text: nil)
+    def initialize(workspace:, description:, kind:, counterparty_id: nil, tax_id: nil, exclude_id: nil, exclude_learned: false, extra_text: nil, allow_ai: false)
       @exclude_learned = exclude_learned
+      @allow_ai        = allow_ai
       @context = Context.new(
         workspace:       workspace,
         description:     description.to_s,
@@ -67,16 +69,48 @@ module Aionis
       rule    = best_matching_rule
       history = history_signal
 
-      if rule
-        build_from_rule(rule, history)
-      elsif history
-        build_from_history(history)
-      else
-        empty_suggestion
-      end
+      base =
+        if rule
+          build_from_rule(rule, history)
+        elsif history
+          build_from_history(history)
+        else
+          empty_suggestion
+        end
+
+      maybe_ai_fallback(base)
     end
 
     private
+
+    # IA APENAS como fallback (CLAUDE.md §4). Nunca chama IA quando:
+    #   - o Rule Engine acertou (regra casou), ou
+    #   - a confiança já é superior ao limite configurado.
+    def maybe_ai_fallback(base)
+      return base unless @allow_ai
+      return base if base.source.to_s.start_with?("rule")
+      return base if base.confidence.to_i > ai_threshold
+
+      ai = ai_fallback
+      ai&.present? ? ai : base
+    end
+
+    def ai_fallback
+      Aionis::Ai::Classifier.call(context: {
+        workspace:   context.workspace,
+        description: context.description,
+        kind:        context.kind,
+        tax_id:      context.tax_id_digits,
+        text:        context.extra_text
+      })
+    rescue => e
+      Rails.logger.error("[ClassificationEngine] IA fallback falhou: #{e.message}")
+      nil
+    end
+
+    def ai_threshold
+      ENV.fetch("AI_FALLBACK_THRESHOLD", "60").to_i
+    end
 
     attr_reader :context
 

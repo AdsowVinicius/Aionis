@@ -134,7 +134,8 @@ module Aionis
         description: suggestion["description"],
         kind:        suggestion["kind"],
         tax_id:      suggestion["counterparty_tax_id_snapshot"],
-        extra_text:  extra_text
+        extra_text:  extra_text,
+        allow_ai:    true # OCR: aciona IA como fallback quando regra/histórico não bastam
       ).call
     end
 

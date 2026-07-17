@@ -52,12 +52,22 @@ default: &default
       dpi:         "<%= ENV.fetch('OCR_DPI', '200') %>"
 
   ai:
+    # IA APENAS como fallback do motor de classificação (CLAUDE.md §4).
+    # Ative com AI_PROVIDER=anthropic + AI_API_KEY. Claude implementado;
+    # OpenAI/Gemini/Ollama ficam prontos para plugar.
     provider: "<%= ENV.fetch('AI_PROVIDER', 'null') %>"
     providers:
-      # anthropic: "Aionis::Integrations::Ai::AnthropicProvider"
+      anthropic: "Aionis::Integrations::Ai::AnthropicProvider"
+      # openai: "Aionis::Integrations::Ai::OpenaiProvider"
+      # gemini: "Aionis::Integrations::Ai::GeminiProvider"
+      # ollama: "Aionis::Integrations::Ai::OllamaProvider"
     settings:
-      api_key: "<%= ENV['AI_API_KEY'] %>"
-      model:   "<%= ENV.fetch('AI_MODEL', 'claude-haiku-4-5-20251001') %>"
+      api_key:      "<%= ENV['AI_API_KEY'] %>"
+      model:        "<%= ENV.fetch('AI_MODEL', 'claude-haiku-4-5') %>"
+      max_tokens:   "<%= ENV.fetch('AI_MAX_TOKENS', '400') %>"
+      timeout:      "<%= ENV.fetch('AI_TIMEOUT', '20') %>"
+      input_price:  "<%= ENV.fetch('AI_INPUT_PRICE', '1.0') %>"
+      output_price: "<%= ENV.fetch('AI_OUTPUT_PRICE', '5.0') %>"
 
 development:
   <<: *default

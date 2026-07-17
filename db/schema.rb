@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_133000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_133000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "ai_interactions", force: :cascade do |t|
+    t.integer "confidence"
+    t.decimal "cost_cents", precision: 12, scale: 4, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.bigint "document_id"
+    t.integer "duration_ms"
+    t.bigint "financial_transaction_id"
+    t.string "kind", default: "classification", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "model"
+    t.text "prompt"
+    t.string "provider", null: false
+    t.text "response"
+    t.integer "tokens_input", default: 0, null: false
+    t.integer "tokens_output", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id"
+    t.index ["financial_transaction_id"], name: "index_ai_interactions_on_financial_transaction_id"
+    t.index ["provider"], name: "index_ai_interactions_on_provider"
+    t.index ["workspace_id", "created_at"], name: "index_ai_interactions_on_workspace_id_and_created_at"
   end
 
   create_table "audit_logs", force: :cascade do |t|
