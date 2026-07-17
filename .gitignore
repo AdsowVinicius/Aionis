@@ -39,6 +39,9 @@
 desktop.ini
 **/desktop.ini
 
+# Configuração local do Claude Code (por máquina, não versionar).
+/.claude/settings.local.json
+
 # Python (worker de OCR)
 __pycache__/
 *.pyc
