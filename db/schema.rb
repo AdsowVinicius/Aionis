@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_150100) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_17_120200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -281,6 +281,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_150100) do
     t.bigint "document_id"
     t.string "from_number"
     t.string "kind", default: "text", null: false
+    t.string "media_url"
+    t.string "mime_type"
     t.jsonb "payload", default: {}, null: false
     t.string "push_name"
     t.datetime "received_at"
@@ -336,6 +338,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_150100) do
     t.datetime "created_at", null: false
     t.text "error"
     t.bigint "incoming_message_id"
+    t.string "message_type", default: "text", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.jsonb "payload", default: {}, null: false
     t.string "provider_message_id"
     t.datetime "sent_at"
     t.string "status", default: "pending", null: false
@@ -409,19 +414,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_150100) do
   end
 
   create_table "workspace_channels", force: :cascade do |t|
+    t.text "access_token"
+    t.boolean "active", default: true, null: false
+    t.string "business_account_id"
     t.string "channel_type", default: "whatsapp", null: false
     t.datetime "created_at", null: false
+    t.string "display_phone_number"
     t.string "external_id"
-    t.string "instance", null: false
+    t.string "instance"
     t.datetime "last_event_at"
     t.string "phone"
+    t.string "phone_number_id"
     t.string "provider", default: "evolution", null: false
+    t.text "refresh_token"
     t.jsonb "settings", default: {}, null: false
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
+    t.string "verify_token"
+    t.string "webhook_secret"
     t.string "webhook_token"
     t.bigint "workspace_id", null: false
     t.index ["instance"], name: "index_workspace_channels_on_instance", unique: true
+    t.index ["phone_number_id"], name: "index_workspace_channels_on_phone_number_id", unique: true
     t.index ["workspace_id", "channel_type"], name: "index_workspace_channels_on_workspace_id_and_channel_type"
     t.index ["workspace_id"], name: "index_workspace_channels_on_workspace_id"
   end

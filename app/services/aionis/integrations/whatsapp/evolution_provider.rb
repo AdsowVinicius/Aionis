@@ -28,7 +28,7 @@ module Aionis
 
         # --- Envio ---
 
-        def send_text(to:, body:, instance: nil)
+        def send_text(to:, body:, instance: nil, credentials: nil)
           return unavailable("Evolution não configurado") unless configured?
 
           resp = post("message/sendText/#{inst(instance)}", { number: number(to), text: body })
@@ -37,10 +37,18 @@ module Aionis
           end
         end
 
-        def send_template(to:, name:, locale: "pt_BR", variables: [], instance: nil)
+        def send_template(to:, name:, locale: "pt_BR", variables: [], instance: nil, credentials: nil)
           # Evolution não usa templates aprovados; envia como texto.
           send_text(to: to, body: variables.join(" "), instance: instance)
         end
+
+        # Envio de mídia e mark_as_read não implementados nesta etapa do Evolution.
+        def send_document(to:, media:, caption: nil, instance: nil, credentials: nil) = unavailable("Evolution: envio de documento não implementado")
+        def send_image(to:, media:, caption: nil, instance: nil, credentials: nil)    = unavailable("Evolution: envio de imagem não implementado")
+        def send_audio(to:, media:, instance: nil, credentials: nil)                  = unavailable("Evolution: envio de áudio não implementado")
+        def mark_as_read(message_id:, instance: nil, credentials: nil)                = unavailable("Evolution: mark_as_read não implementado")
+        # Evolution valida webhook por token no controller, não por HMAC.
+        def verify_signature(raw_body:, signature:) = unavailable("Evolution não usa assinatura HMAC")
 
         # --- Recebimento ---
 
@@ -55,6 +63,7 @@ module Aionis
           kind, text, media = extract_message(data["message"] || {}, key)
 
           Result.ok(provider: provider_key, data: {
+            "event"         => "message",
             "instance"      => payload["instance"],
             "wa_message_id" => key["id"],
             "from"          => number(key["remoteJid"]),
@@ -67,7 +76,7 @@ module Aionis
           })
         end
 
-        def download_media(media, instance: nil)
+        def download_media(media, instance: nil, credentials: nil)
           media = deep_stringify(media)
           bytes = decode_base64(media["base64"])
 
@@ -202,7 +211,7 @@ module Aionis
         end
 
         def ignored(message)
-          Result.ok(provider: provider_key, data: { "type" => "ignored", "reason" => message })
+          Result.ok(provider: provider_key, data: { "event" => "ignored", "type" => "ignored", "reason" => message })
         end
 
         def inst(instance)   = (instance.presence || settings[:instance]).to_s

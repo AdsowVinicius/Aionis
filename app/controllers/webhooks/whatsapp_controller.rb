@@ -1,24 +1,51 @@
 module Webhooks
-  # Recebe webhooks do provedor de WhatsApp (Evolution). Isolado do restante do
-  # app: herda ActionController::Base (sem Devise/Pundit/CSRF). Apenas valida o
-  # token, enfileira o processamento e responde 200 imediatamente — o provedor
-  # reenvia em caso de timeout, então o trabalho pesado fica no job.
+  # Webhook do WhatsApp. Isolado (ActionController::Base, sem Devise/Pundit/CSRF).
+  # Extremamente fino: valida (assinatura/token), responde imediatamente e
+  # enfileira todo o restante (download/OCR/classificação ficam nos jobs).
+  # Nunca conhece Meta/Evolution — delega ao provider via Integration Layer.
   class WhatsappController < ActionController::Base
     skip_forgery_protection
 
-    def create
-      verification = Aionis::Integrations.whatsapp.verify_webhook(token: webhook_token)
-      return head :unauthorized unless verification.success?
+    # GET — handshake de verificação da Meta (hub.challenge).
+    def verify
+      result = meta.verify_webhook(
+        mode:      params["hub.mode"],
+        token:     params["hub.verify_token"],
+        challenge: params["hub.challenge"]
+      )
+      return head :forbidden unless result.success?
 
-      Aionis::Whatsapp::InboundJob.perform_later(params[:instance], payload)
+      render plain: result.data["challenge"].to_s
+    end
+
+    # POST — eventos da Meta (mensagens/status). Valida assinatura HMAC.
+    def receive
+      raw = request.raw_post
+      result = meta.verify_signature(raw_body: raw, signature: request.headers["X-Hub-Signature-256"])
+      return head :unauthorized unless result.success?
+
+      Aionis::Whatsapp::InboundJob.perform_later("meta_cloud", parse(raw))
       head :ok
     rescue => e
-      # Nunca devolve 5xx (evita tempestade de reenvios). O erro fica no log.
-      Rails.logger.error("[Webhooks::Whatsapp] #{e.class}: #{e.message}")
+      Rails.logger.error("[Webhooks::Whatsapp#receive] #{e.class}: #{e.message}")
+      head :ok
+    end
+
+    # POST — Evolution (validação por token). Mantido p/ compatibilidade.
+    def create
+      result = Aionis::Integrations.whatsapp(provider: "evolution").verify_webhook(token: webhook_token)
+      return head :unauthorized unless result.success?
+
+      Aionis::Whatsapp::InboundJob.perform_later("evolution", payload, params[:instance])
+      head :ok
+    rescue => e
+      Rails.logger.error("[Webhooks::Whatsapp#create] #{e.class}: #{e.message}")
       head :ok
     end
 
     private
+
+    def meta = Aionis::Integrations.whatsapp(provider: "meta_cloud")
 
     def webhook_token
       request.headers["apikey"].presence ||
@@ -28,7 +55,11 @@ module Webhooks
 
     def payload
       request.body.rewind
-      JSON.parse(request.body.read.presence || "{}")
+      parse(request.body.read)
+    end
+
+    def parse(raw)
+      JSON.parse(raw.presence || "{}")
     rescue JSON::ParserError
       {}
     end

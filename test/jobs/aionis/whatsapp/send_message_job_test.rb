@@ -4,13 +4,13 @@ class Aionis::Whatsapp::SendMessageJobTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
   class OkProvider
-    def send_text(to:, body:, instance: nil)
+    def send_text(to:, body:, instance: nil, credentials: nil)
       Aionis::Integrations::Result.ok(provider: "evolution", data: { "message_id" => "OUT9" })
     end
   end
 
   class FailProvider
-    def send_text(to:, body:, instance: nil)
+    def send_text(to:, body:, instance: nil, credentials: nil)
       Aionis::Integrations::Result.error(provider: "evolution", message: "offline")
     end
   end

@@ -21,7 +21,9 @@ module Aionis
     TYPES = %i[whatsapp open_finance ocr ai].freeze
 
     class << self
-      def whatsapp     = registry.resolve(:whatsapp)
+      # provider: escolhe o provedor por canal (meta_cloud/evolution). Sem arg,
+      # usa o provedor padrão da config (compatível com chamadas existentes).
+      def whatsapp(provider: nil) = registry.resolve(:whatsapp, key: provider)
       def open_finance = registry.resolve(:open_finance)
       def ocr          = registry.resolve(:ocr)
       def ai           = registry.resolve(:ai)

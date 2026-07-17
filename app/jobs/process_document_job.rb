@@ -10,6 +10,10 @@ class ProcessDocumentJob < ApplicationJob
 
     document.update!(status: "processing")
     Aionis::DocumentExtractionService.call(document)
+
+    # Continuação do pipeline WhatsApp (confirmação automática + resposta),
+    # desacoplada e assíncrona. Guardada por source — não afeta outros canais.
+    Aionis::Whatsapp::AutoConfirmJob.perform_later(document.id) if document.source == "whatsapp"
   rescue => e
     Rails.logger.error("[ProcessDocumentJob] falha inesperada: #{e.class}: #{e.message}")
     document&.update(status: "failed")

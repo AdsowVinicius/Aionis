@@ -12,16 +12,24 @@
 
 default: &default
   whatsapp:
-    # Ative com WHATSAPP_PROVIDER=evolution (Evolution API self-hosted).
+    # Provedor padrão global; canais podem escolher outro via WorkspaceChannel#provider
+    # (Aionis::Integrations.whatsapp(provider: channel.provider)).
+    # meta_cloud = WhatsApp Cloud API oficial (multi-tenant: token por workspace).
     provider: "<%= ENV.fetch('WHATSAPP_PROVIDER', 'null') %>"
     providers:
-      evolution: "Aionis::Integrations::Whatsapp::EvolutionProvider"
+      evolution:  "Aionis::Integrations::Whatsapp::EvolutionProvider"
+      meta_cloud: "Aionis::Integrations::Whatsapp::MetaCloudProvider"
     settings:
+      # Evolution (self-hosted)
       base_url:      "<%= ENV['EVOLUTION_BASE_URL'] %>"
       api_key:       "<%= ENV['EVOLUTION_API_KEY'] %>"
       instance:      "<%= ENV['EVOLUTION_INSTANCE'] %>"
       webhook_token: "<%= ENV['EVOLUTION_WEBHOOK_TOKEN'] %>"
       timeout:       "<%= ENV.fetch('EVOLUTION_TIMEOUT', '15') %>"
+      # Meta Cloud (segredos de app em ENV; token por workspace vem criptografado do canal)
+      app_secret:    "<%= ENV['META_APP_SECRET'] %>"
+      verify_token:  "<%= ENV['META_VERIFY_TOKEN'] %>"
+      graph_version: "<%= ENV.fetch('META_GRAPH_VERSION', 'v21.0') %>"
 
   open_finance:
     # Ative com OPEN_FINANCE_PROVIDER=pluggy. Belvo/Quanto ficam prontos para

@@ -1,28 +1,20 @@
 # frozen_string_literal: true
 
-require "stringio"
-
 module Aionis
   module Whatsapp
-    # Orquestra o processamento de uma mensagem recebida do WhatsApp.
+    # Primeiro passo do pipeline assíncrono (chamado pelo InboundJob):
+    #   parse_inbound -> acha WorkspaceChannel -> persiste IncomingMessage (dedup)
+    #   -> ENFILEIRA o próximo passo (DownloadMediaJob p/ mídia; resposta p/ texto).
     #
-    # Fluxo (chamado pelo InboundJob, fora da requisição web):
-    #   parse_inbound (via Integrations.whatsapp) -> acha WorkspaceChannel ->
-    #   registra IncomingMessage (dedup) -> se mídia: cria Document, extrai
-    #   (OCR/Rule Engine) e faz a confirmação automática -> responde ao usuário.
-    #
-    # NÃO conhece Evolution: tudo passa por Aionis::Integrations.whatsapp.
-    # Confirmação automática respeita as faixas de confiança do CLAUDE.md.
+    # NÃO baixa mídia nem processa OCR aqui (fica nos jobs seguintes). Não conhece
+    # Meta/Evolution: tudo via Aionis::Integrations.whatsapp(provider:).
     class InboundProcessor
-      SUPPORTED = Document::ALLOWED_CONTENT_TYPES
-      AUTO_CONFIRM_MIN = 86
-      REVIEW_MIN       = 61
+      def self.call(provider:, payload:, instance: nil) = new(provider:, payload:, instance:).call
 
-      def self.call(instance:, payload:) = new(instance:, payload:).call
-
-      def initialize(instance:, payload:)
-        @instance = instance
+      def initialize(provider:, payload:, instance: nil)
+        @provider = provider
         @payload  = payload
+        @instance = instance
       end
 
       def call
@@ -30,18 +22,18 @@ module Aionis
         return unless result.success?
 
         @data = result.data
+        return StatusUpdater.call(@data) if @data["event"] == "status"
         return if ignorable?
 
-        @channel = WorkspaceChannel.find_by(instance: channel_instance)
-        return log("canal não encontrado: #{channel_instance}") unless @channel
+        @channel = find_channel
+        return log("canal não encontrado (#{@provider})") unless @channel
         @channel.touch_event!
 
         @incoming = build_incoming
-        return if @incoming.nil? # duplicada — já processada
+        return if @incoming.nil? # idempotência: já recebida
 
-        audit("Mensagem recebida", incoming: true)
-        @data["type"].in?(%w[document image]) ? process_media : process_text
-        @incoming.processed!
+        audit("Mensagem recebida")
+        route
         @incoming
       rescue => e
         Rails.logger.error("[Whatsapp::InboundProcessor] #{e.class}: #{e.message}")
@@ -52,11 +44,15 @@ module Aionis
       private
 
       def ignorable?
-        @data["type"] == "ignored" || @data["from_me"] || @data["wa_message_id"].blank?
+        @data["event"] == "ignored" || @data["from_me"] || @data["wa_message_id"].blank?
       end
 
-      def channel_instance
-        @instance.presence || @data["instance"]
+      def find_channel
+        if @data["phone_number_id"].present?
+          WorkspaceChannel.find_by(phone_number_id: @data["phone_number_id"])
+        else
+          WorkspaceChannel.find_by(instance: (@instance.presence || @data["instance"]))
+        end
       end
 
       def build_incoming
@@ -67,153 +63,50 @@ module Aionis
           wa_message_id: @data["wa_message_id"],
           from_number:   @data["from"],
           push_name:     @data["push_name"],
-          kind:          @data["type"].in?(IncomingMessage::KINDS) ? @data["type"] : "other",
+          kind:          message_kind,
           text:          @data["text"],
-          payload:       @payload,
+          mime_type:     @data.dig("media", "mimetype"),
+          payload:       { "raw" => @payload, "media" => @data["media"] },
           received_at:   parse_time(@data["received_at"]),
           status:        "received"
         )
       rescue ActiveRecord::RecordNotUnique
-        nil
+        nil # corrida de webhooks duplicados
       end
 
-      # --- Mídia (documento/imagem) ---
-
-      def process_media
-        dl = whatsapp.download_media(@data["media"], instance: @channel.instance)
-        return reply(:cant_read) unless dl.success?
-
-        content_type = dl.data["mimetype"]
-        return reply(:unsupported) unless content_type.in?(SUPPORTED)
-
-        document = build_document(dl.data, content_type)
-        @incoming.update!(document: document)
-
-        Aionis::DocumentExtractionService.call(document)
-        auto_confirm(document)
+      def message_kind
+        @data["type"].to_s.in?(IncomingMessage::KINDS) ? @data["type"] : "other"
       end
 
-      def build_document(media, content_type)
-        doc = @channel.workspace.documents.new(source: "whatsapp", status: "pending")
-        doc.file.attach(
-          io:           StringIO.new(media["bytes"]),
-          filename:     media["filename"].presence || "whatsapp_#{@data['wa_message_id']}",
-          content_type: content_type
-        )
-        doc.save!
-        doc
-      end
-
-      # Confirmação automática conforme a confiança da extração.
-      def auto_confirm(document)
-        extraction = document.latest_extraction
-        suggestion = extraction&.suggested_transaction_data || {}
-        confidence = extraction&.confidence_score.to_i
-
-        if suggestion["amount_cents"].blank?
-          return reply(:low_confidence)
-        elsif confidence >= AUTO_CONFIRM_MIN
-          tx = create_transaction(document, extraction, suggestion, status: "confirmed")
-          audit("Lançamento confirmado automaticamente", transaction: tx)
-          reply(:confirmed, tx)
-        elsif confidence >= REVIEW_MIN
-          tx = create_transaction(document, extraction, suggestion, status: "pending")
-          audit("Lançamento pendente de revisão", transaction: tx)
-          reply(:review, tx)
+      # Enfileira o próximo passo conforme o tipo de mensagem.
+      def route
+        case @incoming.kind
+        when "document", "image"
+          audit("Documento recebido — download enfileirado")
+          Aionis::Whatsapp::DownloadMediaJob.perform_later(@incoming.id)
+        when "audio"
+          # Arquitetura preparada; processamento de áudio ainda não implementado.
+          Aionis::Whatsapp::Responder.reply(incoming: @incoming, kind: :audio_unsupported)
+          @incoming.processed!
         else
-          reply(:low_confidence)
+          Aionis::Whatsapp::Responder.reply(incoming: @incoming, kind: :help)
+          @incoming.processed!
         end
       end
 
-      def create_transaction(document, extraction, suggestion, status:)
-        tx = @channel.workspace.financial_transactions.new(
-          origin:        "document",
-          document:      document,
-          kind:          suggestion["kind"].presence || "expense",
-          description:   suggestion["description"].presence || "Comprovante via WhatsApp",
-          amount_cents:  suggestion["amount_cents"],
-          transacted_on: parse_date(suggestion["transacted_on"]) || Date.current,
-          status:        status,
-          counterparty_name_snapshot:   suggestion["counterparty_name_snapshot"],
-          counterparty_tax_id_snapshot: suggestion["counterparty_tax_id_snapshot"],
-          counterparty_tax_id_status:   suggestion["counterparty_tax_id_status"]
-        )
-        classification = Aionis::ClassificationEngine.for_transaction(
-          tx, extra_text: extraction&.raw_text
-        ).call
-        tx.apply_classification(classification, only_blank: true) if classification.present?
-        tx.save!
-        tx
-      end
-
-      # --- Texto ---
-
-      def process_text
-        reply(:help)
-      end
-
-      # --- Resposta (sempre via provider, com retry) ---
-
-      def reply(kind, tx = nil)
-        outgoing = @channel.outgoing_messages.create!(
-          workspace:        @channel.workspace,
-          incoming_message: @incoming,
-          to_number:        @data["from"],
-          body:             message_body(kind, tx),
-          status:           "pending"
-        )
-        Aionis::Whatsapp::SendMessageJob.perform_later(outgoing.id)
-        outgoing
-      end
-
-      def message_body(kind, tx)
-        case kind
-        when :confirmed
-          "✅ Lançamento registrado: #{tx.description} — #{brl(tx.amount_cents)}" \
-            "#{" · #{tx.category.name}" if tx.category}. (confiança alta)"
-        when :review
-          "📄 Recebi seu comprovante e criei um lançamento de #{brl(tx.amount_cents)} " \
-            "pendente de confirmação. Confira no app."
-        when :low_confidence
-          "😕 Não consegui ler o comprovante com segurança. Pode reenviar uma foto mais nítida?"
-        when :unsupported
-          "Recebi seu arquivo, mas só consigo ler foto (JPG/PNG) ou PDF de comprovantes."
-        when :cant_read
-          "Não consegui baixar seu arquivo. Pode reenviar, por favor?"
-        else # :help
-          "Olá! Envie a foto ou o PDF do seu comprovante que eu registro pra você. 📎"
-        end
-      end
-
-      # --- Helpers ---
-
-      def audit(reason, incoming: false, transaction: nil)
+      def audit(reason)
         AuditLog.log(
-          action:                "integration",
-          origin:                "integration",
-          workspace:             @channel.workspace,
-          provider:              @channel.provider,
-          document:              @incoming&.document,
-          financial_transaction: transaction,
-          reason:                reason,
-          metadata: {
-            channel_instance:   @channel.instance,
-            incoming_message_id: @incoming&.id,
-            from:               @data["from"],
-            type:               @data["type"]
-          }
+          action: "integration", origin: "integration",
+          workspace: @channel.workspace, provider: @channel.provider,
+          reason: reason,
+          metadata: { incoming_message_id: @incoming&.id, from: @data["from"], type: @data["type"] }
         )
       end
 
-      def whatsapp = Aionis::Integrations.whatsapp
+      def whatsapp = Aionis::Integrations.whatsapp(provider: @provider)
 
-      def brl(cents)
-        format("R$ %.2f", cents.to_i / 100.0).sub(".", ",")
-      end
-
-      def parse_time(str)  = (Time.zone.parse(str.to_s) rescue nil) || Time.current
-      def parse_date(str)  = (Date.parse(str.to_s) rescue nil)
-      def log(message)     = Rails.logger.info("[Whatsapp::InboundProcessor] #{message}")
+      def parse_time(str) = (Time.zone.parse(str.to_s) rescue nil) || Time.current
+      def log(message)    = Rails.logger.info("[Whatsapp::InboundProcessor] #{message}")
     end
   end
 end

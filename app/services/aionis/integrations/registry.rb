@@ -48,12 +48,14 @@ module Aionis
         @overrides = {}
       end
 
-      # Resolve a instância do provedor ativo para o tipo (memoizada).
-      def resolve(type)
+      # Resolve a instância do provedor para o tipo (memoizada). `key` permite
+      # escolher um provedor específico (ex.: por canal: "meta_cloud"/"evolution")
+      # em vez do provedor padrão da config. Overrides têm precedência (testes).
+      def resolve(type, key: nil)
         type = normalize_type(type)
         return @overrides[type] if @overrides.key?(type)
 
-        @instances[type] ||= build(type)
+        @instances[[type, key]] ||= build(type, key: key)
       end
 
       # Injeta um provedor específico (tem precedência sobre a config).
@@ -65,7 +67,7 @@ module Aionis
       def clear_override(type)
         type = normalize_type(type)
         @overrides.delete(type)
-        @instances.delete(type)
+        @instances.delete_if { |(t, _key), _v| t == type }
         self
       end
 
@@ -99,15 +101,15 @@ module Aionis
         @config[type.to_s] || @config[type] || {}
       end
 
-      def build(type)
+      def build(type, key: nil)
         cfg       = type_config(type)
         providers = DEFAULT_PROVIDERS.fetch(type).merge(cfg["providers"] || {})
-        key       = cfg.fetch("provider", "null").to_s
+        chosen    = (key.presence || cfg.fetch("provider", "null")).to_s
 
-        class_name = providers[key]
+        class_name = providers[chosen]
         unless class_name
           raise Errors::UnknownProvider,
-                "Provedor '#{key}' não mapeado para #{type}. Disponíveis: #{providers.keys.join(', ')}"
+                "Provedor '#{chosen}' não mapeado para #{type}. Disponíveis: #{providers.keys.join(', ')}"
         end
 
         instantiate(class_name, cfg["settings"] || {})

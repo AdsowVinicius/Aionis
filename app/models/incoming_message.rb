@@ -3,7 +3,7 @@ class IncomingMessage < ApplicationRecord
   belongs_to :workspace_channel
   belongs_to :document, optional: true
 
-  KINDS = %w[text document image other].freeze
+  KINDS = %w[text document image audio other].freeze
 
   enum :status, {
     received:  "received",
