@@ -16,6 +16,8 @@ class Workspace < ApplicationRecord
   has_many :bank_transactions, dependent: :destroy
   has_many :reconciliation_matches, dependent: :destroy
   has_many :ai_interactions, dependent: :nullify
+  has_many :kpi_snapshots, dependent: :destroy
+  has_many :insights, dependent: :destroy
 
   enum :kind, { cpf: "cpf", mei: "mei", empresa: "empresa" }
   enum :status, { active: "active", suspended: "suspended", trial: "trial" }

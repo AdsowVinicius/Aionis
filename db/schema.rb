@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_150100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -294,6 +294,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_140000) do
     t.index ["workspace_channel_id", "wa_message_id"], name: "index_incoming_messages_on_channel_and_wa_id", unique: true
     t.index ["workspace_channel_id"], name: "index_incoming_messages_on_workspace_channel_id"
     t.index ["workspace_id"], name: "index_incoming_messages_on_workspace_id"
+  end
+
+  create_table "insights", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "data", default: {}, null: false
+    t.date "generated_on"
+    t.string "kind", null: false
+    t.text "message"
+    t.string "severity", default: "info", null: false
+    t.string "status", default: "active", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "kind", "generated_on"], name: "index_insights_on_workspace_kind_day", unique: true
+    t.index ["workspace_id", "status"], name: "index_insights_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_insights_on_workspace_id"
+  end
+
+  create_table "kpi_snapshots", force: :cascade do |t|
+    t.bigint "balance_cents", default: 0, null: false
+    t.bigint "burn_rate_cents"
+    t.date "captured_on"
+    t.datetime "created_at", null: false
+    t.jsonb "data", default: {}, null: false
+    t.bigint "expense_cents", default: 0, null: false
+    t.integer "health_score"
+    t.bigint "income_cents", default: 0, null: false
+    t.date "period_end"
+    t.string "period_label", null: false
+    t.date "period_start"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "period_label"], name: "index_kpi_snapshots_on_workspace_id_and_period_label", unique: true
+    t.index ["workspace_id"], name: "index_kpi_snapshots_on_workspace_id"
   end
 
   create_table "outgoing_messages", force: :cascade do |t|
