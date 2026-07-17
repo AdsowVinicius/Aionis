@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       end
       resources :alerts, only: [:index]
       resources :audit_logs, only: [:index, :show]
+      resources :whatsapp_channels, except: [:show]
       resource  :subscription, only: [:show, :edit, :update]
       resource  :settings,    only: :show
     end
