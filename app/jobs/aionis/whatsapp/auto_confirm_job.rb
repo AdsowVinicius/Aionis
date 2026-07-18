@@ -10,9 +10,6 @@ module Aionis
     class AutoConfirmJob < ApplicationJob
       queue_as :default
 
-      AUTO_CONFIRM_MIN = 86
-      REVIEW_MIN       = 61
-
       def perform(document_id)
         document = Document.find_by(id: document_id)
         return unless document&.source == "whatsapp"
@@ -24,9 +21,9 @@ module Aionis
         builder = Aionis::Documents::TransactionBuilder.new(document)
         tx = builder.build
 
-        if tx.nil? || builder.confidence < REVIEW_MIN
+        if tx.nil? || Aionis::Confidence.low?(builder.confidence)
           reply(:low_confidence)
-        elsif builder.confidence >= AUTO_CONFIRM_MIN
+        elsif Aionis::Confidence.high?(builder.confidence)
           tx.update!(status: "confirmed")
           audit("Lançamento confirmado automaticamente", transaction: tx)
           reply(:confirmed, tx)

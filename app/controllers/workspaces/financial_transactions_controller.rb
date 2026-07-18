@@ -194,7 +194,7 @@ module Workspaces
       @classification_suggestion = Aionis::ClassificationEngine.for_transaction(
         @transaction, extra_text: @classification_context_text
       ).call
-      if @classification_suggestion.confidence >= 61
+      if Aionis::Confidence.actionable?(@classification_suggestion.confidence)
         @transaction.apply_classification(@classification_suggestion, only_blank: true)
       end
     end

@@ -10,8 +10,6 @@ module Aionis
     #   tx = Aionis::Documents::TransactionBuilder.build(document)   # não salvo
     #   tx.save! if tx
     class TransactionBuilder
-      AUTO_CONFIRM_MIN = 86
-
       def self.build(document, status: nil) = new(document).build(status: status)
 
       def initialize(document)
@@ -49,7 +47,7 @@ module Aionis
       def suggestion = @suggestion ||= (@extraction&.suggested_transaction_data || {})
 
       def default_status
-        confidence >= AUTO_CONFIRM_MIN ? "confirmed" : "pending"
+        Aionis::Confidence.high?(confidence) ? "confirmed" : "pending"
       end
 
       def default_description

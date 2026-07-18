@@ -29,10 +29,10 @@ module Aionis
       :recurrence, :cost_center, :confidence, :source, :reasons,
       keyword_init: true
     ) do
-      def present?           = category_id.present? || confidence.to_i.positive?
-      def auto_applicable?   = confidence.to_i >= 86        # alta confiança
-      def needs_confirmation? = confidence.to_i.between?(61, 85) # média
-      def low_confidence?    = confidence.to_i <= 60
+      def present?            = category_id.present? || confidence.to_i.positive?
+      def auto_applicable?    = Aionis::Confidence.high?(confidence)
+      def needs_confirmation? = Aionis::Confidence.medium?(confidence)
+      def low_confidence?     = Aionis::Confidence.low?(confidence)
     end
 
     def self.for_transaction(transaction, exclude_learned: false, extra_text: nil, allow_ai: false)
@@ -109,7 +109,7 @@ module Aionis
     end
 
     def ai_threshold
-      ENV.fetch("AI_FALLBACK_THRESHOLD", "60").to_i
+      ENV.fetch("AI_FALLBACK_THRESHOLD", Aionis::Confidence::LOW_MAX.to_s).to_i
     end
 
     attr_reader :context

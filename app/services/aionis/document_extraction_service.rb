@@ -85,7 +85,7 @@ module Aionis
       end
 
       extraction.update!(
-        status:                     result.confidence >= 61 ? "extracted" : "needs_review",
+        status:                     Aionis::Confidence.actionable?(result.confidence) ? "extracted" : "needs_review",
         processor_name:             Aionis::FiscalXmlParser::PROCESSOR_NAME,
         processor_version:          Aionis::FiscalXmlParser::PROCESSOR_VERSION,
         confidence_score:           result.confidence,
@@ -119,7 +119,7 @@ module Aionis
       classification = classify(normalized, extra_text: text)
 
       extraction.update!(
-        status:                     normalized.confidence >= 61 ? "extracted" : "needs_review",
+        status:                     Aionis::Confidence.actionable?(normalized.confidence) ? "extracted" : "needs_review",
         processor_name:             result.provider,
         processor_version:          Aionis::OcrNormalizer::PROCESSOR_VERSION,
         confidence_score:           normalized.confidence,

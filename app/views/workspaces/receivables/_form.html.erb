@@ -1,9 +1,11 @@
-<%= form_with model: [current_workspace, @receivable], data: { turbo: false } do |f| %>
-  <% if @receivable.errors.any? %>
+<%= form_with model: @record,
+      url: @record.persisted? ? workspace_receivable_path(current_workspace, @record) : workspace_receivables_path(current_workspace),
+      data: { turbo: false } do |f| %>
+  <% if @record.errors.any? %>
     <div class="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
       <p class="text-sm font-medium text-red-700 mb-1">Corrija os erros abaixo:</p>
       <ul class="text-sm text-red-600 list-disc list-inside">
-        <% @receivable.errors.each do |error| %>
+        <% @record.errors.each do |error| %>
           <li><%= error.full_message %></li>
         <% end %>
       </ul>
@@ -23,7 +25,7 @@
       <div>
         <%= f.label :amount_brl, "Valor (R$)", class: "block text-sm font-medium text-slate-700 mb-1" %>
         <%= f.text_field :amount_brl,
-              value: @receivable.amount_brl > 0 ? "%.2f" % @receivable.amount_brl : "",
+              value: @record.amount_brl > 0 ? "%.2f" % @record.amount_brl : "",
               placeholder: "0,00",
               class: "w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" %>
       </div>
@@ -39,7 +41,7 @@
       <%= f.select :category_id,
             options_for_select(
               @categories.map { |c| [c.name, c.id] },
-              @receivable.category_id
+              @record.category_id
             ),
             { include_blank: "— Selecione (opcional)" },
             class: "w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" %>
@@ -50,7 +52,7 @@
       <%= f.select :counterparty_id,
             options_for_select(
               @counterparties.map { |cp| [cp.name, cp.id] },
-              @receivable.counterparty_id
+              @record.counterparty_id
             ),
             { include_blank: "— Selecione (opcional)" },
             class: "w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" %>
@@ -64,7 +66,7 @@
                 label = d.file.attached? ? d.file.blob.filename.to_s : "Documento ##{d.id}"
                 [label, d.id]
               },
-              @receivable.document_id
+              @record.document_id
             ),
             { include_blank: "— Selecione (opcional)" },
             class: "w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" %>
@@ -79,7 +81,7 @@
     </div>
 
     <div class="flex items-center gap-3 pt-2">
-      <%= f.submit @receivable.new_record? ? "Criar conta a receber" : "Salvar alterações",
+      <%= f.submit @record.new_record? ? "Criar conta a receber" : "Salvar alterações",
             class: "px-5 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors cursor-pointer" %>
       <%= link_to "Cancelar", workspace_receivables_path(current_workspace),
             class: "px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors" %>
