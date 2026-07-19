@@ -70,6 +70,10 @@ group :development, :test do
 end
 
 group :development do
+  # Carrega variáveis do arquivo .env (único por projeto) automaticamente.
+  # Só em development: os testes ficam herméticos (não leem o .env).
+  gem "dotenv-rails"
+
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
