@@ -11,12 +11,21 @@ class WorkspaceChannel < ApplicationRecord
   enum :status, { pending: "pending", connected: "connected", disconnected: "disconnected" }
 
   validates :channel_type, :provider, presence: true
+  # instance/phone_number_id não são mais por workspace: o número é global (ENV).
+  # O canal por workspace serve só para status e para agrupar as mensagens.
+  # Mantemos unicidade para eventuais canais legados que ainda os tenham.
   validates :instance,        uniqueness: true, allow_nil: true
   validates :phone_number_id, uniqueness: true, allow_nil: true
-  validates :instance,        presence: true, if: :evolution?  # Evolution usa instance
-  validates :phone_number_id, presence: true, if: :meta?       # Meta usa phone_number_id
 
   scope :active, -> { where(active: true) }
+
+  # Canal (só status) do workspace para um provider. Provisionado sob demanda
+  # quando chega a primeira mensagem — não guarda segredos nem número.
+  def self.provision(workspace, provider:)
+    workspace.workspace_channels.find_or_create_by!(provider: provider, channel_type: "whatsapp") do |c|
+      c.status = "connected"
+    end
+  end
 
   def meta?      = provider == "meta_cloud"
   def evolution? = provider == "evolution"

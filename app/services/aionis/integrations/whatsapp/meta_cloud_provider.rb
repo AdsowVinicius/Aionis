@@ -233,8 +233,14 @@ module Aionis
           Time.current.utc.iso8601
         end
 
+        # Credenciais do número global (ENV via settings). Aceita override por
+        # chamada (credentials:) para compatibilidade com canais legados.
         def creds(credentials)
-          (credentials || {}).symbolize_keys
+          provided = (credentials || {}).symbolize_keys
+          {
+            access_token:    provided[:access_token].presence    || settings[:access_token].to_s.presence,
+            phone_number_id: provided[:phone_number_id].presence || settings[:phone_number_id].to_s.presence
+          }
         end
 
         # --- Settings (ENV via integrations.yml) — nada hardcoded ---

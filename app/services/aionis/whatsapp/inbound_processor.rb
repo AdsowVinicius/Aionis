@@ -3,7 +3,8 @@
 module Aionis
   module Whatsapp
     # Primeiro passo do pipeline assíncrono (chamado pelo InboundJob):
-    #   parse_inbound -> acha WorkspaceChannel -> persiste IncomingMessage (dedup)
+    #   parse_inbound -> acha o Workspace pelo remetente (Workspace#whatsapp_number)
+    #   -> provisiona o canal (só status) -> persiste IncomingMessage (dedup)
     #   -> ENFILEIRA o próximo passo (DownloadMediaJob p/ mídia; resposta p/ texto).
     #
     # NÃO baixa mídia nem processa OCR aqui (fica nos jobs seguintes). Não conhece
@@ -25,8 +26,10 @@ module Aionis
         return StatusUpdater.call(@data) if @data["event"] == "status"
         return if ignorable?
 
-        @channel = find_channel
-        return log("canal não encontrado (#{@provider})") unless @channel
+        @workspace = find_workspace
+        return log("remetente não cadastrado: #{@data['from']}") unless @workspace
+
+        @channel = WorkspaceChannel.provision(@workspace, provider: @provider)
         @channel.touch_event!
 
         @incoming = build_incoming
@@ -47,12 +50,13 @@ module Aionis
         @data["event"] == "ignored" || @data["from_me"] || @data["wa_message_id"].blank?
       end
 
-      def find_channel
-        if @data["phone_number_id"].present?
-          WorkspaceChannel.find_by(phone_number_id: @data["phone_number_id"])
-        else
-          WorkspaceChannel.find_by(instance: (@instance.presence || @data["instance"]))
-        end
+      # Identifica o workspace pelo número de QUEM ENVIOU (o número do Aionis é
+      # único/global). O cliente registra o próprio número em Workspace#whatsapp_number.
+      def find_workspace
+        digits = @data["from"].to_s.gsub(/\D/, "").presence
+        return nil if digits.blank?
+
+        Workspace.find_by(whatsapp_number: digits)
       end
 
       def build_incoming

@@ -35,11 +35,9 @@ class Aionis::Whatsapp::InboundProcessorTest < ActiveSupport::TestCase
 
   setup do
     @user = User.create!(name: "WA", email: "wain_#{SecureRandom.hex(4)}@t.test", password: "senha1234")
-    @workspace = Workspace.create!(name: "WS", kind: "empresa", owner: @user)
-    @channel = @workspace.workspace_channels.create!(
-      provider: "meta_cloud", status: "connected",
-      phone_number_id: "PN123", access_token: "tok", verify_token: "vt"
-    )
+    # O remetente é reconhecido pelo número dele (número do Aionis é global).
+    @workspace = Workspace.create!(name: "WS", kind: "empresa", owner: @user, whatsapp_number: "5511999")
+    @channel = @workspace.workspace_channels.create!(provider: "meta_cloud", status: "connected")
   end
 
   teardown { Aionis::Integrations.reset! }
@@ -155,5 +153,12 @@ class Aionis::Whatsapp::InboundProcessorTest < ActiveSupport::TestCase
   test "registra AuditLog de integração" do
     run_inbound(media_inbound(id: "AUD"))
     assert AuditLog.where(action: "integration", origin: "integration").exists?
+  end
+
+  test "remetente não cadastrado em nenhum workspace é ignorado" do
+    desconhecido = media_inbound(id: "UNK").merge("from" => "5599000000000")
+    assert_no_difference -> { IncomingMessage.count } do
+      run_inbound(desconhecido)
+    end
   end
 end

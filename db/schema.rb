@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_17_120200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_19_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -459,7 +459,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_120200) do
     t.string "status", default: "active", null: false
     t.string "tax_id"
     t.datetime "updated_at", null: false
+    t.string "whatsapp_number"
     t.index ["owner_id"], name: "index_workspaces_on_owner_id"
+    t.index ["whatsapp_number"], name: "index_workspaces_on_whatsapp_number", unique: true, where: "(whatsapp_number IS NOT NULL)"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

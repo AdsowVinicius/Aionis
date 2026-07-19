@@ -30,7 +30,7 @@ Rails.application.routes.draw do
       end
       resources :alerts, only: [:index]
       resources :audit_logs, only: [:index, :show]
-      resources :whatsapp_channels, except: [:show]
+      resources :whatsapp_channels, only: [:index]
       resources :reconciliations, only: [:index] do
         member do
           patch :confirm

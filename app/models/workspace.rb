@@ -25,10 +25,21 @@ class Workspace < ApplicationRecord
   validates :name, :kind, presence: true
   # tax_id NUNCA obrigatório
   validates :tax_id, cpf_cnpj: true, allow_blank: true
+  # Número de WhatsApp que identifica o remetente no número global do Aionis.
+  # Opcional; único quando informado (um número pertence a um workspace).
+  validates :whatsapp_number, uniqueness: true, allow_blank: true
 
+  before_validation :normalize_whatsapp_number
   after_create :add_owner_as_member
 
   private
+
+  # Guarda apenas dígitos (com DDI), formato em que a Meta entrega o remetente.
+  def normalize_whatsapp_number
+    return if whatsapp_number.blank?
+
+    self.whatsapp_number = whatsapp_number.to_s.gsub(/\D/, "").presence
+  end
 
   def add_owner_as_member
     workspace_users.find_or_create_by(user: owner) { |wu| wu.role = "owner" }

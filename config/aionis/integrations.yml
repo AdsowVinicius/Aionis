@@ -14,7 +14,9 @@ default: &default
   whatsapp:
     # Provedor padrão global; canais podem escolher outro via WorkspaceChannel#provider
     # (Aionis::Integrations.whatsapp(provider: channel.provider)).
-    # meta_cloud = WhatsApp Cloud API oficial (multi-tenant: token por workspace).
+    # meta_cloud = WhatsApp Cloud API oficial. Número ÚNICO/global do Aionis:
+    # todas as credenciais vêm de ENV (não por workspace). O remetente é
+    # identificado pelo número dele (Workspace#whatsapp_number).
     provider: "<%= ENV.fetch('WHATSAPP_PROVIDER', 'null') %>"
     providers:
       evolution:  "Aionis::Integrations::Whatsapp::EvolutionProvider"
@@ -26,10 +28,12 @@ default: &default
       instance:      "<%= ENV['EVOLUTION_INSTANCE'] %>"
       webhook_token: "<%= ENV['EVOLUTION_WEBHOOK_TOKEN'] %>"
       timeout:       "<%= ENV.fetch('EVOLUTION_TIMEOUT', '15') %>"
-      # Meta Cloud (segredos de app em ENV; token por workspace vem criptografado do canal)
-      app_secret:    "<%= ENV['META_APP_SECRET'] %>"
-      verify_token:  "<%= ENV['META_VERIFY_TOKEN'] %>"
-      graph_version: "<%= ENV.fetch('META_GRAPH_VERSION', 'v21.0') %>"
+      # Meta Cloud — número global do Aionis (tudo em ENV, nada por workspace)
+      phone_number_id: "<%= ENV['META_PHONE_NUMBER_ID'] %>"
+      access_token:    "<%= ENV['META_ACCESS_TOKEN'] %>"
+      app_secret:      "<%= ENV['META_APP_SECRET'] %>"
+      verify_token:    "<%= ENV['META_VERIFY_TOKEN'] %>"
+      graph_version:   "<%= ENV.fetch('META_GRAPH_VERSION', 'v21.0') %>"
 
   open_finance:
     # Ative com OPEN_FINANCE_PROVIDER=pluggy. Belvo/Quanto ficam prontos para

@@ -45,6 +45,6 @@ class WorkspacesController < ApplicationController
   end
 
   def workspace_params
-    params.require(:workspace).permit(:name, :kind, :tax_id)
+    params.require(:workspace).permit(:name, :kind, :tax_id, :whatsapp_number)
   end
 end
