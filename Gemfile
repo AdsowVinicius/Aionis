@@ -30,7 +30,7 @@ gem "cpf_cnpj"
 gem "pagy", "~> 9.0"
 
 # Money formatting for BRL
-gem "money-rails", "~> 1.15"
+gem "money-rails", "~> 3.0"
 
 # Full pt-BR translations for Rails (dates, numbers, errors, etc.)
 gem "rails-i18n"
