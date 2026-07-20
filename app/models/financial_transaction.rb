@@ -62,9 +62,9 @@ class FinancialTransaction < ApplicationRecord
     sanitized = value.to_s.gsub(/[^\d.,]/, "").strip
     sanitized = if sanitized.include?(",")
                   sanitized.gsub(".", "").gsub(",", ".")
-                else
+    else
                   sanitized
-                end
+    end
     self.amount_cents = BigDecimal(sanitized).mult(100, 10).to_i
   rescue ArgumentError, TypeError
     nil

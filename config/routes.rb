@@ -37,7 +37,7 @@ Rails.application.routes.draw do
           patch :reject
         end
       end
-      resource  :settings,    only: :show
+      resource :settings,    only: :show
     end
   end
 

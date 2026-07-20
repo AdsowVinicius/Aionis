@@ -20,7 +20,7 @@ class Aionis::AnalyticsTest < ActiveSupport::TestCase
 
     k = Aionis::Analytics::Kpis.call(@ws)
     assert_equal 200_000, k.income_cents
-    assert_equal  80_000, k.expense_cents
+    assert_equal 80_000, k.expense_cents
     assert_equal 120_000, k.balance_cents
     assert_equal 1_199_000, k.general_income_cents
     assert_equal 1_119_000, k.general_balance_cents
@@ -47,7 +47,7 @@ class Aionis::AnalyticsTest < ActiveSupport::TestCase
     ev = Aionis::Analytics::MonthlyEvolution.call(@ws)
     assert_equal 12, ev.size
     assert_equal 100_000, ev.last[:income_cents]
-    assert_equal  40_000, ev.last[:balance_cents]
+    assert_equal 40_000, ev.last[:balance_cents]
   end
 
   test "CashFlow acumula o líquido" do

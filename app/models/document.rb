@@ -38,7 +38,7 @@ class Document < ApplicationRecord
   def latest_extraction
     document_extractions.max_by(&:created_at)
   end
-  validate  :acceptable_file
+  validate :acceptable_file
 
   private
 
