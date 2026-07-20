@@ -1,7 +1,7 @@
 <% content_for :title, "Documento ##{@document.id} — #{current_workspace.name}" %>
 <% content_for :page_title, "Detalhes do documento" %>
 
-<div class="max-w-2xl">
+<div class="mx-auto max-w-2xl">
   <div class="flex items-center gap-3 mb-6">
     <%= link_to workspace_documents_path(current_workspace),
           class: "text-slate-400 hover:text-slate-600 transition-colors" do %>

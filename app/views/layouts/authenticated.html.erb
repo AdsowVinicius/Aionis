@@ -34,8 +34,12 @@
         <%= render "layouts/topbar" %>
 
         <main class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
-          <%= render "layouts/flash" %>
-          <%= yield %>
+          <%# Coluna de conteúdo única e centralizada — mantém o conteúdo sempre
+              no centro e proporcional em qualquer tamanho de tela. %>
+          <div class="mx-auto w-full max-w-7xl">
+            <%= render "layouts/flash" %>
+            <%= yield %>
+          </div>
         </main>
       </div>
 

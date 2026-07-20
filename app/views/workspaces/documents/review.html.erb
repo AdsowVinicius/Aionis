@@ -5,7 +5,7 @@
 <% suggestion  = extraction&.suggested_transaction_data || {} %>
 <% tier_label, tier_css = confidence_tier(extraction&.confidence_score) %>
 
-<div class="max-w-2xl">
+<div class="mx-auto max-w-2xl">
   <div class="flex items-center gap-3 mb-6">
     <%= link_to workspace_document_path(current_workspace, @document),
           class: "text-slate-400 hover:text-slate-600 transition-colors" do %>
