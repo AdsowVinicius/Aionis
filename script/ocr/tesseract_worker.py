@@ -22,6 +22,7 @@ Exit codes:
 
 import argparse
 import json
+import os
 import sys
 
 
@@ -107,6 +108,13 @@ def ocr_image(image, lang):
     """Roda o Tesseract e devolve (texto, confiança_média, num_palavras)."""
     import pytesseract
     from pytesseract import Output
+
+    # No Windows o tesseract.exe normalmente não está no PATH do processo Rails.
+    # TESSERACT_CMD (via ENV) aponta o binário sem depender do PATH. TESSDATA_PREFIX
+    # (lido pelo próprio tesseract) indica a pasta com os idiomas (ex.: por).
+    tesseract_cmd = os.environ.get("TESSERACT_CMD")
+    if tesseract_cmd:
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 
     text = pytesseract.image_to_string(image, lang=lang)
     data = pytesseract.image_to_data(image, lang=lang, output_type=Output.DICT)
