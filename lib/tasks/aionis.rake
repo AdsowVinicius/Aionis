@@ -15,6 +15,65 @@ namespace :aionis do
     exit(1) if checker.failed?
   end
 
+  namespace :ocr do
+    # Autoteste FIM-A-FIM do OCR: roda o provider real (Python + Tesseract) sobre
+    # uma imagem com texto conhecido e diz EXATAMENTE o que está quebrado.
+    # Use no Railway:  railway run bin/rails aionis:ocr:selftest
+    desc "Testa o OCR de ponta a ponta e reporta o erro exato (útil no Railway)"
+    task selftest: :environment do
+      require "open3"
+      say = ->(m) { puts m }
+
+      say.call "\n\e[1mAIONIS · OCR selftest\e[0m"
+      say.call "provider ativo : #{Aionis::Integrations.active_provider_key(:ocr)}"
+
+      if Aionis::Integrations.active_provider_key(:ocr) == "null"
+        say.call "\e[31m✗ OCR_PROVIDER não está 'tesseract' (está null).\e[0m"
+        say.call "  → Defina OCR_PROVIDER=tesseract nas variáveis do Railway e reinicie."
+        exit(1)
+      end
+
+      # 1) binários presentes? (argv como array — caminhos com espaço no Windows)
+      py   = ENV.fetch("OCR_PYTHON_BIN", "python3")
+      tess = ENV["TESSERACT_CMD"].presence || "tesseract"
+      { "Python" => py, "Tesseract binário" => tess }.each do |label, bin|
+        out, st = Open3.capture2e(bin, "--version")
+        say.call(st.success? ? "\e[32m✓\e[0m #{label}: #{out.lines.first&.strip}"
+                             : "\e[31m✗ #{label} não encontrado (#{bin}): #{out.lines.first&.strip}\e[0m")
+      rescue => e
+        say.call "\e[31m✗ #{label} não encontrado (#{bin}): #{e.message}\e[0m"
+      end
+
+      # 2) idioma por instalado?
+      langs, = Open3.capture2e(tess, "--list-langs")
+      say.call(langs.include?("por") ? "\e[32m✓\e[0m Idioma 'por' instalado"
+                                     : "\e[31m✗ Idioma 'por' AUSENTE — instale tesseract-ocr-por\e[0m")
+
+      # 3) libs Python do worker?
+      libs, st = Open3.capture2e(py, "-c", "import cv2, numpy, pytesseract, fitz; print('ok')")
+      say.call(st.success? ? "\e[32m✓\e[0m Libs Python (cv2/numpy/pytesseract/pymupdf) importam"
+                           : "\e[31m✗ Libs Python faltando: #{libs.strip.lines.last}\e[0m")
+
+      # 4) extração real na imagem de teste
+      path = Rails.root.join("script", "ocr", "selftest_sample.png")
+      unless File.exist?(path)
+        say.call "\e[31m✗ Imagem de teste ausente: #{path}\e[0m"; exit(1)
+      end
+      result = Aionis::Integrations.ocr.extract(io: File.open(path, "rb"), content_type: "image/png")
+      if result.success?
+        text = result.data["text"].to_s
+        say.call "\e[32m✓ EXTRAÇÃO OK\e[0m — confiança #{result.data['confidence']}"
+        say.call "  texto lido: #{text.gsub(/\s+/, ' ').strip.truncate(120)}"
+        say.call(text.match?(/123,45|CNPJ|AIONIS/i) ? "\e[32m✓ Reconheceu o conteúdo esperado. OCR 100% funcional.\e[0m"
+                                                     : "\e[33m! Extraiu, mas não casou o texto esperado (qualidade baixa?).\e[0m")
+      else
+        say.call "\e[31m✗ EXTRAÇÃO FALHOU\e[0m (#{result.status}): #{result.message}"
+        say.call "  → Veja acima qual pré-requisito falhou (binário, idioma 'por' ou libs Python)."
+        exit(1)
+      end
+    end
+  end
+
   namespace :whatsapp do
     # Simula o RECEBIMENTO de uma mensagem e roda o pipeline in-process (sem Meta
     # nem OCR reais). Params via ENV:
