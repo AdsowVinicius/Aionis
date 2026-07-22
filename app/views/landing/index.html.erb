@@ -1,0 +1,463 @@
+<%#
+  ============================================================
+  AIONIS — Landing Page v2  (vendas agressivas honestas)
+  ------------------------------------------------------------
+  MELHORIAS vs v1:
+  1. CTA ÚNICO dominante ("Começar grátis") repetido; "Falar com vendas"
+     virou link secundário discreto.
+  2. Captura de e-mail no hero e no CTA final (reduz atrito, gera lead).
+  3. Ângulo "Preço de Fundador / Beta" — agressivo E verdadeiro.
+  4. Escassez REAL: vagas de fundador restantes (não timer falso).
+  5. Ancoragem pela DOR em reais (quanto se perde sem organização).
+  6. Prova = produto funcionando (mock do fluxo WhatsApp em destaque).
+
+  ⚠️ NÚMEROS: edite config/aionis/landing.yml (LandingController#index).
+     NUNCA publique estatística ou depoimento inventado (CDC/CONAR proíbem
+     publicidade enganosa no Brasil).
+
+  Head/SEO/fontes/estilos: app/views/layouts/landing.html.erb
+  Cores e fontes Tailwind:  app/assets/tailwind/application.css (@theme)
+  ============================================================
+%>
+  <div class="bg-ink text-white text-xs">
+    <div class="max-w-7xl mx-auto px-6 h-10 flex items-center justify-center gap-3 flex-wrap">
+      <i data-lucide="flame" class="w-3.5 h-3.5 text-amber"></i>
+      <span class="font-semibold">PREÇO DE FUNDADOR:</span>
+      <span class="text-white/80"><b class="text-teal"><%= @price_now %>/mês travado pra sempre</b> — sobe pra <%= @price_after %> depois do beta</span>
+      <span class="text-white/40 hidden sm:inline">·</span>
+      <span class="text-white/80 hidden sm:inline">restam <b class="text-amber"><%= @founder_slots_left %></b> de <%= @founder_slots_total %> vagas</span>
+      <a href="<%= new_user_registration_path %>" class="ml-1 underline hover:text-teal">Garantir vaga →</a>
+    </div>
+  </div>
+
+  <header class="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-black/5">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <span class="relative flex items-center justify-center rounded-[14px] w-7 h-7" style="background:linear-gradient(135deg,#0E1B2C 0%,#14B88A 130%)">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M4 18 L12 4 L20 18" stroke="#14B88A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14 L16 14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </span>
+        <span class="font-display text-ink" style="font-weight:800;font-size:1.05rem">Aionis</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-8 text-sm text-mist">
+        <a href="#dor" class="hover:text-ink transition">Por que Aionis</a>
+        <a href="#fluxo" class="hover:text-ink transition">Como funciona</a>
+        <a href="#planos" class="hover:text-ink transition">Planos</a>
+        <a href="#faq" class="hover:text-ink transition">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <a href="<%= new_user_session_path %>" class="text-sm text-ink hover:opacity-70 transition">Entrar</a>
+        <a href="<%= new_user_registration_path %>" class="bg-teal hover:bg-[#0ea273] text-white text-sm px-4 h-10 rounded-[14px] flex items-center gap-2 transition shadow-teal-sm">
+          Começar grátis <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 -z-10">
+      <div class="absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full opacity-30" style="background:radial-gradient(circle,#14B88A 0%,transparent 60%)"></div>
+      <div class="absolute top-40 -left-20 w-[420px] h-[420px] rounded-full opacity-20" style="background:radial-gradient(circle,#38BDF8 0%,transparent 60%)"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-6 pt-16 pb-24 grid lg:grid-cols-12 gap-12 items-center">
+      <div class="lg:col-span-7">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink text-white text-xs mb-6">
+          <i data-lucide="rocket" class="w-3 h-3 text-teal"></i>
+          <span>Beta aberto · preço de fundador por tempo limitado</span>
+        </div>
+        <h1 class="font-display text-5xl md:text-[64px] leading-[1.02] tracking-tight">
+          Pare de <span class="line-through text-rose/70 decoration-[3px]">perder dinheiro</span> com planilha bagunçada.
+          <br>
+          <span class="text-teal">Manda no WhatsApp.</span> A IA organiza pra você.
+        </h1>
+        <p class="mt-6 text-lg text-mist max-w-2xl leading-relaxed">
+          Foto da nota vira lançamento, KPI e alerta em <b class="text-ink">menos de 30 segundos</b>.
+          Sem digitação, sem ERP, sem planilha. Você manda — o Aionis organiza.
+        </p>
+        <form action="<%= new_user_registration_path %>" method="get" class="mt-8 flex flex-col sm:flex-row gap-3 max-w-xl">
+          <input type="email" name="email" required placeholder="seu@email.com"
+                 class="flex-1 h-14 px-5 rounded-[14px] bg-white border border-black/10 focus:border-teal focus:ring-2 focus:ring-teal/30 outline-none text-base" />
+          <button type="submit" class="bg-teal hover:bg-[#0ea273] text-white h-14 px-7 rounded-[14px] flex items-center justify-center gap-2 transition shadow-teal whitespace-nowrap font-semibold">
+            Começar grátis <i data-lucide="arrow-right" class="w-5 h-5"></i>
+          </button>
+        </form>
+        <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-mist">
+          <span class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal"></i> Sem cartão de crédito</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal"></i> Cancele quando quiser</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal"></i> Pronto em 3 minutos</span>
+        </div>
+        <% if @show_testimonials %>
+        <div class="mt-10 flex items-center gap-5">
+          <div class="flex -space-x-2">
+            <% ["#14B88A","#0E1B2C","#38BDF8","#F59E0B","#8B5CF6"].each do |c| %>
+              <div class="w-9 h-9 rounded-full border-2 border-white" style="background:<%= c %>"></div>
+            <% end %>
+          </div>
+          <div class="text-sm text-mist">Empreendedores que largaram a planilha e <b class="text-ink">nunca mais voltaram.</b></div>
+        </div>
+        <% end %>
+      </div>
+      <div class="lg:col-span-5 relative">
+        <div class="relative mx-auto max-w-sm">
+          <div class="absolute -inset-4 rounded-[32px] opacity-30" style="background:radial-gradient(circle,#14B88A 0%,transparent 70%)"></div>
+          <div class="relative bg-white rounded-[28px] border border-black/5 shadow-card p-5">
+            <div class="flex items-center gap-2 pb-4 border-b border-black/5">
+              <div class="w-9 h-9 rounded-full bg-teal flex items-center justify-center text-white"><i data-lucide="message-circle" class="w-4 h-4"></i></div>
+              <div><div class="text-sm font-semibold">Aionis</div><div class="text-[11px] text-teal">online</div></div>
+            </div>
+            <div class="flex justify-end mt-4">
+              <div class="bg-[#E8F4EF] rounded-[16px] rounded-tr-sm px-3 py-2 text-sm max-w-[80%]">
+                <div class="flex items-center gap-2 text-mist text-xs mb-1"><i data-lucide="paperclip" class="w-3 h-3"></i> nota-mercado.jpg</div>
+                Comprei material R$ 340
+              </div>
+            </div>
+            <div class="flex justify-start mt-3">
+              <div class="bg-cream rounded-[16px] rounded-tl-sm px-3 py-3 text-sm max-w-[85%]">
+                <div class="flex items-center gap-1.5 text-teal text-xs font-semibold mb-2"><i data-lucide="sparkles" class="w-3 h-3"></i> Lançamento criado</div>
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex justify-between"><span class="text-mist">Valor</span><span class="font-mono font-medium">R$ 340,00</span></div>
+                  <div class="flex justify-between"><span class="text-mist">Categoria</span><span class="font-medium">Insumos</span></div>
+                  <div class="flex justify-between"><span class="text-mist">Tipo</span><span class="font-medium">Despesa</span></div>
+                  <div class="flex justify-between items-center"><span class="text-mist">Confiança</span>
+                    <span class="inline-flex items-center gap-1 bg-teal/10 text-teal px-2 py-0.5 rounded-full font-semibold"><i data-lucide="check" class="w-3 h-3"></i> 94%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 text-center text-[11px] text-mist flex items-center justify-center gap-1"><i data-lucide="timer" class="w-3 h-3"></i> processado em 18 segundos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dor" class="bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <div class="text-xs uppercase tracking-[0.18em] text-rose mb-3">A conta que ninguém faz</div>
+        <h2 class="font-display text-4xl md:text-5xl leading-tight">
+          A planilha bagunçada te custa <span class="text-rose"><%= @pain_per_month %> por mês</span> — e você nem percebe.
+        </h2>
+        <p class="mt-5 text-mist text-lg">
+          Multa por conta esquecida, imposto pago errado, desconto perdido, hora gasta digitando.
+          Some tudo: dá mais que a assinatura do Aionis. <b class="text-ink">Todo mês que você adia, esse dinheiro escapa.</b>
+        </p>
+        <div class="mt-8 flex items-center gap-4">
+          <div class="flex-1 rounded-[14px] bg-[#FBEBEE]/50 border border-rose/20 p-4 text-center">
+            <div class="text-xs text-mist">Sem organização</div>
+            <div class="font-display text-2xl text-rose">−<%= @pain_per_month %>/mês</div>
+          </div>
+          <i data-lucide="arrow-right" class="w-5 h-5 text-mist shrink-0"></i>
+          <div class="flex-1 rounded-[14px] bg-[#E8F4EF]/60 border border-teal/30 p-4 text-center">
+            <div class="text-xs text-mist">Com Aionis</div>
+            <div class="font-display text-2xl text-teal"><%= @price_now %>/mês</div>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <% [
+          "Você esquece contas vencendo e paga multa.",
+          "Não sabe quanto sobra de verdade no fim do mês.",
+          "Mistura CPF e CNPJ e o contador cobra extra.",
+          "Comprovantes somem ou vencem no e-mail.",
+          "Gasta 6h por mês digitando nota em planilha.",
+          "Não tem visão real do caixa pros próximos 30 dias.",
+        ].each do |t| %>
+          <div class="flex items-start gap-3 p-4 rounded-[14px] bg-[#FBEBEE]/40 border border-rose/15">
+            <div class="w-6 h-6 rounded-full bg-rose/15 text-rose flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="x" class="w-3.5 h-3.5"></i></div>
+            <div class="text-sm font-medium text-ink"><%= t %></div>
+          </div>
+        <% end %>
+        <div class="mt-4 p-5 rounded-[14px] bg-ink text-white flex items-center gap-3">
+          <i data-lucide="sparkles" class="w-5 h-5 text-teal"></i>
+          <div class="text-sm"><b class="text-teal">Aionis resolve tudo isso</b> em uma única conversa de WhatsApp.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fluxo" class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <div class="text-xs uppercase tracking-[0.18em] text-teal mb-3">Como funciona</div>
+      <h2 class="font-display text-4xl md:text-5xl">3 passos. Zero planilha. 30 segundos.</h2>
+      <p class="mt-4 text-mist text-lg">Mais rápido que escrever um e-mail.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <% [
+        { n:"01", icon:"send",       title:"Envie a nota ou comprovante", text:"WhatsApp, e-mail ou upload no portal. Foto, PDF, XML — tudo aceito.", time:"5s" },
+        { n:"02", icon:"sparkles",   title:"A IA interpreta e classifica", text:"Identifica valor, fornecedor, categoria e gera o lançamento sozinha.", time:"15s" },
+        { n:"03", icon:"bar-chart-3",title:"Acompanhe KPIs e alertas",     text:"Saúde financeira, fluxo de caixa, vencimentos e avisos no tempo certo.", time:"tempo real" },
+      ].each do |s| %>
+        <div class="group relative bg-white border border-black/5 rounded-[20px] p-7 hover:border-teal/40 hover:shadow-card transition">
+          <div class="flex items-center justify-between mb-6">
+            <div class="font-mono text-xs text-teal"><%= s[:n] %></div>
+            <div class="flex items-center gap-1 text-[10px] uppercase tracking-wider text-mist bg-cream px-2 py-1 rounded-full"><i data-lucide="timer" class="w-2.5 h-2.5"></i> <%= s[:time] %></div>
+          </div>
+          <div class="w-12 h-12 rounded-[14px] bg-ink text-white flex items-center justify-center mb-5 group-hover:bg-teal transition"><i data-lucide="<%= s[:icon] %>" class="w-5 h-5"></i></div>
+          <h3 class="font-display text-xl mb-2"><%= s[:title] %></h3>
+          <p class="text-mist text-sm leading-relaxed"><%= s[:text] %></p>
+        </div>
+      <% end %>
+    </div>
+    <div class="mt-16 grid md:grid-cols-2 gap-5">
+      <div class="rounded-[20px] border-2 border-dashed border-rose/30 p-7 bg-[#FBEBEE]/20">
+        <div class="text-xs uppercase tracking-wider text-rose font-semibold mb-3">Antes do Aionis</div>
+        <% ["6h/mês digitando planilha","Esquece 2 a 3 contas por mês","Não sabe se está no lucro","Contador cobra R$ 400 de extra","Comprovantes perdidos"].each do |t| %>
+          <div class="flex items-center gap-2 py-2 text-sm text-ink"><i data-lucide="x" class="w-4 h-4 text-rose"></i> <%= t %></div>
+        <% end %>
+      </div>
+      <div class="rounded-[20px] border-2 border-teal p-7 bg-[#E8F4EF]/40 relative">
+        <div class="absolute -top-3 left-7 bg-teal text-white text-[11px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full">Com Aionis</div>
+        <div class="text-xs uppercase tracking-wider text-teal font-semibold mb-3">Depois do Aionis</div>
+        <% ["0h digitando — IA faz por você","Alertas antes de cada vencimento","Lucro real em tempo real","Pacote pronto pro contador","Tudo arquivado e buscável"].each do |t| %>
+          <div class="flex items-center gap-2 py-2 text-sm text-ink font-medium"><i data-lucide="check-circle-2" class="w-4 h-4 text-teal"></i> <%= t %></div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-white border-y border-black/5">
+    <div class="max-w-6xl mx-auto px-6 py-24">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <div class="text-xs uppercase tracking-[0.18em] text-teal mb-3">Por que Aionis vence</div>
+        <h2 class="font-display text-4xl md:text-5xl">Aionis vs. o que você usa hoje.</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr>
+            <th class="text-left p-4"></th>
+            <th class="p-4"><div class="inline-flex items-center gap-2 bg-ink text-white px-4 py-2 rounded-[14px] font-display font-bold">Aionis</div></th>
+            <th class="p-4 font-display text-mist">Planilha</th>
+            <th class="p-4 font-display text-mist">ERP tradicional</th>
+            <th class="p-4 font-display text-mist">Contador só</th>
+          </tr></thead>
+          <tbody>
+            <% [
+              ["Envio por WhatsApp", true, false, false, false],
+              ["IA lê e classifica nota", true, false, false, false],
+              ["Alertas de vencimento", true, false, true, false],
+              ["KPIs em tempo real", true, false, true, false],
+              ["Setup em 3 minutos", true, true, false, false],
+              ["Separação CPF/CNPJ", true, false, false, true],
+              ["Custa menos de R$ 100/mês", true, true, false, false],
+            ].each do |row| %>
+              <tr class="border-t border-black/5">
+                <td class="p-4 font-medium"><%= row[0] %></td>
+                <% [1,2,3,4].each do |j| %>
+                  <td class="p-4 text-center">
+                    <% if row[j] %><i data-lucide="check-circle-2" class="w-5 h-5 mx-auto <%= j==1 ? "text-teal" : "text-mist" %>"></i>
+                    <% else %><i data-lucide="minus" class="w-4 h-4 mx-auto text-rose/40"></i><% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="beneficios" class="bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-12 gap-12">
+      <div class="lg:col-span-4">
+        <div class="text-xs uppercase tracking-[0.18em] text-teal mb-3">Benefícios</div>
+        <h2 class="font-display text-4xl leading-tight">Tudo o que falta na sua rotina financeira.</h2>
+        <p class="mt-5 text-mist">Pensado para quem não tem tempo, nem paciência, para sistema de contador.</p>
+      </div>
+      <div class="lg:col-span-8 grid sm:grid-cols-2 gap-4">
+        <% [
+          { icon:"zap",              t:"Menos digitação manual",     d:"A IA extrai dados do documento em segundos." },
+          { icon:"credit-card",      t:"Controle de contas a pagar", d:"Acompanhe vencimentos por status, valor e fornecedor." },
+          { icon:"bell",             t:"Alertas de vencimento",      d:"Avisos antes do vencimento, no WhatsApp ou e-mail." },
+          { icon:"bar-chart-3",      t:"Indicadores financeiros",    d:"Saúde, margem, custo fixo, ponto de equilíbrio." },
+          { icon:"file-spreadsheet", t:"Relatórios para contador",   d:"Exportação em formato pronto para escritório." },
+          { icon:"users",            t:"Separação CPF / CNPJ",       d:"Uma única conta, finanças bem separadas." },
+        ].each do |b| %>
+          <div class="flex items-start gap-4 p-5 rounded-[14px] border border-black/5 hover:bg-[#E8F4EF]/40 transition">
+            <div class="w-10 h-10 rounded-lg bg-[#E8F4EF] text-teal flex items-center justify-center shrink-0"><i data-lucide="<%= b[:icon] %>" class="w-4 h-4"></i></div>
+            <div><div class="font-display font-semibold text-ink"><%= b[:t] %></div><div class="text-sm text-mist mt-1"><%= b[:d] %></div></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section id="planos" class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <div class="text-xs uppercase tracking-[0.18em] text-teal mb-3">Preço de fundador</div>
+      <h2 class="font-display text-4xl md:text-5xl">Trave o preço antes de subir.</h2>
+      <p class="mt-4 text-mist text-lg">14 dias grátis. <b class="text-ink">Sem cartão de crédito.</b> O preço de fundador fica travado enquanto você for cliente.</p>
+      <div class="mt-5 inline-flex items-center gap-2 bg-[#FAF1DD] text-[#B26B00] px-4 py-2 rounded-full text-sm">
+        <i data-lucide="flame" class="w-3.5 h-3.5"></i> Restam <b><%= @founder_slots_left %></b> vagas de fundador com esse preço
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <% [
+        { name:"CPF",    price:"R$ 13", old:"R$ 26", per:"/mês · fundador", desc:"Para autônomos e pessoa física.", features:["WhatsApp + e-mail","100 documentos/mês","Alertas de vencimento","Resumos mensais"], cta:"Começar grátis", badge:nil, highlight:false, icon:"user" },
+        { name:"MEI",    price:@price_now, old:@price_after, per:"/mês · fundador", desc:"Para microempreendedores individuais.", features:["Tudo do CPF","500 documentos/mês","Contas a pagar/receber","Relatórios para contador","Assistente IA ilimitado"], cta:"Começar grátis", badge:"Mais escolhido", highlight:true, icon:"receipt" },
+        { name:"Pro",    price:"R$ 98", old:"R$ 197", per:"/mês + implantação grátis", desc:"Para pequenas empresas em crescimento.", features:["Documentos ilimitados","Multiusuário (até 5)","KPIs avançados","Suporte prioritário","Onboarding 1-a-1"], cta:"Começar grátis", badge:"Melhor custo-benefício", highlight:false, icon:"building-2" },
+        { name:"Gestão", price:"Sob consulta", old:"", per:"", desc:"Para operações com necessidades específicas.", features:["Integrações sob medida","SLA dedicado","Onboarding assistido","API e BI","Gerente dedicado"], cta:"Falar com a gente", badge:nil, highlight:false, icon:"crown" },
+      ].each do |p| %>
+        <div class="relative rounded-[20px] p-7 border transition <%= p[:highlight] ? "bg-ink text-white border-ink shadow-plan" : "bg-white border-black/5 hover:border-teal/40" %>">
+          <% if p[:badge] %>
+            <div class="absolute -top-3 left-7 text-[11px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full <%= p[:highlight] ? "bg-teal text-white" : "bg-ink text-white" %>"><%= p[:badge] %></div>
+          <% end %>
+          <div class="flex items-center justify-between">
+            <div class="text-xs uppercase tracking-wider opacity-70">Aionis</div>
+            <i data-lucide="<%= p[:icon] %>" class="w-4 h-4 <%= p[:highlight] ? "text-teal" : "text-mist" %>"></i>
+          </div>
+          <div class="font-display text-3xl mt-1"><%= p[:name] %></div>
+          <% if p[:old].present? %>
+            <div class="mt-4 text-sm line-through <%= p[:highlight] ? "text-white/40" : "text-mist" %>">Depois: <%= p[:old] %>/mês</div>
+          <% end %>
+          <div class="<%= p[:old].present? ? "mt-1" : "mt-5" %> flex items-baseline gap-1">
+            <span class="font-display text-3xl"><%= p[:price] %></span>
+            <span class="opacity-60 text-xs"><%= p[:per] %></span>
+          </div>
+          <p class="mt-3 text-sm <%= p[:highlight] ? "text-white/70" : "text-mist" %>"><%= p[:desc] %></p>
+          <ul class="mt-6 space-y-2.5">
+            <% p[:features].each do |f| %>
+              <li class="flex items-start gap-2 text-sm"><i data-lucide="check" class="w-4 h-4 text-teal mt-0.5 shrink-0"></i><span class="<%= p[:highlight] ? "text-white/90" : "text-ink" %>"><%= f %></span></li>
+            <% end %>
+          </ul>
+          <a href="<%= new_user_registration_path %>" class="mt-7 w-full h-11 rounded-[14px] text-sm font-semibold transition flex items-center justify-center <%= p[:highlight] ? "bg-teal hover:bg-[#0ea273] text-white" : "bg-ink hover:bg-[#15243d] text-white" %>"><%= p[:cta] %></a>
+        </div>
+      <% end %>
+    </div>
+    <div class="mt-10 max-w-3xl mx-auto rounded-[20px] border-2 border-teal/30 bg-[#E8F4EF]/40 p-7 flex items-center gap-5">
+      <div class="w-16 h-16 rounded-[20px] bg-teal text-white flex items-center justify-center shrink-0"><i data-lucide="shield-check" class="w-7 h-7"></i></div>
+      <div>
+        <div class="font-display text-xl text-ink">Garantia incondicional de 30 dias</div>
+        <p class="text-sm text-mist mt-1">Testou e não amou? Devolvemos <b class="text-teal">100% do seu dinheiro</b>. Sem perguntas, sem letrinha miúda. O risco é todo nosso.</p>
+      </div>
+    </div>
+  </section>
+
+  <% if @show_testimonials %>
+  <section class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <div class="text-xs uppercase tracking-[0.18em] text-teal mb-3">Quem usa, fala</div>
+      <h2 class="font-display text-4xl md:text-5xl">Empresários que dormem tranquilos agora.</h2>
+      <p class="mt-3 text-mist text-sm">Substitua pelos depoimentos reais dos seus primeiros clientes.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <% [
+        { n:"Camila A.", r:"MEI · Estúdio de design", q:"Em 30 dias o Aionis tirou minha planilha do caos. Hoje sei exatamente quanto sobra no fim do mês." },
+        { n:"Rodrigo S.", r:"Pequena indústria", q:"Mando a nota pelo WhatsApp e ele lança, categoriza e ainda me avisa quando vai vencer." },
+        { n:"Marina C.", r:"Restaurante", q:"Meu contador me pediu pra usar. Reduziu o trabalho dele e meus custos contábeis." },
+      ].each do |d| %>
+        <div class="bg-white rounded-[20px] border border-black/5 p-7">
+          <div class="flex items-center gap-1 mb-4"><% 5.times do %><i data-lucide="star" class="w-3.5 h-3.5 text-amber fill-amber"></i><% end %></div>
+          <p class="text-ink leading-relaxed">"<%= d[:q] %>"</p>
+          <div class="mt-5 flex items-center gap-3 pt-5 border-t border-black/5">
+            <div class="w-11 h-11 rounded-full" style="background:linear-gradient(135deg,#14B88A,#0E1B2C)"></div>
+            <div><div class="font-semibold text-sm"><%= d[:n] %></div><div class="text-xs text-mist"><%= d[:r] %></div></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+  <% end %>
+
+  <section id="faq" class="bg-white border-t border-black/5">
+    <div class="max-w-4xl mx-auto px-6 py-24">
+      <div class="text-center mb-12">
+        <div class="text-xs uppercase tracking-[0.18em] text-teal mb-3">FAQ</div>
+        <h2 class="font-display text-4xl md:text-5xl">Tirando as dúvidas reais.</h2>
+      </div>
+      <div class="space-y-3">
+        <% [
+          { q:"O preço de fundador sobe mesmo?", a:"Sim. Enquanto estamos em beta, quem entra trava o preço de fundador enquanto for cliente. Quando as vagas acabarem, o valor cheio passa a valer para novos cadastros." },
+          { q:"Preciso instalar alguma coisa?", a:"Não. Tudo funciona pelo WhatsApp, pelo seu e-mail e por um portal web. Você só precisa enviar a nota — a IA faz o resto." },
+          { q:"Funciona pra MEI E pra CPF na mesma conta?", a:"Sim. O Aionis separa automaticamente o que é CPF e o que é CNPJ, mesmo se você enviar tudo pelo mesmo WhatsApp." },
+          { q:"É seguro mandar minhas notas por WhatsApp?", a:"Sim. Tudo é criptografado e em conformidade com a LGPD. Você é o único dono dos seus dados." },
+          { q:"E se a IA classificar algo errado?", a:"Você revisa e corrige em um clique. A cada correção, a IA aprende seus padrões e fica mais precisa pra você." },
+          { q:"Posso cancelar quando quiser?", a:"Sim. Sem multa, sem fidelidade. Tudo dentro do próprio app." },
+          { q:"E se eu não gostar?", a:"Você tem 30 dias de garantia incondicional. Não amou? Devolvemos 100% do valor pago." },
+        ].each_with_index do |it, i| %>
+          <div class="rounded-[20px] border border-black/5 bg-white hover:border-ink/20 transition" data-faq>
+            <button type="button" class="w-full text-left p-5 flex items-center justify-between gap-4" data-faq-toggle>
+              <span class="font-display font-semibold text-ink"><%= it[:q] %></span>
+              <span class="w-8 h-8 rounded-lg flex items-center justify-center transition bg-cream text-mist" data-faq-icon><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+            </button>
+            <div class="px-5 pb-5 text-sm text-mist leading-relaxed <%= i==0 ? "" : "hidden" %>" data-faq-body><%= it[:a] %></div>
+          </div>
+        <% end %>
+      </div>
+      <div class="mt-10 p-6 rounded-[20px] bg-ink text-white flex items-center justify-between gap-5 flex-wrap">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-[14px] bg-teal flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></div>
+          <div><div class="font-display font-semibold">Ainda tem dúvida?</div><div class="text-sm text-white/60">Fala com a gente no WhatsApp — respondemos em minutos.</div></div>
+        </div>
+        <a href="#" class="bg-teal hover:bg-[#0ea273] h-11 px-5 rounded-[14px] flex items-center gap-2 text-sm"><i data-lucide="message-circle" class="w-4 h-4"></i> Chamar no WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-6 pb-24">
+    <div class="max-w-6xl mx-auto rounded-[28px] bg-ink text-white px-10 py-20 relative overflow-hidden">
+      <div class="absolute inset-0 opacity-50" style="background:radial-gradient(circle at 80% 30%, rgba(16,185,129,0.5) 0%, transparent 50%)"></div>
+      <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full opacity-20" style="background:radial-gradient(circle,#38BDF8 0%,transparent 60%)"></div>
+      <div class="relative max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal/20 text-teal text-xs font-semibold uppercase tracking-wider mb-6">
+          <i data-lucide="flame" class="w-3 h-3"></i> Restam <%= @founder_slots_left %> vagas de fundador
+        </div>
+        <h2 class="font-display text-4xl md:text-6xl leading-[1.05] tracking-tight">
+          Trave o <span class="text-teal">preço de fundador</span> antes que as vagas acabem.
+        </h2>
+        <p class="mt-6 text-white/70 text-lg leading-relaxed">
+          Comece hoje em 3 minutos — <b class="text-white">14 dias grátis</b>, sem cartão. O preço fica travado enquanto você for cliente.
+        </p>
+        <form action="<%= new_user_registration_path %>" method="get" class="mt-8 flex flex-col sm:flex-row gap-3 max-w-xl">
+          <input type="email" name="email" required placeholder="seu@email.com"
+                 class="flex-1 h-14 px-5 rounded-[14px] bg-white/10 border border-white/20 focus:border-teal focus:ring-2 focus:ring-teal/40 outline-none text-base text-white placeholder-white/50" />
+          <button type="submit" class="bg-teal hover:bg-[#0ea273] text-white h-14 px-7 rounded-[14px] flex items-center justify-center gap-2 shadow-teal whitespace-nowrap font-semibold">
+            Quero minha vaga <i data-lucide="arrow-right" class="w-5 h-5"></i>
+          </button>
+        </form>
+        <div class="mt-6 flex flex-wrap items-center gap-5 text-xs text-white/60">
+          <span class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal"></i> Garantia 30 dias</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal"></i> Sem cartão de crédito</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal"></i> Cancele quando quiser</span>
+        </div>
+        <div class="mt-6 text-sm text-white/50">
+          Empresa maior? <a href="<%= new_user_registration_path %>" class="text-teal underline hover:text-white">Falar com a gente</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-black/5 bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3 text-sm text-mist">
+        <span class="relative flex items-center justify-center rounded-[14px] w-6 h-6" style="background:linear-gradient(135deg,#0E1B2C 0%,#14B88A 130%)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M4 18 L12 4 L20 18" stroke="#14B88A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14 L16 14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </span>
+        <span>— seu financeiro organizado, inteligente e sem complicação.</span>
+      </div>
+      <div class="text-xs text-mist">© 2026 Aionis. Todos os direitos reservados.</div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    document.querySelectorAll('[data-faq]').forEach(faq=>{
+      const btn=faq.querySelector('[data-faq-toggle]');
+      const body=faq.querySelector('[data-faq-body]');
+      const icon=faq.querySelector('[data-faq-icon]');
+      btn.addEventListener('click',()=>{
+        const open=!body.classList.contains('hidden');
+        document.querySelectorAll('[data-faq]').forEach(f=>{
+          f.querySelector('[data-faq-body]').classList.add('hidden');
+          f.classList.remove('border-teal');
+          const ic=f.querySelector('[data-faq-icon]');
+          ic.classList.remove('bg-teal','text-white','rotate-180');
+          ic.classList.add('bg-cream','text-mist');
+        });
+        if(open) return;
+        body.classList.remove('hidden');
+        faq.classList.add('border-teal');
+        icon.classList.remove('bg-cream','text-mist');
+        icon.classList.add('bg-teal','text-white','rotate-180');
+      });
+    });
+  </script>

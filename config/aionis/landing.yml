@@ -1,0 +1,12 @@
+# Números da landing page — EDITÁVEIS (nada disso é inventado pelo código).
+# ⚠️ NUNCA publique estatística ou depoimento inventado (CDC/CONAR).
+#
+# founder_slots_left: por padrão é COMPUTADO de verdade
+#   (founder_slots_total - Workspace.count). Descomente para fixar um número
+#   manualmente — mas o computado é a opção honesta.
+founder_slots_total: 500
+# founder_slots_left: 214
+price_now: "R$ 48"
+price_after: "R$ 97"
+pain_per_month: "R$ 380"
+show_testimonials: true

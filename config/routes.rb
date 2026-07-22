@@ -5,7 +5,8 @@ Rails.application.routes.draw do
     root "dashboard#index", as: :authenticated_root
   end
 
-  root "home#index"
+  # Landing pública de vendas (home#index antiga ficou sem rota; arquivos mantidos).
+  root "landing#index"
 
   resources :workspaces do
     scope module: :workspaces do
@@ -31,6 +32,9 @@ Rails.application.routes.draw do
       resources :alerts, only: [:index]
       resources :audit_logs, only: [:index, :show]
       resources :whatsapp_channels, only: [:index]
+      # Agente Financeiro (chat) e a memória do agente (LGPD: ver/apagar).
+      resource  :chat, only: [:show, :create], controller: "chat"
+      resources :agent_memories, only: [:index, :destroy]
       resources :reconciliations, only: [:index] do
         member do
           patch :confirm

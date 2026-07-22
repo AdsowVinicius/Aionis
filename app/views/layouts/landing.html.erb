@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <% page_title       = content_for(:title).presence || "Aionis — Manda no WhatsApp, a IA organiza seu financeiro em 30s" %>
+  <% page_description = content_for(:description).presence || "Notas e despesas viram lançamentos, KPIs e alertas em menos de 30 segundos. Sem digitação, sem ERP. Preço de fundador por tempo limitado." %>
+  <title><%= page_title %></title>
+  <meta name="description" content="<%= page_description %>">
+
+  <%# Open Graph / Twitter — preview bonito no WhatsApp e redes %>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aionis">
+  <meta property="og:title" content="<%= page_title %>">
+  <meta property="og:description" content="<%= page_description %>">
+  <meta property="og:url" content="<%= request.original_url %>">
+  <meta property="og:image" content="<%= "#{request.base_url}/icon.png" %>">
+  <meta property="og:locale" content="pt_BR">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="<%= page_title %>">
+  <meta name="twitter:description" content="<%= page_description %>">
+  <meta name="twitter:image" content="<%= "#{request.base_url}/icon.png" %>">
+
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link rel="icon" href="/icon.png" type="image/png">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <%# Tailwind BUILDADO do projeto (cores/fontes da landing vêm do @theme) %>
+  <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+
+  <%# Lucide vendorado (app/assets/javascripts/lucide.min.js, versão pinada — sem CDN) %>
+  <%= javascript_include_tag "lucide.min" %>
+
+  <style>
+    body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;background-color:#F5F4EF;color:#0E1B2C;
+      background-image:radial-gradient(circle at 15% 10%, rgba(20,184,138,0.05) 0%, transparent 40%),radial-gradient(circle at 85% 90%, rgba(14,27,44,0.04) 0%, transparent 45%);background-attachment:fixed;}
+    .font-display{font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em}
+    .font-mono{font-family:'JetBrains Mono',monospace}
+    ::selection{background:rgba(20,184,138,0.25)}
+    .shadow-teal{box-shadow:0 16px 40px -12px rgba(16,185,129,0.6)}
+    .shadow-teal-sm{box-shadow:0 8px 24px -8px rgba(16,185,129,0.6)}
+    .shadow-card{box-shadow:0 8px 40px -12px rgba(11,26,47,0.12)}
+    .shadow-plan{box-shadow:0 24px 60px -20px rgba(11,26,47,0.4)}
+    @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+    /* Foco de teclado visível (a11y) — anel teal consistente com a marca */
+    a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #14B88A;outline-offset:2px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <%= yield %>
+</body>
+</html>

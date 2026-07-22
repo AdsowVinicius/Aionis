@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Tokens da landing page (Tailwind v4: config via CSS, não tailwind.config.js).
+   Nomes SEM sufixo numérico (ink, teal, cream…) não colidem com a paleta
+   padrão usada no app (teal-600, slate-50 etc. continuam intactos). */
+@theme {
+  --color-ink: #0E1B2C;
+  --color-teal: #14B88A;
+  --color-sky: #38BDF8;
+  --color-amber: #F59E0B;
+  --color-rose: #DC2657;
+  --color-cream: #F5F4EF;
+  --color-mist: #6B7385;
+
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
