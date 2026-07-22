@@ -18,7 +18,12 @@ module Aionis
       # Provedores embutidos (sempre disponíveis). A config pode adicionar
       # outros por tipo; o provedor ativo é escolhido por `provider:`.
       DEFAULT_PROVIDERS = {
-        whatsapp:     { "null" => "Aionis::Integrations::Whatsapp::NullProvider" },
+        whatsapp:     {
+          "null"    => "Aionis::Integrations::Whatsapp::NullProvider",
+          # Envio dry-run (dev/test): não chama a Meta, só loga. Resolvido pelo
+          # SendMessageJob quando Aionis::Integrations.whatsapp_dry_run? é true.
+          "dry_run" => "Aionis::Integrations::Whatsapp::DryRunProvider"
+        },
         open_finance: { "null" => "Aionis::Integrations::OpenFinance::NullProvider" },
         ocr:          { "null" => "Aionis::Integrations::Ocr::NullProvider" },
         ai:           { "null" => "Aionis::Integrations::Ai::NullProvider" }

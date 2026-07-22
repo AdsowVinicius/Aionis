@@ -32,6 +32,15 @@ module Aionis
       def configured?(type) = registry.configured?(type)
       def active_provider_key(type) = registry.active_provider_key(type)
 
+      # Modo dry-run do ENVIO de WhatsApp: quando true, o SendMessageJob resolve
+      # o DryRunProvider (não chama a Meta). Controlado por WHATSAPP_DRY_RUN;
+      # default seguro por ambiente: true em dev/test, false em produção. Só
+      # afeta a saída — o recebimento por webhook continua no provider real.
+      def whatsapp_dry_run?
+        parsed = ActiveModel::Type::Boolean.new.cast(ENV["WHATSAPP_DRY_RUN"])
+        parsed.nil? ? !Rails.env.production? : parsed
+      end
+
       def registry
         @registry ||= Registry.from_config
       end

@@ -29,7 +29,7 @@ module Aionis
         channel = outgoing.workspace_channel
         outgoing.increment!(:attempts)
 
-        result = Aionis::Integrations.whatsapp(provider: channel.provider).send_text(
+        result = provider_for(channel).send_text(
           to:          outgoing.to_number,
           body:        outgoing.body,
           instance:    channel.instance,
@@ -37,17 +37,35 @@ module Aionis
         )
 
         if result.success?
-          outgoing.mark_sent!(result.data["message_id"])
-          AuditLog.log(
-            action: "integration", origin: "integration",
-            workspace: outgoing.workspace, provider: channel.provider,
-            reason: "Mensagem WhatsApp enviada",
-            metadata: { outgoing_message_id: outgoing.id, to: outgoing.to_number }
-          )
+          settle(outgoing, channel, result)
         else
           # Result pending (429/5xx) ou error → retry com backoff.
           raise DeliveryError, (result.message.presence || "Falha ao enviar mensagem")
         end
+      end
+
+      private
+
+      # Em dry-run resolve o DryRunProvider (não chama a Meta); caso contrário, o
+      # provider real do canal. A decisão fica no job — a Integration Layer segue
+      # intacta (o DryRunProvider implementa o mesmo contrato Whatsapp::Base).
+      def provider_for(channel)
+        key = Aionis::Integrations.whatsapp_dry_run? ? "dry_run" : channel.provider
+        Aionis::Integrations.whatsapp(provider: key)
+      end
+
+      # O status vem de QUEM respondeu (result.provider): "dry_run" não foi à Meta.
+      def settle(outgoing, channel, result)
+        dry_run = result.provider == "dry_run"
+        dry_run ? outgoing.mark_dry_run!(result.data["message_id"])
+                : outgoing.mark_sent!(result.data["message_id"])
+
+        AuditLog.log(
+          action: "integration", origin: "integration",
+          workspace: outgoing.workspace, provider: channel.provider,
+          reason: dry_run ? "WhatsApp em dry-run — envio suprimido (não foi à Meta)" : "Mensagem WhatsApp enviada",
+          metadata: { outgoing_message_id: outgoing.id, to: outgoing.to_number, dry_run: dry_run }
+        )
       end
     end
   end
