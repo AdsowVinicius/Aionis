@@ -5,8 +5,9 @@ require "rails/test_help"
 module ActiveSupport
   class TestCase
     # Thread parallelization causa race conditions no carregamento de atributos AR
-    # quando muitos testes são executados juntos. Threshold alto mantém execução serial.
-    parallelize(workers: :number_of_processors, with: :threads, threshold: 500)
+    # (a suíte cruzou o antigo threshold de 500 testes e o deadlock apareceu).
+    # Execução serial explícita: rápida o bastante (~20s) e determinística.
+    parallelize(workers: 1)
 
     # Fixtures não carregadas por padrão — tests usam setup com dados inline.
     # Para usar fixtures num test específico: declare `fixtures :nome_da_tabela` na classe.
