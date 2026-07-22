@@ -14,9 +14,15 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 # Rails app lives here
 WORKDIR /rails
 
-# Install base packages including Tesseract OCR
+# Install base packages including Tesseract OCR (with Portuguese language pack)
+# and the Python deps of the OCR worker (script/ocr/tesseract_worker.py:
+# OpenCV headless + pytesseract + PyMuPDF). --break-system-packages is required
+# on Debian bookworm (PEP 668) — fine inside a container.
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client tesseract-ocr libtesseract-dev && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client \
+      tesseract-ocr tesseract-ocr-por libtesseract-dev python3 python3-pip && \
+    pip3 install --no-cache-dir --break-system-packages \
+      opencv-python-headless pytesseract pymupdf numpy && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
