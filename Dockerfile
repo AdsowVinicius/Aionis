@@ -83,7 +83,10 @@ COPY --chown=rails:rails --from=build /rails /rails
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start server via Thruster by default, this can be overwritten at runtime
-EXPOSE 80
-CMD ["./bin/thrust", "./bin/rails", "server"]
+# Puma direto, escutando em 0.0.0.0:$PORT (config/puma.rb) — é o que o
+# Railway espera para rotear o domínio. Thruster foi removido do CMD: ele
+# escuta na 80 (HTTP_PORT) e escondia o Puma da plataforma (502); atrás do
+# proxy do Railway seus benefícios (TLS/HTTP2) são redundantes.
+EXPOSE 3000
+CMD ["./bin/rails", "server"]
 
