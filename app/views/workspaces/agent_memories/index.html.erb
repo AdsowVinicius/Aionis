@@ -1,0 +1,36 @@
+<% content_for :title, "Memória do assistente" %>
+
+<div class="max-w-3xl mx-auto space-y-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Memória do assistente</h1>
+    <p class="text-sm text-slate-500">
+      Tudo o que o assistente lembra sobre o seu negócio. Você pode apagar
+      qualquer item a qualquer momento (LGPD).
+    </p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+    <% if @memories.empty? %>
+      <p class="text-sm text-slate-400 text-center py-10">O assistente ainda não memorizou nada.</p>
+    <% end %>
+    <% @memories.each do |memory| %>
+      <div class="flex items-center justify-between gap-4 px-4 py-3">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-slate-800"><%= memory.key %></p>
+          <p class="text-sm text-slate-600 truncate"><%= memory.value %></p>
+          <p class="text-xs text-slate-400">
+            <%= memory.source == "user_stated" ? "Afirmado por você" : memory.source == "inferred" ? "Inferido (pode estar errado)" : "Sistema" %>
+            · <%= l(memory.updated_at, format: :short) rescue memory.updated_at.strftime("%d/%m/%Y") %>
+          </p>
+        </div>
+        <%= button_to "Apagar", workspace_agent_memory_path(current_workspace, memory),
+              method: :delete,
+              class: "text-sm text-red-600 hover:text-red-800 cursor-pointer",
+              form: { data: { turbo_confirm: "Apagar esta memória?" } } %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= link_to "← Voltar ao assistente", workspace_chat_path(current_workspace),
+              class: "text-sm text-teal-700 hover:underline" %>
+</div>

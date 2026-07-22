@@ -1,0 +1,8 @@
+<%= form_with url: workspace_chat_path(current_workspace), method: :post,
+              id: "chat-form", class: "flex gap-2" do |f| %>
+  <%= f.text_field :message, autofocus: true, autocomplete: "off",
+        placeholder: "Escreva sua pergunta…",
+        class: "flex-1 rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500 text-sm" %>
+  <%= f.submit "Enviar",
+        class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 cursor-pointer" %>
+<% end %>

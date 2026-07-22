@@ -10,6 +10,7 @@ module Aionis
         def classify(context:)          = unavailable
         def review(context:)            = unavailable
         def complete(prompt:, **options) = unavailable
+        def chat(messages:, system: nil, tools: [], model: nil, max_tokens: nil) = unavailable
       end
     end
   end

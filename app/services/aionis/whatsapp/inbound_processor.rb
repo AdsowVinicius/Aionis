@@ -92,6 +92,20 @@ module Aionis
           # Arquitetura preparada; processamento de áudio ainda não implementado.
           Aionis::Whatsapp::Responder.reply(incoming: @incoming, kind: :audio_unsupported)
           @incoming.processed!
+        when "text"
+          route_text
+        else
+          Aionis::Whatsapp::Responder.reply(incoming: @incoming, kind: :help)
+          @incoming.processed!
+        end
+      end
+
+      # Texto vai para o Agente Financeiro (job próprio — nada de IA aqui).
+      # Sem IA configurada, mantém a resposta de ajuda de sempre.
+      def route_text
+        if Aionis::Agent.enabled?
+          audit("Texto roteado ao Agente Financeiro")
+          Aionis::Agent::WhatsappReplyJob.perform_later(@incoming.id)
         else
           Aionis::Whatsapp::Responder.reply(incoming: @incoming, kind: :help)
           @incoming.processed!

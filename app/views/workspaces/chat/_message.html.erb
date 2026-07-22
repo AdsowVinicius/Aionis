@@ -1,0 +1,6 @@
+<% user = role == "user" %>
+<div class="flex <%= user ? "justify-end" : "justify-start" %>">
+  <div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap <%= user ? "bg-teal-600 text-white" : "bg-slate-100 text-slate-800" %>">
+    <%= content %>
+  </div>
+</div>

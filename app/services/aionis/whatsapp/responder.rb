@@ -8,18 +8,26 @@ module Aionis
     class Responder
       def self.reply(incoming:, kind:, transaction: nil) = new(incoming).reply(kind, transaction)
 
+      # Resposta com corpo livre (usada pelo Agente Financeiro) — mesmo caminho
+      # de OutgoingMessage + SendMessageJob + auditoria das respostas fixas.
+      def self.reply_custom(incoming:, body:) = new(incoming).deliver(body, kind: :agent)
+
       def initialize(incoming)
         @incoming = incoming
         @channel  = incoming.workspace_channel
       end
 
       def reply(kind, transaction = nil)
+        deliver(body(kind, transaction), kind: kind, transaction: transaction)
+      end
+
+      def deliver(text, kind:, transaction: nil)
         outgoing = @channel.outgoing_messages.create!(
           workspace:        @channel.workspace,
           incoming_message: @incoming,
           to_number:        @incoming.from_number,
           message_type:     "text",
-          body:             body(kind, transaction),
+          body:             text,
           status:           "pending"
         )
         Aionis::Whatsapp::SendMessageJob.perform_later(outgoing.id)

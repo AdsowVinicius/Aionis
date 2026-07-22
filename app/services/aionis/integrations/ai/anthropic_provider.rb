@@ -50,6 +50,35 @@ module Aionis
         end
 
         def review(context:)   = classify(context: context)
+
+        # Conversa com tool calling (Agente Financeiro). Devolve os blocos crus
+        # (text/tool_use) — quem executa tools é o orquestrador, nunca o provider.
+        def chat(messages:, system: nil, tools: [], model: nil, max_tokens: nil)
+          return unavailable("IA não configurada") unless configured?
+
+          body = {
+            model:      model.presence || agent_model,
+            max_tokens: (max_tokens || agent_max_tokens).to_i,
+            messages:   messages
+          }
+          body[:system] = system if system.present?
+          body[:tools]  = tools if tools.present?
+
+          started  = monotonic
+          response = post_raw(body)
+          elapsed  = ((monotonic - started) * 1000).round
+          return failure(response) unless ok?(response)
+
+          json = parse(response.body)
+          Result.ok(provider: provider_key, data: {
+            "content"     => Array(json["content"]),
+            "stop_reason" => json["stop_reason"],
+            "model"       => json["model"] || body[:model],
+            "usage"       => usage_of(json, elapsed)
+          })
+        rescue => e
+          Result.error(provider: provider_key, message: "Falha na IA: #{e.message}")
+        end
         def complete(prompt:, **_options)
           return unavailable("IA não configurada") unless configured?
 
@@ -109,7 +138,10 @@ module Aionis
             messages:   [{ role: "user", content: user }]
           }
           body[:system] = system if system.present?
+          post_raw(body)
+        end
 
+        def post_raw(body)
           headers = {
             "content-type"      => "application/json",
             "x-api-key"         => api_key,
@@ -184,6 +216,10 @@ module Aionis
         def api_key      = settings[:api_key].to_s
         def model        = settings[:model].presence || "claude-haiku-4-5"
         def max_tokens   = settings.fetch(:max_tokens, 400).to_i
+        # Agente conversacional: modelo próprio (Haiku barato por padrão;
+        # AGENT_MODEL pode subir para Sonnet) e teto maior de tokens de saída.
+        def agent_model      = settings[:agent_model].presence || model
+        def agent_max_tokens = settings.fetch(:agent_max_tokens, 1024).to_i
         def timeout      = settings.fetch(:timeout, 20).to_i
         def input_price  = settings.fetch(:input_price, 1.0).to_f   # US$/1M tokens (Haiku 4.5)
         def output_price = settings.fetch(:output_price, 5.0).to_f

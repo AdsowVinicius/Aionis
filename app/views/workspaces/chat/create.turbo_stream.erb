@@ -1,0 +1,8 @@
+<%= turbo_stream.append "chat-messages" do %>
+  <%= render "message", role: "user", content: @user_message %>
+  <%= render "message", role: "assistant", content: @reply.text %>
+<% end %>
+
+<%= turbo_stream.replace "chat-form" do %>
+  <%= render "form" %>
+<% end %>

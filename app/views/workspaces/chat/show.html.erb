@@ -1,0 +1,33 @@
+<% content_for :title, "Assistente" %>
+
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Assistente financeiro</h1>
+      <p class="text-sm text-slate-500">
+        Pergunte sobre saldo, gastos, contas e registre lançamentos por conversa.
+      </p>
+    </div>
+    <%= link_to "Memória do assistente", workspace_agent_memories_path(current_workspace),
+                class: "text-sm text-teal-700 hover:underline" %>
+  </div>
+
+  <% unless @agent_enabled %>
+    <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+      O assistente está desligado — configure <code>AI_PROVIDER=anthropic</code> e <code>AI_API_KEY</code>.
+    </div>
+  <% end %>
+
+  <div id="chat-messages" class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 min-h-[300px]">
+    <% if @messages.empty? %>
+      <p class="text-sm text-slate-400 text-center py-10">
+        Nenhuma conversa ainda. Experimente: “qual meu saldo desse mês?”
+      </p>
+    <% end %>
+    <% @messages.each do |message| %>
+      <%= render "message", role: message.role, content: message.content %>
+    <% end %>
+  </div>
+
+  <%= render "form" %>
+</div>

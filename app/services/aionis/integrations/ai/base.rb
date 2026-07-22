@@ -26,6 +26,15 @@ module Aionis
         def complete(prompt:, **options)
           not_implemented!(:complete)
         end
+
+        # Conversa com tool calling (Agente Financeiro). `messages` segue o
+        # formato da Messages API ({role:, content:}); `tools` são definições
+        # JSON Schema. O provider NUNCA executa tools — apenas devolve os
+        # blocos (tool_use/text) para o orquestrador decidir.
+        # @return [Result] data: { content: [], stop_reason:, model:, usage: }
+        def chat(messages:, system: nil, tools: [], model: nil, max_tokens: nil)
+          not_implemented!(:chat)
+        end
       end
     end
   end

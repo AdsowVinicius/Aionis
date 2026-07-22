@@ -80,6 +80,10 @@ default: &default
       timeout:      "<%= ENV.fetch('AI_TIMEOUT', '20') %>"
       input_price:  "<%= ENV.fetch('AI_INPUT_PRICE', '1.0') %>"
       output_price: "<%= ENV.fetch('AI_OUTPUT_PRICE', '5.0') %>"
+      # Agente Financeiro conversacional (tool calling). Haiku por padrão;
+      # suba para claude-sonnet-5 se quiser insights mais elaborados.
+      agent_model:      "<%= ENV.fetch('AGENT_MODEL', 'claude-haiku-4-5') %>"
+      agent_max_tokens: "<%= ENV.fetch('AGENT_MAX_TOKENS', '1024') %>"
 
 development:
   <<: *default

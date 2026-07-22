@@ -18,6 +18,8 @@ class Workspace < ApplicationRecord
   has_many :ai_interactions, dependent: :nullify
   has_many :kpi_snapshots, dependent: :destroy
   has_many :insights, dependent: :destroy
+  has_many :workspace_memories, dependent: :destroy
+  has_many :agent_messages, dependent: :destroy
 
   enum :kind, { cpf: "cpf", mei: "mei", empresa: "empresa" }
   enum :status, { active: "active", suspended: "suspended", trial: "trial" }

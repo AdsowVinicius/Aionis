@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_19_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_22_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_120000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "agent_messages", force: :cascade do |t|
+    t.string "channel", default: "portal", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "channel", "created_at"], name: "idx_on_workspace_id_channel_created_at_6a370f4b95"
+    t.index ["workspace_id"], name: "index_agent_messages_on_workspace_id"
   end
 
   create_table "ai_interactions", force: :cascade do |t|
@@ -440,6 +452,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_120000) do
     t.index ["workspace_id"], name: "index_workspace_channels_on_workspace_id"
   end
 
+  create_table "workspace_memories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key", null: false
+    t.integer "relevance", default: 0, null: false
+    t.string "source", default: "system", null: false
+    t.datetime "updated_at", null: false
+    t.text "value", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "key"], name: "index_workspace_memories_on_workspace_id_and_key"
+    t.index ["workspace_id"], name: "index_workspace_memories_on_workspace_id"
+  end
+
   create_table "workspace_users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "role", default: "member", null: false
@@ -466,6 +490,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "agent_messages", "workspaces"
   add_foreign_key "categories", "workspaces"
   add_foreign_key "category_rules", "workspaces"
   add_foreign_key "counterparties", "workspaces"
@@ -475,6 +500,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_120000) do
   add_foreign_key "financial_transactions", "workspaces"
   add_foreign_key "subscriptions", "plans"
   add_foreign_key "subscriptions", "workspaces"
+  add_foreign_key "workspace_memories", "workspaces"
   add_foreign_key "workspace_users", "users"
   add_foreign_key "workspace_users", "workspaces"
   add_foreign_key "workspaces", "users", column: "owner_id"
