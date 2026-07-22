@@ -1,0 +1,23 @@
+<%# Receitas × Despesas — barras agrupadas em CSS (BarChart do Figma).
+    locals: rows (monthly_evolution real: label/income_cents/expense_cents). %>
+<% rows = Array(rows).last(6)
+   max  = [rows.map { |r| [r[:income_cents], r[:expense_cents]].max }.max.to_i, 1].max %>
+<% if rows.empty? %>
+  <div class="h-[220px] flex items-center justify-center text-sm text-mist">Sem lançamentos ainda.</div>
+<% else %>
+  <div class="h-[220px] flex items-end gap-4">
+    <% rows.each do |r| %>
+      <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+        <div class="w-full flex items-end justify-center gap-1.5 flex-1">
+          <div class="w-4 rounded-t-md bg-teal" style="height: <%= bar_width(r[:income_cents], max) %>" title="Receitas <%= month_short(r[:label]) %>: <%= format_brl(r[:income_cents]) %>"></div>
+          <div class="w-4 rounded-t-md bg-ink" style="height: <%= bar_width(r[:expense_cents], max) %>" title="Despesas <%= month_short(r[:label]) %>: <%= format_brl(r[:expense_cents]) %>"></div>
+        </div>
+        <div class="text-[11px] text-mist"><%= month_short(r[:label]) %></div>
+      </div>
+    <% end %>
+  </div>
+  <div class="flex items-center gap-5 mt-3 text-xs text-mist">
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-teal"></span> Receitas</span>
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-ink"></span> Despesas</span>
+  </div>
+<% end %>

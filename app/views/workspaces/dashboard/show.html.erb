@@ -5,174 +5,79 @@
   <%= render "empty_state" %>
 <% else %>
   <% k = @dashboard.kpis %>
-  <div class="space-y-4 md:space-y-5 mx-auto max-w-6xl">
+  <% evolution = @dashboard.monthly_evolution %>
+  <div class="space-y-6">
 
-    <%# ── Hero: Health Score + KPIs ─────────────────────────────────────────── %>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <%= render "health_score", health: @dashboard.health %>
-
-      <div class="lg:col-span-2 grid grid-cols-2 gap-4">
-        <%= render "metric_card", label: "Receita do mês", accent: "text-teal-700",
-              value: format_brl(k.income_cents), hint: Date.current.strftime("%B/%Y").capitalize %>
-        <%= render "metric_card", label: "Despesa do mês", accent: "text-red-600",
-              value: format_brl(k.expense_cents), hint: Date.current.strftime("%B/%Y").capitalize %>
-        <%= render "metric_card", label: "Saldo do mês",
-              accent: (k.balance_cents.negative? ? "text-red-600" : "text-slate-800"),
-              value: format_brl(k.balance_cents),
-              hint: "Poupança: #{k.savings_rate}%" %>
-        <% b = @dashboard.burn_rate %>
-        <%= render "metric_card", label: "Burn rate", accent: "text-slate-800",
-              value: (b.positive_cashflow ? "—" : format_brl(b.monthly_burn_cents)),
-              hint: (b.runway_months ? "≈ #{b.runway_months} meses de fôlego" : (b.positive_cashflow ? "fluxo de caixa positivo" : "consumo #{burn_trend_label(b.trend)}")) %>
-      </div>
+    <%# ── KPIs (Figma Kpi ×4) — valores e deltas REAIS ──────────────────────── %>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <%= render "kpi_card", label: "Saldo acumulado", value: format_brl(k.general_balance_cents),
+            hint: "todas as receitas − despesas",
+            icon_path: "M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" %>
+      <%= render "kpi_card", label: "Receitas do mês", value: format_brl(k.income_cents),
+            delta: mom_delta(evolution, :income_cents),
+            icon_path: "M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" %>
+      <%= render "kpi_card", label: "Despesas do mês", value: format_brl(k.expense_cents),
+            delta: mom_delta(evolution, :expense_cents),
+            icon_path: "M4.5 4.5l15 15m0 0V8.25m0 11.25H8.25" %>
+      <%= render "kpi_card", label: "Saldo do mês", value: format_brl(k.balance_cents), highlight: true,
+            delta: mom_delta(evolution, :balance_cents),
+            icon_path: "M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" %>
     </div>
 
-    <%# ── Receitas × Despesas (12 meses) ────────────────────────────────────── %>
-    <div class="bg-white rounded-xl border border-slate-200 p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-semibold text-slate-700">Receitas × Despesas</h3>
-        <span class="text-xs text-slate-400">últimos 12 meses</span>
-      </div>
-      <%= render "bars_12m", series: @dashboard.monthly_evolution %>
+    <%# ── Mini cards (Figma MiniCard ×4) — contadores REAIS ─────────────────── %>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <%= render "mini_card", label: "Contas a pagar", value: format_brl(k.upcoming_payables_cents),
+            sub: "vencem nos próximos 7 dias", color: "text-ink",
+            icon_path: "M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" %>
+      <%= render "mini_card", label: "Contas vencidas", value: k.overdue_payables_count,
+            sub: k.overdue_payables_count == 1 ? "conta atrasada" : "contas atrasadas", color: "text-rose",
+            icon_path: "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" %>
+      <%= render "mini_card", label: "Documentos pendentes", value: k.pending_docs + k.review_docs,
+            sub: "aguardando revisão", color: "text-amber",
+            icon_path: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" %>
+      <% health = @dashboard.health %>
+      <%= render "mini_card", label: "Saúde financeira", value: "#{health.score}/100",
+            sub: health_band(health.band)[:label].downcase, color: "text-teal",
+            icon_path: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" %>
     </div>
 
-    <%# ── Fluxo de caixa + Distribuição por categorias ──────────────────────── %>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="bg-white rounded-xl border border-slate-200 p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-semibold text-slate-700">Fluxo de caixa</h3>
-          <span class="text-xs text-slate-400">acumulado</span>
-        </div>
-        <%= render "line_chart", points: @dashboard.cash_flow %>
-      </div>
-      <div class="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 class="text-sm font-semibold text-slate-700 mb-4">Distribuição por categorias</h3>
-        <%= render "ranking", rows: @dashboard.top_categories %>
-      </div>
+    <%# ── Gráficos linha 1: fluxo de caixa + donut de categorias ────────────── %>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <%= render layout: "chart_card", locals: { title: "Fluxo de caixa", subtitle: "últimos 6 meses", css: "lg:col-span-2" } do %>
+        <%= render "cashflow_chart", flow: @dashboard.cash_flow %>
+      <% end %>
+      <%= render layout: "chart_card", locals: { title: "Despesas por categoria", subtitle: "mês atual" } do %>
+        <%= render "donut_categories", rows: @dashboard.top_categories %>
+      <% end %>
     </div>
 
-    <%# ── Essencialidade + Top fornecedores + Top centros de custo ──────────── %>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 class="text-sm font-semibold text-slate-700 mb-4">Essenciais × Supérfluos</h3>
-        <% e = @dashboard.essentiality %>
-        <% if e.total_cents.zero? %>
-          <p class="text-sm text-slate-400 py-6 text-center">Classifique despesas para ver a distribuição.</p>
-        <% else %>
-          <div class="h-3 rounded-full overflow-hidden flex bg-slate-100 mb-4">
-            <% e.by_essentiality.each do |key, cents| %>
-              <% next if cents.to_i.zero? %>
-              <div class="<%= essentiality_color(key) %> h-full" style="width: <%= bar_width(cents, e.total_cents) %>"
-                   title="<%= essentiality_label(key) %>: <%= format_brl(cents) %>"></div>
-            <% end %>
-          </div>
-          <div class="space-y-2 text-sm">
-            <div class="flex items-center justify-between">
-              <span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-sm bg-teal-500"></span>Essenciais</span>
-              <span class="font-medium text-slate-700"><%= e.essential_ratio %>%</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>Supérfluos / não essenciais</span>
-              <span class="font-medium text-slate-700"><%= e.superfluous_ratio %>%</span>
-            </div>
-          </div>
-        <% end %>
-      </div>
-
-      <div class="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 class="text-sm font-semibold text-slate-700 mb-4">Top fornecedores</h3>
-        <%= render "ranking", rows: @dashboard.top_counterparties %>
-      </div>
-
-      <div class="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 class="text-sm font-semibold text-slate-700 mb-4">Top centros de custo</h3>
-        <%= render "ranking", rows: @dashboard.top_cost_centers %>
-      </div>
+    <%# ── Gráficos linha 2: receitas × despesas + top fornecedores ──────────── %>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <%= render layout: "chart_card", locals: { title: "Receitas × Despesas", subtitle: "últimos 6 meses", css: "lg:col-span-2" } do %>
+        <%= render "bars_evolution", rows: evolution %>
+      <% end %>
+      <%= render layout: "chart_card", locals: { title: "Top fornecedores", subtitle: "mês atual" } do %>
+        <%= render "top_suppliers", rows: @dashboard.top_counterparties %>
+      <% end %>
     </div>
 
-    <%# ── Insights ──────────────────────────────────────────────────────────── %>
+    <%# ── Alertas inteligentes (insights REAIS do InsightGenerator) ─────────── %>
     <% if @dashboard.insights.any? %>
       <div>
-        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-          </svg>
-          Insights
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <% @dashboard.insights.each do |ins| %>
-            <% s = insight_severity(ins[:severity]) %>
-            <div class="border rounded-xl p-4 <%= s[:ring] %>">
-              <div class="flex items-start gap-2">
-                <span class="w-2 h-2 rounded-full <%= s[:dot] %> mt-1.5 shrink-0"></span>
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold <%= s[:text] %>"><%= ins[:title] %></p>
-                  <p class="text-xs text-slate-500 mt-0.5"><%= ins[:message] %></p>
-                </div>
-              </div>
-            </div>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display">Alertas inteligentes</h2>
+          <%= link_to workspace_alerts_path(@workspace), class: "text-sm text-teal flex items-center gap-1 hover:underline" do %>
+            Ver todos
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          <% end %>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <% @dashboard.insights.first(4).each do |insight| %>
+            <%= render "insight_alert", insight: insight %>
           <% end %>
         </div>
       </div>
     <% end %>
-
-    <%# ── Atenção / contas a vencer  ·  Documentos / mensagens ──────────────── %>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-100"><h3 class="text-sm font-semibold text-slate-700">Atenção & contas a vencer</h3></div>
-        <div class="divide-y divide-slate-100">
-          <% if k.overdue_payables_count.positive? %>
-            <div class="px-5 py-3 flex items-center justify-between">
-              <span class="flex items-center gap-2 text-sm text-slate-700"><span class="w-2 h-2 rounded-full bg-red-500"></span>Contas a pagar vencidas</span>
-              <%= link_to "#{k.overdue_payables_count} →", workspace_payables_path(@workspace, filter: "overdue"), class: "text-xs font-semibold text-red-600 hover:underline" %>
-            </div>
-          <% end %>
-          <% @dashboard.upcoming_payables.each do |t| %>
-            <div class="px-5 py-3 flex items-center justify-between gap-2">
-              <div class="min-w-0">
-                <p class="text-sm text-slate-700 truncate"><%= t.description %></p>
-                <p class="text-xs text-slate-400">vence <%= t.due_on&.strftime("%d/%m") %></p>
-              </div>
-              <span class="text-sm font-medium text-slate-600 shrink-0"><%= format_brl(t.amount_cents) %></span>
-            </div>
-          <% end %>
-          <% if k.overdue_payables_count.zero? && @dashboard.upcoming_payables.empty? %>
-            <div class="px-5 py-4 text-center"><p class="text-xs text-slate-400">Nenhuma conta a vencer nos próximos dias.</p></div>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-slate-700">Entradas recentes</h3>
-          <%= link_to "Documentos →", workspace_documents_path(@workspace), class: "text-xs text-teal-600 hover:underline" %>
-        </div>
-        <div class="divide-y divide-slate-100">
-          <% @dashboard.recent_documents.each do |doc| %>
-            <div class="px-5 py-2.5 flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                <span class="text-sm text-slate-700 truncate"><%= doc.file.attached? ? doc.file.filename.to_s : "Documento ##{doc.id}" %></span>
-              </div>
-              <%= document_status_badge(doc.status) %>
-            </div>
-          <% end %>
-          <% @dashboard.recent_messages.each do |msg| %>
-            <div class="px-5 py-2.5 flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
-                <span class="text-sm text-slate-700 truncate">WhatsApp · <%= msg.push_name.presence || msg.from_number %></span>
-              </div>
-              <span class="text-xs text-slate-400 shrink-0"><%= msg.received_at&.strftime("%d/%m %H:%M") %></span>
-            </div>
-          <% end %>
-          <% if @dashboard.recent_documents.empty? && @dashboard.recent_messages.empty? %>
-            <div class="px-5 py-4 text-center"><p class="text-xs text-slate-400">Nenhum documento ou mensagem ainda.</p></div>
-          <% end %>
-        </div>
-      </div>
-    </div>
 
   </div>
 <% end %>

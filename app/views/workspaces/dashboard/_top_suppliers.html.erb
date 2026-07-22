@@ -1,0 +1,20 @@
+<%# Top fornecedores com barras de progresso (Figma). locals: rows (top_counterparties reais). %>
+<% rows = Array(rows).first(5)
+   max  = [rows.map { |r| r[:total_cents].to_i }.max.to_i, 1].max %>
+<% if rows.empty? %>
+  <div class="h-[200px] flex items-center justify-center text-sm text-mist">Sem fornecedores ainda.</div>
+<% else %>
+  <div class="space-y-3">
+    <% rows.each do |f| %>
+      <div>
+        <div class="flex justify-between text-xs mb-1.5">
+          <span class="font-semibold text-ink truncate"><%= f[:name] %></span>
+          <span class="font-mono text-mist shrink-0 pl-2"><%= format_brl(f[:total_cents]) %></span>
+        </div>
+        <div class="h-1.5 bg-cream rounded-full">
+          <div class="h-full bg-gradient-to-r from-teal to-ink rounded-full" style="width: <%= bar_width(f[:total_cents], max) %>"></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

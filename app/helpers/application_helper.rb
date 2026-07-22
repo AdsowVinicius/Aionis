@@ -1,19 +1,63 @@
 module ApplicationHelper
+  # Item de navegação da sidebar navy (AppShell do Figma):
+  # ativo = bg-teal sólido; inativo = texto claro com hover sutil.
   def sidebar_nav_link(label, path, match: :prefix, &block)
     active = case match
     when :exact   then request.path == URI.parse(path).path
     when :prefix  then request.path.start_with?(URI.parse(path).path)
     end
 
-    base   = "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150"
-    active_cls   = "bg-teal-600 text-white"
-    inactive_cls = "text-slate-300 hover:bg-slate-800 hover:text-white"
+    base   = "flex items-center gap-3 px-3 h-10 rounded-lg text-sm transition-colors duration-150"
+    active_cls   = "bg-teal text-white"
+    inactive_cls = "text-white/70 hover:bg-white/5 hover:text-white"
 
     link_to path, class: "#{base} #{active ? active_cls : inactive_cls}" do
       concat(capture(&block)) if block_given?
       concat(content_tag(:span, label))
     end
   end
+
+  # Dados reais do card de plano da sidebar (nil quando não há assinatura).
+  def sidebar_plan
+    return @sidebar_plan if defined?(@sidebar_plan)
+    plan = current_workspace&.subscription&.plan
+    return @sidebar_plan = nil unless plan
+
+    used  = current_workspace.documents.where(created_at: Time.current.all_month).count
+    limit = plan.max_documents_month
+    @sidebar_plan = { name: plan.name, used: used, limit: limit,
+                      pct: limit.to_i.positive? ? [(used * 100.0 / limit).round, 100].min : 0 }
+  end
+
+  def workspace_kind_label(workspace)
+    { "cpf" => "CPF", "mei" => "MEI", "empresa" => "Empresa" }[workspace&.kind] || ""
+  end
+
+  # Papel do usuário no workspace atual (topbar).
+  def current_workspace_role
+    return @current_workspace_role if defined?(@current_workspace_role)
+    role = current_workspace && current_user &&
+           current_workspace.workspace_users.find_by(user: current_user)&.role
+    @current_workspace_role = { "owner" => "Admin", "admin" => "Admin",
+                                "member" => "Membro" }[role] || role&.capitalize || "Membro"
+  end
+
+  def user_initials(user)
+    user.name.to_s.split.map(&:first).join[0, 2].upcase.presence || "A"
+  end
+
+  # Sugestões do chat — apenas perguntas que as tools do agente respondem
+  # de verdade (consultar_contas/gastos/kpis, gerar_insight). Nada inventado.
+  CHAT_SUGGESTIONS = [
+    "Quanto tenho para pagar essa semana?",
+    "Qual foi meu maior gasto do mês?",
+    "Meu caixa está saudável?",
+    "Quanto gastei com combustível?",
+    "Como estão meus indicadores do mês?",
+    "Gerar um resumo financeiro do mês."
+  ].freeze
+
+  def chat_suggestions = CHAT_SUGGESTIONS
 
   def format_brl(cents)
     value = (cents || 0) / 100.0

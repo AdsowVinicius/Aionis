@@ -1,8 +1,21 @@
-<%= form_with url: workspace_chat_path(current_workspace), method: :post,
-              id: "chat-form", class: "flex gap-2" do |f| %>
-  <%= f.text_field :message, autofocus: true, autocomplete: "off",
-        placeholder: "Escreva sua pergunta…",
-        class: "flex-1 rounded-lg border-slate-300 focus:border-teal-500 focus:ring-teal-500 text-sm" %>
-  <%= f.submit "Enviar",
-        class: "rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 cursor-pointer" %>
+<%# Chips de sugestão + campo de mensagem (Figma). Os chips são botões de
+    submit do MESMO form (name=message value=...) — post real, sem JS. %>
+<%= form_with url: workspace_chat_path(current_workspace), method: :post, id: "chat-form" do |f| %>
+  <div class="flex gap-2 mb-3 overflow-x-auto pb-1">
+    <% chat_suggestions.first(4).each do |s| %>
+      <button type="submit" name="message" value="<%= s %>"
+              class="text-xs whitespace-nowrap px-3 h-8 rounded-lg bg-cream hover:bg-[#E8F4EF] text-ink transition-colors cursor-pointer shrink-0">
+        <%= s %>
+      </button>
+    <% end %>
+  </div>
+  <div class="flex items-center gap-2 bg-cream rounded-[14px] pr-2">
+    <%= f.text_field :message, autocomplete: "off", autofocus: true,
+          placeholder: "Pergunte sobre suas finanças…", "aria-label": "Mensagem para o assistente",
+          class: "flex-1 bg-transparent h-12 px-4 outline-none text-sm border-0 focus:ring-0" %>
+    <button type="submit" aria-label="Enviar"
+            class="w-9 h-9 rounded-lg bg-teal hover:bg-[#0ea273] text-white flex items-center justify-center transition-colors cursor-pointer shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+    </button>
+  </div>
 <% end %>

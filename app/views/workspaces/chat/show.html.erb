@@ -1,33 +1,62 @@
-<% content_for :title, "Assistente" %>
+<% content_for :title, "Assistente — Aionis" %>
+<% content_for :page_title, "Assistente" %>
+<h1 class="sr-only">Assistente financeiro</h1>
 
-<div class="max-w-3xl mx-auto space-y-4">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-900">Assistente financeiro</h1>
-      <p class="text-sm text-slate-500">
-        Pergunte sobre saldo, gastos, contas e registre lançamentos por conversa.
-      </p>
+<div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+
+  <%# ── Coluna do chat (Figma Assistant) ─────────────────────────────────── %>
+  <div class="bg-white rounded-[20px] border border-border flex flex-col h-[calc(100vh-180px)] min-h-[420px]">
+
+    <div class="p-5 border-b border-border flex items-center gap-3">
+      <div class="w-10 h-10 rounded-[14px] bg-gradient-to-br from-teal to-ink flex items-center justify-center text-white shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-[18px] h-[18px]"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+      </div>
+      <div>
+        <div class="font-display font-semibold">Assistente Aionis</div>
+        <% if @agent_enabled %>
+          <div class="text-xs text-teal flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"></span> Online · IA financeira
+          </div>
+        <% else %>
+          <div class="text-xs text-mist">Offline — configure AI_PROVIDER/AI_API_KEY</div>
+        <% end %>
+      </div>
     </div>
-    <%= link_to "Memória do assistente", workspace_agent_memories_path(current_workspace),
-                class: "text-sm text-teal-700 hover:underline" %>
+
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4"
+         data-controller="chat" data-chat-target="messages">
+      <% if @messages.empty? %>
+        <%= render "message", role: "assistant",
+              content: "Oi, #{current_user.name.split.first}! Sou o assistente do Aionis. Posso responder sobre saldo, gastos, contas a pagar/receber, registrar lançamentos e gerar insights. Pergunte ou escolha uma sugestão abaixo." %>
+      <% end %>
+      <% @messages.each do |message| %>
+        <%= render "message", role: message.role, content: message.content %>
+      <% end %>
+    </div>
+
+    <div class="p-4 border-t border-border">
+      <%= render "form" %>
+    </div>
   </div>
 
-  <% unless @agent_enabled %>
-    <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-      O assistente está desligado — configure <code>AI_PROVIDER=anthropic</code> e <code>AI_API_KEY</code>.
+  <%# ── Aside: sugestões + card IA contextual (Figma) ────────────────────── %>
+  <aside class="space-y-4">
+    <div class="bg-white rounded-[20px] border border-border p-5">
+      <h3 class="font-display mb-3">Sugestões</h3>
+      <div class="space-y-2">
+        <% chat_suggestions.each do |s| %>
+          <%= button_to s, workspace_chat_path(current_workspace), params: { message: s },
+                class: "w-full text-left px-3 py-2.5 rounded-lg text-sm bg-cream hover:bg-[#E8F4EF] hover:text-teal transition-colors cursor-pointer" %>
+        <% end %>
+      </div>
     </div>
-  <% end %>
 
-  <div id="chat-messages" class="bg-white rounded-xl border border-slate-200 p-4 space-y-3 min-h-[300px]">
-    <% if @messages.empty? %>
-      <p class="text-sm text-slate-400 text-center py-10">
-        Nenhuma conversa ainda. Experimente: “qual meu saldo desse mês?”
-      </p>
-    <% end %>
-    <% @messages.each do |message| %>
-      <%= render "message", role: message.role, content: message.content %>
-    <% end %>
-  </div>
-
-  <%= render "form" %>
+    <div class="bg-ink text-white rounded-[20px] p-5">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-teal mb-2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+      <div class="font-display">IA contextual</div>
+      <p class="text-xs text-white/60 mt-2">Suas respostas usam dados reais do seu Aionis. Nada de adivinhação.</p>
+      <%= link_to "Ver o que o assistente memorizou →", workspace_agent_memories_path(current_workspace),
+            class: "text-xs text-teal hover:underline mt-3 inline-block" %>
+    </div>
+  </aside>
 </div>

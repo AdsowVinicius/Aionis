@@ -55,4 +55,45 @@ module DashboardHelper
   def burn_trend_label(trend)
     { "up" => "em alta", "down" => "em queda", "stable" => "estável" }[trend.to_s] || "estável"
   end
+
+  # Variação % mês atual vs. anterior, calculada da evolução mensal REAL.
+  # Retorna nil quando não há base de comparação (aí o card omite o delta).
+  def mom_delta(evolution, key)
+    rows = Array(evolution)
+    return nil if rows.size < 2
+
+    current  = rows[-1][key].to_i
+    previous = rows[-2][key].to_i
+    return nil if previous.zero?
+
+    pct = ((current - previous) * 100.0 / previous.abs).round(1)
+    { pct: pct, text: "#{pct.positive? ? '+' : ''}#{number_with_precision(pct, precision: 1, separator: ',')}%" }
+  end
+
+  # Tons dos alertas inteligentes (Figma Alert): severidade real do insight.
+  FIGMA_ALERT_TONES = {
+    "critical" => { bg: "bg-[#FBEBEE]", text: "text-[#9F1239]", icon: "bg-[#DC2657]/15 text-[#DC2657]" },
+    "warning"  => { bg: "bg-[#FAF1DD]", text: "text-[#B26B00]", icon: "bg-[#F59E0B]/15 text-[#F59E0B]" },
+    "info"     => { bg: "bg-[#E8F4EF]", text: "text-[#04221A]", icon: "bg-[#14B88A]/15 text-[#14B88A]" }
+  }.freeze
+
+  def figma_alert_tone(severity) = FIGMA_ALERT_TONES[severity.to_s] || FIGMA_ALERT_TONES["info"]
+
+  # Paleta dos gráficos internos (theme.css --chart-*).
+  FIGMA_CHART_COLORS = %w[#14B88A #0E1B2C #38BDF8 #F59E0B #8B5CF6].freeze
+  def figma_chart_color(index) = FIGMA_CHART_COLORS[index % FIGMA_CHART_COLORS.size]
+
+  # CSS conic-gradient para o donut de categorias (percentuais reais).
+  def donut_gradient(rows)
+    total = rows.sum { |r| r[:total_cents].to_i }
+    return "conic-gradient(#EFEDE6 0% 100%)" if total.zero?
+
+    stops, acc = [], 0.0
+    rows.each_with_index do |row, i|
+      pct = row[:total_cents].to_i * 100.0 / total
+      stops << "#{figma_chart_color(i)} #{acc.round(2)}% #{(acc + pct).round(2)}%"
+      acc += pct
+    end
+    "conic-gradient(#{stops.join(', ')})"
+  end
 end

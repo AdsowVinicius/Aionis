@@ -97,15 +97,16 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "3.733,33", response.body  # despesa com cancelled = 3.733,33
   end
 
-  # 7. Documentos recentes aparecem no dashboard (seção "Entradas recentes")
-  test "exibe documentos recentes" do
+  # 7. Ter documentos (mesmo sem lançamento) mostra o dashboard, não o empty state.
+  # Figma: a lista de documentos vive na tela Documentos; o dashboard mostra KPIs.
+  test "documentos tiram o dashboard do empty state" do
     2.times { d = @workspace.documents.new(source: "web", status: "pending"); d.save!(validate: false) }
     d = @workspace.documents.new(source: "web", status: "processed")
     d.save!(validate: false)
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Entradas recentes", response.body
+    assert_match "Saúde financeira", response.body # KPIs renderizam (não é o empty state)
   end
 
   # 8. Ter só documento (sem lançamento) já mostra o dashboard, não o empty state
@@ -115,7 +116,7 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Entradas recentes", response.body
+    assert_match "Saúde financeira", response.body
   end
 
   # 9. Com dados, o dashboard mostra a saúde financeira e KPIs
@@ -126,7 +127,7 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
     get workspace_dashboard_path(@workspace)
     assert_response :success
     assert_match "Saúde financeira", response.body
-    assert_match "Receita do mês", response.body
+    assert_match "Receitas do mês", response.body
   end
 
   # 10. Top categorias de despesa do mês aparecem pelo nome
@@ -246,7 +247,7 @@ class Workspaces::DashboardControllerTest < ActionDispatch::IntegrationTest
 
     get workspace_dashboard_path(@workspace)
     assert_response :success
-    assert_match "Contas a pagar vencidas", response.body
+    assert_match "Contas vencidas", response.body
   end
 
   # 12. Não mistura dados de outro workspace

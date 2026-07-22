@@ -12,11 +12,31 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Tipografia do design system (docs/design_ref/fonts.css) %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+
+    <style>
+      /* Base do app logado — docs/design_ref/theme.css + fonts.css */
+      body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;background-color:#F5F4EF;color:#0E1B2C;
+        background-image:radial-gradient(circle at 15% 10%, rgba(20,184,138,0.05) 0%, transparent 40%),radial-gradient(circle at 85% 90%, rgba(14,27,44,0.04) 0%, transparent 45%);background-attachment:fixed;}
+      .font-display{font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em}
+      .font-mono{font-family:'JetBrains Mono',monospace}
+      ::selection{background:rgba(20,184,138,0.25)}
+      ::-webkit-scrollbar{width:8px;height:8px}
+      ::-webkit-scrollbar-thumb{background:transparent;border-radius:8px}
+      :hover::-webkit-scrollbar-thumb{background:rgba(11,26,47,0.15)}
+      a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #14B88A;outline-offset:2px;border-radius:6px}
+      @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+    </style>
   </head>
 
-  <body class="bg-slate-50 antialiased">
+  <body class="antialiased">
     <div class="flex h-screen overflow-hidden" data-controller="sidebar">
 
       <%# Overlay mobile — fecha o drawer ao clicar fora %>
@@ -24,7 +44,7 @@
            data-sidebar-target="overlay"
            data-action="click->sidebar#close"></div>
 
-      <%# Sidebar — drawer no mobile, estática no desktop %>
+      <%# Sidebar navy — drawer no mobile, estática no desktop (AppShell do Figma) %>
       <div class="fixed inset-y-0 left-0 z-30 flex -translate-x-full transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:z-auto"
            data-sidebar-target="panel">
         <%= render "layouts/sidebar" %>
@@ -33,9 +53,7 @@
       <div class="flex flex-col flex-1 overflow-hidden min-w-0">
         <%= render "layouts/topbar" %>
 
-        <main class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
-          <%# Coluna de conteúdo única e centralizada — mantém o conteúdo sempre
-              no centro e proporcional em qualquer tamanho de tela. %>
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div class="mx-auto w-full max-w-7xl">
             <%= render "layouts/flash" %>
             <%= yield %>

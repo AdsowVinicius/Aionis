@@ -1,0 +1,40 @@
+<%# Fluxo de caixa em SVG puro (área receitas teal × despesas navy, como o
+    AreaChart do Figma). locals: flow (Analytics::CashFlow — mensal). %>
+<%
+  rows = Array(flow)
+  w, h, pad = 640, 240, 28
+  max = [rows.map { |r| r[:inflow_cents].to_i }.max.to_i,
+         rows.map { |r| r[:outflow_cents].to_i }.max.to_i, 1].max
+  x_for = ->(i) { rows.size < 2 ? w / 2.0 : pad + i * (w - 2 * pad) / (rows.size - 1.0) }
+  y_for = ->(v) { h - pad - (v.to_f / max) * (h - 2 * pad) }
+  pts   = ->(key) { rows.each_with_index.map { |r, i| "#{x_for.(i).round(1)},#{y_for.(r[key].to_i).round(1)}" }.join(" ") }
+  area  = ->(key) { "#{x_for.(0).round(1)},#{h - pad} #{pts.(key)} #{x_for.(rows.size - 1).round(1)},#{h - pad}" }
+%>
+<% if rows.size < 2 %>
+  <div class="h-[240px] flex items-center justify-center text-sm text-mist">Ainda não há meses suficientes para o gráfico.</div>
+<% else %>
+  <svg viewBox="0 0 <%= w %> <%= h %>" class="w-full h-auto" role="img" aria-label="Fluxo de caixa: receitas e despesas por mês">
+    <defs>
+      <linearGradient id="grad-rec" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#14B88A" stop-opacity="0.35"/><stop offset="100%" stop-color="#14B88A" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="grad-desp" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0E1B2C" stop-opacity="0.25"/><stop offset="100%" stop-color="#0E1B2C" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <% 4.times do |g| %>
+      <line x1="<%= pad %>" x2="<%= w - pad %>" y1="<%= pad + g * (h - 2 * pad) / 3.0 %>" y2="<%= pad + g * (h - 2 * pad) / 3.0 %>" stroke="#EEF1F6" stroke-dasharray="3 3"/>
+    <% end %>
+    <polygon points="<%= area.(:outflow_cents) %>" fill="url(#grad-desp)"/>
+    <polyline points="<%= pts.(:outflow_cents) %>" fill="none" stroke="#0E1B2C" stroke-width="2.4" stroke-linecap="round"/>
+    <polygon points="<%= area.(:inflow_cents) %>" fill="url(#grad-rec)"/>
+    <polyline points="<%= pts.(:inflow_cents) %>" fill="none" stroke="#14B88A" stroke-width="2.4" stroke-linecap="round"/>
+    <% rows.each_with_index do |r, i| %>
+      <text x="<%= x_for.(i).round(1) %>" y="<%= h - 8 %>" text-anchor="middle" font-size="11" fill="#6B7385"><%= month_short(r[:label]) %></text>
+    <% end %>
+  </svg>
+  <div class="flex items-center gap-5 mt-2 text-xs text-mist">
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-teal"></span> Receitas</span>
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-ink"></span> Despesas</span>
+  </div>
+<% end %>

@@ -1,0 +1,23 @@
+<%# Donut de despesas por categoria via conic-gradient (PieChart do Figma).
+    locals: rows (top_categories reais: name/total_cents). %>
+<% rows = Array(rows).first(5) %>
+<% if rows.empty? %>
+  <div class="h-[220px] flex items-center justify-center text-sm text-mist text-center px-4">Sem despesas categorizadas ainda.<br>Envie comprovantes que o Aionis classifica.</div>
+<% else %>
+  <div class="flex items-center justify-center py-3">
+    <div class="relative w-44 h-44 rounded-full" style="background: <%= donut_gradient(rows) %>">
+      <div class="absolute inset-[26%] rounded-full bg-white"></div>
+    </div>
+  </div>
+  <div class="space-y-2 mt-2">
+    <% rows.each_with_index do |c, i| %>
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background: <%= figma_chart_color(i) %>"></span>
+          <span class="truncate"><%= c[:name] %></span>
+        </div>
+        <div class="font-mono text-mist shrink-0"><%= format_brl(c[:total_cents]) %></div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

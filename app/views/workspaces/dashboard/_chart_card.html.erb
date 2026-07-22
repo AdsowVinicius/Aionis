@@ -1,0 +1,10 @@
+<%# Moldura de gráfico (Figma ChartCard). Uso: render layout: "chart_card", locals: { title:, subtitle: } do %>
+<div class="bg-white rounded-[20px] border border-border p-6 <%= local_assigns[:css] %>">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="font-display"><%= title %></h3>
+    <% if local_assigns[:subtitle] %>
+      <span class="text-xs text-mist"><%= local_assigns[:subtitle] %></span>
+    <% end %>
+  </div>
+  <%= yield %>
+</div>
