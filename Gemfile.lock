@@ -289,7 +289,6 @@ GEM
       actionpack (>= 7.0)
       railties (>= 7.0)
     rexml (3.4.4)
-    rtesseract (3.1.4)
     rubocop (1.86.2)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -417,7 +416,6 @@ DEPENDENCIES
   pundit
   rails (~> 8.1.3)
   rails-i18n
-  rtesseract
   rubocop-rails-omakase
   selenium-webdriver
   solid_cable
