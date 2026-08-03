@@ -64,25 +64,32 @@ default: &default
       dpi:         "<%= ENV.fetch('OCR_DPI', '200') %>"
 
   ai:
-    # IA APENAS como fallback do motor de classificação (CLAUDE.md §4).
-    # Ative com AI_PROVIDER=anthropic + AI_API_KEY. Claude implementado;
-    # OpenAI/Gemini/Ollama ficam prontos para plugar.
+    # IA como fallback do motor de classificação (CLAUDE.md §4) e cérebro do
+    # Agente Financeiro (tool calling). Ative com AI_PROVIDER=anthropic|groq
+    # + AI_API_KEY. Gemini/Ollama ficam prontos para plugar.
     provider: "<%= ENV.fetch('AI_PROVIDER', 'null') %>"
     providers:
       anthropic: "Aionis::Integrations::Ai::AnthropicProvider"
-      # openai: "Aionis::Integrations::Ai::OpenaiProvider"
+      groq:      "Aionis::Integrations::Ai::GroqProvider"
       # gemini: "Aionis::Integrations::Ai::GeminiProvider"
       # ollama: "Aionis::Integrations::Ai::OllamaProvider"
     settings:
-      api_key:      "<%= ENV['AI_API_KEY'] %>"
-      model:        "<%= ENV.fetch('AI_MODEL', 'claude-haiku-4-5') %>"
+      api_key:  "<%= ENV['AI_API_KEY'] %>"
+      # Endpoint alternativo (só para APIs compatíveis com OpenAI, ex.: Groq
+      # via proxy). Vazio = endpoint oficial do provedor escolhido.
+      base_url: "<%= ENV['AI_BASE_URL'] %>"
+      # Modelo: em branco = default DO PROVEDOR ATIVO (anthropic ->
+      # claude-haiku-4-5; groq -> llama-3.3-70b-versatile). Assim trocar de
+      # provedor não exige mexer no modelo.
+      model:        "<%= ENV['AI_MODEL'] %>"
       max_tokens:   "<%= ENV.fetch('AI_MAX_TOKENS', '400') %>"
       timeout:      "<%= ENV.fetch('AI_TIMEOUT', '20') %>"
-      input_price:  "<%= ENV.fetch('AI_INPUT_PRICE', '1.0') %>"
-      output_price: "<%= ENV.fetch('AI_OUTPUT_PRICE', '5.0') %>"
-      # Agente Financeiro conversacional (tool calling). Haiku por padrão;
-      # suba para claude-sonnet-5 se quiser insights mais elaborados.
-      agent_model:      "<%= ENV.fetch('AGENT_MODEL', 'claude-haiku-4-5') %>"
+      # US$/1M tokens só para estimar custo. Vazio = tabela do provedor ativo.
+      input_price:  "<%= ENV['AI_INPUT_PRICE'] %>"
+      output_price: "<%= ENV['AI_OUTPUT_PRICE'] %>"
+      # Agente Financeiro conversacional (tool calling). Vazio = mesmo modelo
+      # de AI_MODEL; suba para um modelo maior se quiser insights melhores.
+      agent_model:      "<%= ENV['AGENT_MODEL'] %>"
       agent_max_tokens: "<%= ENV.fetch('AGENT_MAX_TOKENS', '1024') %>"
 
 development:

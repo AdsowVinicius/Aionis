@@ -9,28 +9,16 @@ module Aionis
     module Ai
       # Provedor de IA via Anthropic Claude (Messages API).
       #
-      # Usado APENAS como fallback do motor de classificação (CLAUDE.md §4:
-      # "IA barata para revisar/classificar"). Modelo padrão: Claude Haiku 4.5
-      # (rápido e barato), configurável por ENV. O restante do app não conhece a
-      # Anthropic — fala só com Aionis::Integrations.ai. Cliente HTTP injetável.
+      # Usado como fallback do motor de classificação (CLAUDE.md §4: "IA barata
+      # para revisar/classificar") e como cérebro do Agente Financeiro (chat com
+      # tool calling). O restante do app não conhece a Anthropic — fala só com
+      # Aionis::Integrations.ai. Cliente HTTP injetável (settings[:http]).
       #
       # Ativação: AI_PROVIDER=anthropic + AI_API_KEY (nenhuma credencial fixa).
       class AnthropicProvider < Base
-        HttpResponse = Struct.new(:code, :body)
-        ENDPOINT     = "https://api.anthropic.com/v1/messages"
-        API_VERSION  = "2023-06-01"
-
-        # Persona do assistente de classificação financeira do Aionis.
-        PERSONA = <<~PROMPT.freeze
-          Você é o assistente de classificação financeira do Aionis, um SaaS para
-          CPF, MEI e pequenas empresas no Brasil. Sua função é sugerir a categoria
-          de um lançamento financeiro a partir da descrição, valor, fornecedor e
-          texto do comprovante. Seja objetivo e conservador: se não tiver certeza,
-          use confiança baixa. Responda SOMENTE com um JSON válido, sem comentários,
-          no formato:
-          {"category_id": <id da categoria ou null>, "confidence": <0-100>, "reasons": ["motivo"]}
-          Escolha category_id apenas entre as categorias fornecidas.
-        PROMPT
+        ENDPOINT      = "https://api.anthropic.com/v1/messages"
+        API_VERSION   = "2023-06-01"
+        DEFAULT_MODEL = "claude-haiku-4-5"
 
         def configured?
           api_key.present?
@@ -79,6 +67,7 @@ module Aionis
         rescue => e
           Result.error(provider: provider_key, message: "Falha na IA: #{e.message}")
         end
+
         def complete(prompt:, **_options)
           return unavailable("IA não configurada") unless configured?
 
@@ -112,23 +101,6 @@ module Aionis
           })
         end
 
-        def build_prompt(context)
-          categories = Array(context[:categories]).map { |c| "#{c[:id]}: #{c[:name]}" }.join("\n")
-          <<~TXT
-            Categorias disponíveis (id: nome):
-            #{categories.presence || '(nenhuma)'}
-
-            Lançamento:
-            - Natureza: #{context[:kind]}
-            - Descrição: #{context[:description]}
-            - Valor (centavos): #{context[:amount_cents]}
-            - CPF/CNPJ: #{context[:tax_id].presence || 'não informado'}
-            - Texto do comprovante (OCR): #{context[:text].to_s[0, 1500]}
-
-            Retorne o JSON de classificação.
-          TXT
-        end
-
         # --- HTTP ---
 
         def post(system:, user:)
@@ -150,22 +122,6 @@ module Aionis
           http.call(:post, ENDPOINT, headers, body.to_json)
         end
 
-        def http
-          settings[:http] || method(:net_http)
-        end
-
-        def net_http(method, url, headers, body)
-          uri = URI(url)
-          req = Net::HTTP::Post.new(uri)
-          headers.each { |k, v| req[k] = v }
-          req.body = body
-          res = Net::HTTP.start(uri.host, uri.port, use_ssl: true,
-                                read_timeout: timeout, open_timeout: timeout) { |h| h.request(req) }
-          HttpResponse.new(res.code.to_i, res.body)
-        end
-
-        def ok?(resp) = resp && resp.code.to_i.between?(200, 299)
-
         def failure(resp)
           Result.error(provider: provider_key,
                        message: "Anthropic respondeu #{resp&.code}: #{resp&.body.to_s.truncate(200)}")
@@ -175,14 +131,6 @@ module Aionis
 
         def text_of(json)
           Array(json["content"]).find { |b| b["type"] == "text" }&.dig("text").to_s
-        end
-
-        # Extrai o primeiro objeto JSON do texto (tolera cercas de código).
-        def extract_json(text)
-          match = text.to_s[/\{.*\}/m]
-          match ? JSON.parse(match) : {}
-        rescue JSON::ParserError
-          {}
         end
 
         def usage_of(json, elapsed_ms)
@@ -198,31 +146,18 @@ module Aionis
           }
         end
 
-        # Custo em centavos de dólar a partir dos preços por 1M tokens.
-        def cost_cents(input, output)
-          ((input / 1_000_000.0 * input_price) + (output / 1_000_000.0 * output_price)) * 100
-        end
-
-        def parse(body)
-          JSON.parse(body.to_s)
-        rescue JSON::ParserError
-          {}
-        end
-
-        def monotonic = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
         # --- Settings (ENV via integrations.yml) ---
 
-        def api_key      = settings[:api_key].to_s
-        def model        = settings[:model].presence || "claude-haiku-4-5"
-        def max_tokens   = settings.fetch(:max_tokens, 400).to_i
+        def api_key    = settings[:api_key].to_s
+        def model      = settings[:model].presence || DEFAULT_MODEL
+        def max_tokens = settings.fetch(:max_tokens, 400).to_i
         # Agente conversacional: modelo próprio (Haiku barato por padrão;
         # AGENT_MODEL pode subir para Sonnet) e teto maior de tokens de saída.
         def agent_model      = settings[:agent_model].presence || model
         def agent_max_tokens = settings.fetch(:agent_max_tokens, 1024).to_i
-        def timeout      = settings.fetch(:timeout, 20).to_i
-        def input_price  = settings.fetch(:input_price, 1.0).to_f   # US$/1M tokens (Haiku 4.5)
-        def output_price = settings.fetch(:output_price, 5.0).to_f
+        # Preços US$/1M tokens do Haiku 4.5 (default quando ENV não define).
+        def default_input_price  = 1.0
+        def default_output_price = 5.0
       end
     end
   end
