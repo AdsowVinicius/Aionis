@@ -9,7 +9,7 @@
 # Razão social do controlador dos dados. No MEI, a razão social é o nome
 # completo do titular. Ao migrar para ME/LTDA ("Aionis Solutions"), troque aqui
 # E o CNPJ abaixo — a mudança de natureza jurídica gera inscrição nova.
-company_name: "Adsow Vinicius Freitas Batista (MEI)"
+company_name: "Adsow Vinicius Freitas Batista"
 
 # CNPJ do controlador. Sem ele a página fica juridicamente frágil.
 company_tax_id: "59.619.431/0001-83"

@@ -3,12 +3,10 @@
     que o Figma não cobre (não podem ficar inacessíveis). %>
 <aside class="w-[260px] shrink-0 h-screen bg-sidebar text-white p-5 flex flex-col gap-1 overflow-y-auto">
 
-  <%# Logo mono (Figma Logo mono) %>
-  <%= link_to current_workspace ? workspace_dashboard_path(current_workspace) : workspaces_path, class: "px-2 mb-6 flex items-center gap-2" do %>
-    <span class="relative flex items-center justify-center rounded-[14px] w-7 h-7 bg-white/10">
-      <svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M4 18 L12 4 L20 18" stroke="#14B88A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14 L16 14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-    </span>
-    <span class="font-display text-white" style="font-weight:800;font-size:1.05rem">Aionis</span>
+  <%# Lockup em fundo navy — variante clara (texto branco + check teal). %>
+  <%= link_to current_workspace ? workspace_dashboard_path(current_workspace) : workspaces_path,
+        class: "px-2 mb-6 flex items-center", aria: { label: "Aionis Finance — início" } do %>
+    <%= aionis_logo :full_dark, css_class: "h-7 w-auto" %>
   <% end %>
 
   <% if current_workspace %>

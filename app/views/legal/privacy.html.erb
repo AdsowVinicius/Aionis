@@ -18,11 +18,8 @@
 
 <header class="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-black/5">
   <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2">
-      <span class="relative flex items-center justify-center rounded-[14px] w-7 h-7" style="background:linear-gradient(135deg,#0E1B2C 0%,#14B88A 130%)">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M4 18 L12 4 L20 18" stroke="#14B88A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14 L16 14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-      </span>
-      <span class="font-display text-ink" style="font-weight:800;font-size:1.05rem">Aionis</span>
+    <a href="/" class="flex items-center" aria-label="Aionis Finance — início">
+      <%= aionis_logo :full, css_class: "h-8 w-auto" %>
     </a>
     <a href="/" class="text-sm text-mist hover:text-ink transition flex items-center gap-2">
       <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao site

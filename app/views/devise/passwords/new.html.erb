@@ -1,7 +1,9 @@
 <div class="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
   <div class="w-full max-w-md">
     <div class="text-center mb-8">
-      <span class="text-3xl font-bold text-teal-600">Aionis</span>
+      <%= link_to root_path, class: "inline-block", aria: { label: "Aionis Finance — início" } do %>
+        <%= aionis_logo :stacked, css_class: "h-20 w-auto mx-auto" %>
+      <% end %>
     </div>
 
     <div class="bg-white rounded-2xl shadow-lg p-8">
