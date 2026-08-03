@@ -27,6 +27,8 @@
 
   <%# Ícones pelo pipeline (URL com digest) — ver comentário no application.html.erb %>
   <link rel="icon" href="<%= asset_path("icon.svg") %>" type="image/svg+xml">
+  <%# O "A" é navy: em aba escura sumiria. Variante branca no dark mode. %>
+  <link rel="icon" href="<%= asset_path("icon-dark.svg") %>" type="image/svg+xml" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="<%= asset_path("icon.png") %>" type="image/png">
   <link rel="apple-touch-icon" href="<%= asset_path("icon.png") %>">
   <meta name="theme-color" content="#0E1B2C">

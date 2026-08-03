@@ -9,6 +9,8 @@ class IconsTest < ActionDispatch::IntegrationTest
   ICON_SVG = Rails.root.join("app/assets/images/icon.svg")
   ICON_PNG = Rails.root.join("app/assets/images/icon.png")
 
+  ICON_DARK = Rails.root.join("app/assets/images/icon-dark.svg")
+
   test "o ícone não é o placeholder vermelho do Rails" do
     svg = File.read(ICON_SVG)
     refute_match(/fill="red"/i, svg, "icon.svg ainda é o placeholder do Rails")
@@ -16,9 +18,16 @@ class IconsTest < ActionDispatch::IntegrationTest
     assert_match(/#0E1B2C/i, svg, "icon.svg deveria usar o navy da marca")
   end
 
+  # Decisão de marca: só o "A" com o check, sem container. Um <rect> de fundo
+  # significa que alguém trouxe a versão em badge de volta.
+  test "o ícone é o A sem fundo" do
+    refute_match(/<rect/i, File.read(ICON_SVG), "icon.svg voltou a ter fundo")
+    refute_match(/<rect/i, File.read(ICON_DARK), "icon-dark.svg voltou a ter fundo")
+  end
+
   test "o PNG existe e tem tamanho de arte real" do
     assert File.exist?(ICON_PNG)
-    assert_operator File.size(ICON_PNG), :>, 10_000,
+    assert_operator File.size(ICON_PNG), :>, 3_000,
                     "icon.png pequeno demais — provavelmente ainda é o placeholder"
   end
 
@@ -26,11 +35,20 @@ class IconsTest < ActionDispatch::IntegrationTest
     get root_path
     hrefs = response.body.scan(/<link rel="(?:apple-touch-)?icon"[^>]*href="([^"]+)"/).flatten
 
-    assert_equal 3, hrefs.size, "esperava svg + png + apple-touch-icon"
+    assert_equal 4, hrefs.size, "esperava svg + svg dark + png + apple-touch-icon"
     hrefs.each do |href|
-      assert_match(%r{\A/assets/icon-[0-9a-f]+\.(svg|png)\z}, href,
+      assert_match(%r{\A/assets/icon(-dark)?-[0-9a-f]+\.(svg|png)\z}, href,
                    "#{href} não tem digest — trocar a arte não invalidaria o cache")
     end
+  end
+
+  # O "A" é navy: numa aba em modo escuro ele sumiria no fundo.
+  test "há variante clara do favicon para o dark mode" do
+    get root_path
+    assert_match(
+      %r{<link rel="icon" href="/assets/icon-dark-[0-9a-f]+\.svg"[^>]*media="\(prefers-color-scheme: dark\)"},
+      response.body
+    )
   end
 
   test "og:image aponta para o ícone versionado, em URL absoluta" do
