@@ -74,6 +74,109 @@ namespace :aionis do
     end
   end
 
+  namespace :ai do
+    # Autoteste FIM-A-FIM da IA: bate na API real do provedor ativo (Groq/Claude)
+    # e valida as DUAS funções — fallback de classificação e o loop de tool
+    # calling do Agente Financeiro. Não escreve nada no banco (tool fictícia),
+    # então é seguro rodar em produção.
+    #   railway run bin/rails aionis:ai:selftest
+    desc "Testa a IA de ponta a ponta: classificação + tool calling (útil no Railway)"
+    task selftest: :environment do
+      say = ->(m) { puts m }
+      ok  = ->(m) { puts "\e[32m✓\e[0m #{m}" }
+      bad = ->(m) { puts "\e[31m✗ #{m}\e[0m" }
+
+      say.call "\n\e[1mAIONIS · IA selftest\e[0m"
+      key = Aionis::Integrations.active_provider_key(:ai)
+      say.call "provider ativo : #{key}"
+
+      if key == "null"
+        bad.call "AI_PROVIDER não está definido (está null)."
+        say.call "  → Defina AI_PROVIDER=groq (ou anthropic) e AI_API_KEY nas variáveis e reinicie."
+        exit(1)
+      end
+
+      ai = Aionis::Integrations.ai
+      unless ai.configured?
+        bad.call "Provider '#{key}' sem credencial — AI_API_KEY ausente ou vazia."
+        exit(1)
+      end
+      ok.call "AI_API_KEY presente"
+
+      # 1) Fallback de classificação (Ai::Classifier -> provider.classify)
+      classify = ai.classify(context: {
+        categories:  [ { id: 1, name: "Transporte" }, { id: 2, name: "Alimentação" } ],
+        kind:        "expense",
+        description: "Corrida de Uber para visitar cliente",
+        amount_cents: 3200,
+        tax_id:      nil,
+        text:        ""
+      })
+
+      unless classify.success?
+        bad.call "CLASSIFICAÇÃO FALHOU (#{classify.status}): #{classify.message}"
+        say.call "  → 401/403 = chave inválida. 404 = AI_MODEL com nome de modelo de outro provedor."
+        exit(1)
+      end
+
+      usage = classify.data["usage"] || {}
+      ok.call "Classificação OK — categoria #{classify.data['category_id'].inspect}, " \
+              "confiança #{classify.data['confidence']}"
+      say.call "  modelo #{usage['model']} · #{usage['input_tokens']}+#{usage['output_tokens']} tokens · " \
+               "#{usage['duration_ms']}ms · ~#{format('%.4f', usage['cost_cents'].to_f)} centavos de US$"
+      if classify.data["category_id"].to_i != 1
+        say.call "\e[33m!\e[0m Esperava a categoria 1 (Transporte) — modelo respondeu diferente. " \
+                 "Funciona, mas a qualidade pode estar baixa."
+      end
+
+      # 2) Loop de tool calling do agente (tool FICTÍCIA — não toca no banco)
+      tools = [ {
+        name:         "consultar_saldo",
+        description:  "Retorna o saldo atual do workspace",
+        input_schema: { "type" => "object", "properties" => {}, "required" => [] }
+      } ]
+      pergunta = "Qual é o meu saldo hoje?"
+      system   = "Você é o assistente financeiro do Aionis. Use as ferramentas para responder."
+
+      first = ai.chat(messages: [ { role: "user", content: pergunta } ], system: system, tools: tools)
+      unless first.success?
+        bad.call "CHAT FALHOU (#{first.status}): #{first.message}"
+        exit(1)
+      end
+
+      block = Array(first.data["content"]).find { |b| b["type"] == "tool_use" }
+      if block.nil?
+        bad.call "O modelo NÃO chamou nenhuma tool (stop_reason=#{first.data['stop_reason']})."
+        say.call "  → Sem tool calling o agente não consulta dados. Use um modelo que suporte tools."
+        say.call "  texto devolvido: #{Array(first.data['content']).map { |b| b['text'] }.join(' ').truncate(160)}"
+        exit(1)
+      end
+      ok.call "Tool calling OK — modelo pediu '#{block['name']}' (id #{block['id']})"
+
+      # Devolve o tool_result e confere que ele fecha a resposta com o dado recebido
+      convo = [
+        { role: "user",      content: pergunta },
+        { role: "assistant", content: first.data["content"] },
+        { role: "user",      content: [ { "type" => "tool_result", "tool_use_id" => block["id"],
+                                          "content" => '{"saldo":"R$ 1.234,56"}' } ] }
+      ]
+      final = ai.chat(messages: convo, system: system, tools: tools)
+      unless final.success?
+        bad.call "SEGUNDA VOLTA FALHOU (#{final.status}): #{final.message}"
+        say.call "  → O tool_result não foi aceito pelo provider (tradução do histórico)."
+        exit(1)
+      end
+
+      texto = Array(final.data["content"]).select { |b| b["type"] == "text" }.map { |b| b["text"] }.join(" ").strip
+      ok.call "Resposta final OK — #{texto.truncate(160)}"
+      if texto.include?("1.234,56")
+        ok.call "Usou o dado da tool na resposta. Agente 100% funcional."
+      else
+        say.call "\e[33m!\e[0m Respondeu, mas sem repetir o valor da tool — verifique a qualidade do modelo."
+      end
+    end
+  end
+
   namespace :whatsapp do
     # Simula o RECEBIMENTO de uma mensagem e roda o pipeline in-process (sem Meta
     # nem OCR reais). Params via ENV:
