@@ -34,6 +34,38 @@ class Workspace < ApplicationRecord
   before_validation :normalize_whatsapp_number
   after_create :add_owner_as_member
 
+  # Celular brasileiro: 55 + DDD + 9 dígitos (com o "9") ou 8 (sem).
+  BR_MOBILE_WITH_9    = /\A55(\d{2})9(\d{8})\z/
+  BR_MOBILE_WITHOUT_9 = /\A55(\d{2})(\d{8})\z/
+
+  # Formas equivalentes do mesmo número. A Meta entrega o wa_id de celulares
+  # brasileiros ora COM, ora SEM o "9" adicional (depende de quando a linha foi
+  # registrada no WhatsApp) — e não é o mesmo formato que o cliente digita no
+  # portal. Guardamos um número só, mas aceitamos as duas formas ao identificar
+  # o remetente; sem isso o bot ignora silenciosamente quem escreve.
+  def self.whatsapp_number_variants(number)
+    digits = number.to_s.gsub(/\D/, "").presence
+    return [] if digits.blank?
+
+    variants = [ digits ]
+    if (m = digits.match(BR_MOBILE_WITH_9))
+      variants << "55#{m[1]}#{m[2]}"
+    elsif (m = digits.match(BR_MOBILE_WITHOUT_9))
+      variants << "55#{m[1]}9#{m[2]}"
+    end
+    variants.uniq
+  end
+
+  # Acha o workspace do remetente tolerando o 9º dígito. Prefere sempre a
+  # correspondência exata quando as duas formas existirem no banco.
+  def self.find_by_whatsapp_number(number)
+    variants = whatsapp_number_variants(number)
+    return nil if variants.empty?
+
+    found = where(whatsapp_number: variants).to_a
+    found.find { |w| w.whatsapp_number == variants.first } || found.first
+  end
+
   private
 
   # Guarda apenas dígitos (com DDI), formato em que a Meta entrega o remetente.

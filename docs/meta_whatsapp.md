@@ -4,12 +4,19 @@ O Aionis recebe comprovantes por WhatsApp usando a **Meta WhatsApp Cloud API**
 (oficial). Toda a comunicação passa pela Integration Layer — nenhum controller,
 model ou service conhece a Meta diretamente.
 
+O Aionis tem **um único número** (global, em ENV). Quem escreve para ele é
+identificado pelo **número de quem envia**:
+
 ```
 Usuário → WhatsApp → Meta Cloud API → Webhook → WhatsappController
   → Aionis::Integrations.whatsapp(provider:) → MetaCloudProvider
-  → InboundJob → DownloadMediaJob → ProcessDocumentJob → DocumentExtractionService
-  → OCR / XML Parser → Normalizer → Rule Engine → Rule Learner → IA (fallback)
-  → FinancialTransaction → SendMessageJob → Dashboard
+  → InboundJob → InboundProcessor → acha o Workspace pelo remetente
+      ├─ FOTO/PDF → DownloadMediaJob → ProcessDocumentJob → DocumentExtractionService
+      │             → OCR / XML → Normalizer → Rule Engine → Rule Learner → IA (fallback)
+      │             → AutoConfirmJob → FinancialTransaction
+      └─ TEXTO    → Agent::WhatsappReplyJob → Agent::Conversation (tool calling)
+                    → tools consultam/gravam no BD (sempre escopadas no workspace)
+  → Responder → SendMessageJob → resposta no WhatsApp
 ```
 
 ## Arquitetura
@@ -21,9 +28,31 @@ Usuário → WhatsApp → Meta Cloud API → Webhook → WhatsappController
 - **Provider:** `MetaCloudProvider < Whatsapp::Base` implementa `send_text`,
   `send_template`, `send_document`, `send_image`, `send_audio`, `mark_as_read`,
   `parse_inbound`, `download_media`, `verify_webhook`, `verify_signature`.
-- **Multi-tenant:** cada workspace conecta seu próprio WhatsApp Business. As
-  credenciais do workspace (access_token, phone_number_id) ficam no
-  `WorkspaceChannel` e são passadas **por chamada** ao provider (`credentials:`).
+- **Número único/global:** as credenciais da Meta (`META_PHONE_NUMBER_ID`,
+  `META_ACCESS_TOKEN`, `META_APP_SECRET`, `META_VERIFY_TOKEN`) vêm **de ENV**,
+  não do workspace. O cliente cadastra o **próprio** número em
+  `Workspace#whatsapp_number` (tela *Canais → WhatsApp* do portal), e é assim
+  que o `InboundProcessor` sabe de quem é a mensagem. Remetente não cadastrado
+  é ignorado (aparece no log como `remetente não cadastrado: …`).
+- **`WorkspaceChannel`** virou só registro de status por workspace, provisionado
+  sob demanda por `WorkspaceChannel.provision`.
+- **9º dígito (Brasil):** a Meta entrega o `wa_id` de celulares brasileiros ora
+  com, ora sem o "9" (`5511925647469` vs `551125647469`). O roteamento aceita as
+  duas formas — ver `Workspace.whatsapp_number_variants`. Sem isso o bot ignora
+  o cliente em silêncio, que é a falha mais comum nesse ponto.
+
+## O que o bot faz com uma mensagem de TEXTO
+
+Texto vai para o **Agente Financeiro** (`Agent::Conversation`), o mesmo do portal.
+A LLM nunca toca no banco nem gera SQL: ela só escolhe *tools*, que o backend
+executa **sempre escopadas pelo workspace da sessão** (`Agent::Toolbox`):
+
+`consultar_saldo` · `consultar_gastos` · `consultar_transacoes` · `consultar_contas`
+· `consultar_kpis` · `registrar_lancamento` · `gerar_insight` · `ler_memoria` ·
+`salvar_memoria`.
+
+Toda tool executada gera `AuditLog` (`action: "ai"`). Se `AI_PROVIDER=null`, o
+texto cai na resposta de ajuda padrão — o bot não fica mudo.
 
 ## Pipeline (100% assíncrono)
 
@@ -84,21 +113,97 @@ ficam criptografados no banco (`encrypts`), com as chaves de criptografia em ENV
 
 ## Como conectar um Workspace
 
-Via serviço (regra fora do controller):
+Não há credencial por workspace. O cliente só cadastra o **próprio número** em
+**Canais → WhatsApp** no portal (`Workspace#whatsapp_number`); o canal de status
+é provisionado sozinho na primeira mensagem.
 
-```ruby
-Aionis::Whatsapp::ChannelConnector.connect(
-  workspace,
-  provider: "meta_cloud",
-  phone_number_id: "1234567890",
-  business_account_id: "..",
-  display_phone_number: "+55 11 99999-0000",
-  access_token: "EAAG...",   # gravado criptografado
-  verify_token: "meu_verify" # opcional (por canal)
-)
+`ChannelConnector` segue existindo como ferramenta de backend (para o cenário de
+credencial por canal), mas a UI não o usa mais.
+
+## ✅ Checklist para rodar 100% do lado da Meta
+
+Do lado do app tudo já está implementado — o que falta é configuração. Ordem
+recomendada; cada item tem como verificar.
+
+### 1. App e número na Meta
+
+- [ ] App **Business** criado em <https://developers.facebook.com> com o produto
+      **WhatsApp** adicionado.
+- [ ] Número registrado em **WhatsApp → API Setup** e **verificado** (SMS/voz).
+- [ ] Copiar o **Phone number ID** (é um número longo, **não** é o telefone).
+- [ ] Enquanto usar o número de teste da Meta (remetente EUA), adicionar o seu
+      número em **"To"/destinatários permitidos** (máx. 5). Com número próprio
+      verificado isso não é necessário.
+
+### 2. Token de acesso
+
+- [ ] **Teste:** token temporário da tela API Setup (expira em 24h).
+- [ ] **Produção:** *Business Settings → Usuários do sistema* → token permanente
+      com `whatsapp_business_messaging` + `whatsapp_business_management`.
+
+> Token temporário expirando é a causa nº 1 de "parou de responder do nada".
+
+### 3. ENVs no Railway
+
+```
+WHATSAPP_PROVIDER=meta_cloud
+META_PHONE_NUMBER_ID=<Phone number ID da API Setup>
+META_ACCESS_TOKEN=<token permanente>
+META_APP_SECRET=<App > Configurações > Básico > Chave Secreta>
+META_VERIFY_TOKEN=<string que VOCÊ inventa; repita no painel da Meta>
+META_GRAPH_VERSION=v21.0
+WHATSAPP_DRY_RUN=false
+AR_ENCRYPTION_PRIMARY_KEY=...        # gere com bin/rails db:encryption:init
+AR_ENCRYPTION_DETERMINISTIC_KEY=...
+AR_ENCRYPTION_KEY_DERIVATION_SALT=...
+AI_PROVIDER=groq|anthropic           # sem isso o texto só recebe a msg de ajuda
+AI_API_KEY=...
+OCR_PROVIDER=tesseract               # sem isso foto/PDF não viram lançamento
 ```
 
-Cada workspace tem seu Business Account, Phone Number, Webhook, Token e Status.
+- [ ] `WHATSAPP_DRY_RUN=false` — com `true` o app **não envia nada**, só loga e
+      marca a `OutgoingMessage` como `dry_run`.
+- [ ] `AR_ENCRYPTION_*` definidas (obrigatórias em produção).
+
+### 4. Webhook
+
+- [ ] **WhatsApp → Configuration → Webhook**
+      Callback URL: `https://SEU_APP/webhooks/whatsapp/meta`
+      Verify token: o mesmo valor de `META_VERIFY_TOKEN`
+- [ ] Assinar o campo **`messages`** (sem isso nada chega).
+- [ ] Clicar em **Verify and save** — se der erro, o `META_VERIFY_TOKEN` não bate
+      ou o app não está no ar.
+
+### 5. Cadastro do usuário no Aionis
+
+- [ ] Logar no portal → **Canais → WhatsApp** → salvar o **seu número pessoal**
+      (o que vai conversar com o bot), com DDI: `+55 11 9xxxx-xxxx`.
+- [ ] Confirmar que ele é diferente do número do Aionis — o bot não conversa
+      consigo mesmo.
+
+### 6. Verificação
+
+```bash
+railway run bin/rails aionis:doctor          # confere ENVs e integrações
+railway run bin/rails aionis:ai:selftest     # IA + tool calling ponta a ponta
+railway run bin/rails aionis:ocr:selftest    # OCR ponta a ponta
+```
+
+- [ ] Mandar **"quanto eu gastei esse mês?"** para o número do Aionis → deve
+      responder com dados do seu workspace.
+- [ ] Mandar **foto de um comprovante** → deve virar lançamento.
+
+### Diagnóstico rápido quando não responde
+
+| Sintoma | Causa provável |
+|---|---|
+| Log `remetente não cadastrado: 55…` | número não salvo em `Workspace#whatsapp_number` |
+| Nada chega no log | webhook sem o campo `messages`, ou URL/verify token errados |
+| `401` no webhook | `META_APP_SECRET` errado (assinatura HMAC não bate) |
+| `OutgoingMessage` fica `dry_run` | `WHATSAPP_DRY_RUN` não está `false` |
+| Erro `130497` no envio | remetente EUA → destinatário BR (número de teste da Meta) |
+| Responde só "Envie a foto ou o PDF…" | `AI_PROVIDER` não configurado (agente desligado) |
+| Foto chega mas não vira lançamento | `OCR_PROVIDER` não é `tesseract` |
 
 ## Como trocar credenciais (rotação)
 

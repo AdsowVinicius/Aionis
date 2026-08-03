@@ -52,11 +52,9 @@ module Aionis
 
       # Identifica o workspace pelo número de QUEM ENVIOU (o número do Aionis é
       # único/global). O cliente registra o próprio número em Workspace#whatsapp_number.
+      # Tolera o 9º dígito dos celulares BR (ver Workspace.whatsapp_number_variants).
       def find_workspace
-        digits = @data["from"].to_s.gsub(/\D/, "").presence
-        return nil if digits.blank?
-
-        Workspace.find_by(whatsapp_number: digits)
+        Workspace.find_by_whatsapp_number(@data["from"])
       end
 
       def build_incoming

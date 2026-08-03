@@ -161,4 +161,16 @@ class Aionis::Whatsapp::InboundProcessorTest < ActiveSupport::TestCase
       run_inbound(desconhecido)
     end
   end
+
+  # A Meta entrega o wa_id de celulares BR ora com, ora sem o 9º dígito. Se o
+  # roteamento exigisse igualdade exata, o bot ignoraria o cliente em silêncio.
+  test "celular BR cadastrado com o 9 é reconhecido quando a Meta manda sem o 9" do
+    @workspace.update!(whatsapp_number: "5511925647469")
+    sem_9 = media_inbound(id: "BR9").merge("from" => "551125647469")
+
+    assert_difference -> { IncomingMessage.count } => 1 do
+      run_inbound(sem_9)
+    end
+    assert_equal @workspace, IncomingMessage.last.workspace
+  end
 end
