@@ -1,0 +1,30 @@
+# Dados da empresa usados nas páginas legais (Política de Privacidade, Termos).
+# ---------------------------------------------------------------------------
+# PREENCHA os campos marcados como PENDENTE antes de publicar. A Meta exige uma
+# política de privacidade acessível publicamente para aprovar o app do WhatsApp,
+# e a LGPD (art. 9º) exige que o titular saiba QUEM é o controlador dos dados.
+#
+# Não há segredo aqui — é tudo informação pública, exibida na própria página.
+
+# Razão social do controlador dos dados.
+company_name: "PENDENTE — razão social completa"
+
+# CNPJ do controlador. Sem ele a página fica juridicamente frágil.
+company_tax_id: "PENDENTE — 00.000.000/0001-00"
+
+# Endereço da sede (pode ser o endereço fiscal do MEI/ME).
+company_address: "PENDENTE — Rua, nº, bairro, cidade/UF, CEP"
+
+# E-mail do Encarregado de Dados (DPO) — LGPD art. 41. Pode ser o seu e-mail;
+# o que importa é que exista um canal para o titular exercer os direitos dele.
+dpo_email: "privacidade@aionisfinance.com.br"
+
+# Número de WhatsApp do Aionis (o bot), exibido como canal de contato.
+whatsapp_number: "+55 11 92564-7469"
+
+# Domínio público do produto.
+domain: "aionisfinance.com.br"
+
+# Data da última atualização do texto (formato ISO). Atualize a cada mudança
+# material — a LGPD exige transparência sobre alterações no tratamento.
+updated_at: "2026-08-03"

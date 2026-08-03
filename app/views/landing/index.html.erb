@@ -434,7 +434,10 @@
         </span>
         <span>— seu financeiro organizado, inteligente e sem complicação.</span>
       </div>
-      <div class="text-xs text-mist">© 2026 Aionis. Todos os direitos reservados.</div>
+      <div class="flex items-center gap-5 text-xs text-mist">
+        <%= link_to "Política de Privacidade", privacy_policy_path, class: "hover:text-ink transition" %>
+        <span>© <%= Date.current.year %> Aionis. Todos os direitos reservados.</span>
+      </div>
     </div>
   </footer>
 

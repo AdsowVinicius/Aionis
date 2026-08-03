@@ -1,0 +1,364 @@
+<%#
+  ============================================================
+  AIONIS — Política de Privacidade (pública, sem login)
+  ------------------------------------------------------------
+  Dados da empresa: config/aionis/legal.yml (LegalController#privacy).
+  Layout/fontes/estilos: app/views/layouts/landing.html.erb
+
+  ⚠️ Este texto é um PONTO DE PARTIDA técnico, redigido a partir do que o
+     código realmente faz (LGPD Lei 13.709/2018). NÃO é parecer jurídico:
+     revise com advogado antes de publicar, e preencha os PENDENTE do YAML.
+  ============================================================
+%>
+<% content_for :title, "Política de Privacidade — Aionis" %>
+<% content_for :description, "Como o Aionis coleta, usa, compartilha e protege seus dados pessoais e financeiros, em conformidade com a LGPD." %>
+
+<% updated  = (Date.parse(@legal["updated_at"].to_s) rescue Date.current) %>
+<% pending  = ->(v) { v.to_s.start_with?("PENDENTE") } %>
+
+<header class="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-black/5">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <span class="relative flex items-center justify-center rounded-[14px] w-7 h-7" style="background:linear-gradient(135deg,#0E1B2C 0%,#14B88A 130%)">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M4 18 L12 4 L20 18" stroke="#14B88A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14 L16 14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </span>
+      <span class="font-display text-ink" style="font-weight:800;font-size:1.05rem">Aionis</span>
+    </a>
+    <a href="/" class="text-sm text-mist hover:text-ink transition flex items-center gap-2">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao site
+    </a>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-6 py-14">
+
+  <div class="flex items-center gap-2 text-xs text-teal font-semibold uppercase tracking-wider">
+    <i data-lucide="shield-check" class="w-4 h-4"></i> Privacidade e LGPD
+  </div>
+  <h1 class="font-display text-4xl md:text-5xl leading-[1.1] tracking-tight text-ink mt-3">
+    Política de Privacidade
+  </h1>
+  <p class="mt-4 text-mist leading-relaxed">
+    Esta política explica quais dados o Aionis coleta, por que coleta, com quem
+    compartilha e como você pode controlá-los. Escrevemos em português claro,
+    sem juridiquês desnecessário.
+  </p>
+  <p class="mt-3 text-sm text-mist">
+    Última atualização: <b class="text-ink"><%= l(updated, format: "%d de %B de %Y") %></b>
+  </p>
+
+  <% if [@legal["company_name"], @legal["company_tax_id"], @legal["company_address"]].any?(&pending) %>
+    <div class="mt-8 rounded-[14px] border border-amber/40 bg-amber/10 p-5 text-sm text-ink">
+      <div class="flex items-start gap-3">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber shrink-0 mt-0.5"></i>
+        <div>
+          <b>Rascunho — não publique ainda.</b>
+          Faltam os dados do controlador em <code class="font-mono text-xs bg-black/5 px-1.5 py-0.5 rounded">config/aionis/legal.yml</code>
+          (razão social, CNPJ e endereço). Este aviso some sozinho quando eles forem preenchidos.
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Índice — "abas" de navegação dentro da política %>
+  <nav class="mt-10 rounded-[18px] border border-black/5 bg-white shadow-card p-6">
+    <div class="text-xs font-semibold uppercase tracking-wider text-mist mb-3">Nesta página</div>
+    <ol class="grid sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+      <% [
+        ["quem-somos",      "1. Quem é o controlador"],
+        ["dados",           "2. Quais dados coletamos"],
+        ["finalidades",     "3. Para que usamos"],
+        ["bases-legais",    "4. Bases legais"],
+        ["whatsapp",        "5. WhatsApp"],
+        ["ia",              "6. Inteligência artificial"],
+        ["compartilhamento","7. Com quem compartilhamos"],
+        ["internacional",   "8. Transferência internacional"],
+        ["retencao",        "9. Por quanto tempo guardamos"],
+        ["direitos",        "10. Seus direitos"],
+        ["seguranca",       "11. Segurança"],
+        ["cookies",         "12. Cookies"],
+        ["menores",         "13. Menores de idade"],
+        ["mudancas",        "14. Mudanças nesta política"],
+        ["contato",         "15. Como falar conosco"]
+      ].each do |anchor, label| %>
+        <li><a href="#<%= anchor %>" class="text-mist hover:text-teal transition"><%= label %></a></li>
+      <% end %>
+    </ol>
+  </nav>
+
+  <article class="prose-aionis mt-12 space-y-10">
+
+    <section id="quem-somos">
+      <h2>1. Quem é o controlador dos seus dados</h2>
+      <p>
+        O Aionis é operado por <b><%= @legal["company_name"] %></b>,
+        inscrita no CNPJ <b><%= @legal["company_tax_id"] %></b>, com sede em
+        <%= @legal["company_address"] %>.
+      </p>
+      <p>
+        Somos o <b>controlador</b> dos dados pessoais tratados na plataforma, nos
+        termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
+        Nosso Encarregado de Dados (DPO) pode ser contatado em
+        <a href="mailto:<%= @legal["dpo_email"] %>"><%= @legal["dpo_email"] %></a>.
+      </p>
+    </section>
+
+    <section id="dados">
+      <h2>2. Quais dados coletamos</h2>
+
+      <h3>Dados que você fornece</h3>
+      <ul>
+        <li><b>Cadastro:</b> nome, e-mail e senha (armazenada apenas como hash, nunca em texto legível).</li>
+        <li><b>Workspace:</b> nome, tipo (CPF, MEI ou empresa) e, <b>opcionalmente</b>, CPF/CNPJ.</li>
+        <li><b>Número de WhatsApp:</b> se você optar por usar o bot, para identificarmos suas mensagens.</li>
+        <li><b>Lançamentos financeiros:</b> descrições, valores, datas, categorias e fornecedores/clientes.</li>
+        <li><b>Documentos:</b> fotos, PDFs e XMLs de notas, recibos, boletos e comprovantes que você enviar.</li>
+      </ul>
+
+      <h3>Dados gerados pelo uso</h3>
+      <ul>
+        <li><b>Texto extraído dos documentos</b> por OCR, incluindo CPF/CNPJ que apareçam neles.</li>
+        <li><b>Mensagens trocadas com o assistente</b>, para manter o contexto da conversa.</li>
+        <li><b>Registros de auditoria:</b> quem fez o quê e quando, exigidos por segurança e pela própria LGPD.</li>
+        <li><b>Dados técnicos:</b> endereço IP, tipo de navegador e horários de acesso, em logs de servidor.</li>
+      </ul>
+
+      <div class="callout">
+        <b>CPF/CNPJ é sempre opcional.</b> Pedimos porque ajuda a identificar notas,
+        evitar duplicidade e organizar melhor seus lançamentos — mas o sistema
+        nunca bloqueia você por não informar. Se ignorar, seguimos normalmente.
+      </div>
+
+      <p>
+        <b>Não coletamos</b> dados de cartão de crédito (o processamento de pagamento,
+        quando houver, fica com o provedor especializado), nem dados sensíveis como
+        origem racial, opinião política, religião, saúde ou biometria.
+      </p>
+    </section>
+
+    <section id="finalidades">
+      <h2>3. Para que usamos seus dados</h2>
+      <ul>
+        <li>Ler documentos e transformá-los em lançamentos financeiros.</li>
+        <li>Classificar despesas e receitas por categoria e essencialidade.</li>
+        <li>Calcular indicadores, alertas e insights sobre sua saúde financeira.</li>
+        <li>Responder suas perguntas pelo assistente, no portal e no WhatsApp.</li>
+        <li>Autenticar seu acesso, prevenir fraude e manter a plataforma segura.</li>
+        <li>Cumprir obrigações legais e responder a autoridades quando exigido.</li>
+      </ul>
+      <p>
+        <b>Não vendemos seus dados</b> e não os usamos para publicidade de terceiros.
+        Não usamos seus documentos ou lançamentos para treinar modelos de IA nossos
+        ou de terceiros.
+      </p>
+    </section>
+
+    <section id="bases-legais">
+      <h2>4. Bases legais do tratamento</h2>
+      <ul>
+        <li><b>Execução de contrato</b> (art. 7º, V) — para entregar o serviço que você contratou.</li>
+        <li><b>Cumprimento de obrigação legal</b> (art. 7º, II) — guarda de registros fiscais e de acesso.</li>
+        <li><b>Legítimo interesse</b> (art. 7º, IX) — segurança, prevenção a fraude e melhoria do produto.</li>
+        <li><b>Consentimento</b> (art. 7º, I) — para o canal de WhatsApp e comunicações opcionais, revogável a qualquer momento.</li>
+      </ul>
+    </section>
+
+    <section id="whatsapp">
+      <h2>5. Como tratamos os dados do WhatsApp</h2>
+      <p>
+        O Aionis usa a <b>WhatsApp Business Platform (Meta Cloud API)</b>. Quando você
+        envia uma mensagem para o número do Aionis
+        (<b><%= @legal["whatsapp_number"] %></b>):
+      </p>
+      <ul>
+        <li>Recebemos seu número, seu nome de exibição no WhatsApp, o conteúdo da mensagem e a data/hora.</li>
+        <li>Usamos <b>seu número apenas para identificar o seu workspace</b> e responder você.</li>
+        <li>Fotos e PDFs enviados são processados como documentos financeiros e ficam vinculados à sua conta.</li>
+        <li>Só respondemos números previamente cadastrados por você na plataforma.</li>
+      </ul>
+      <p>
+        A Meta trata esses dados conforme a política de privacidade dela. Não usamos
+        o seu número para marketing, não montamos listas de transmissão e não
+        compartilhamos seu contato com terceiros. Para sair, basta remover o número
+        nas configurações do seu workspace ou pedir por e-mail.
+      </p>
+    </section>
+
+    <section id="ia">
+      <h2>6. Uso de inteligência artificial</h2>
+      <p>
+        Usamos IA em duas situações, sempre como apoio — nunca como decisão final
+        automatizada sobre você:
+      </p>
+      <ul>
+        <li><b>Classificar lançamentos</b> quando nossas regras internas não bastam.</li>
+        <li><b>Responder no assistente</b>, consultando apenas os dados do seu próprio workspace.</li>
+      </ul>
+      <p>
+        Nesses casos, trechos do texto do documento ou da sua pergunta são enviados
+        a um provedor de modelos de linguagem (Anthropic ou Groq, conforme a
+        configuração vigente). Esses provedores atuam como <b>operadores</b>, sob
+        contrato, e <b>não usam esse conteúdo para treinar modelos</b>.
+      </p>
+      <p>
+        Quando a confiança da IA é baixa, o sistema pede sua confirmação em vez de
+        lançar sozinho. Você pode revisar, corrigir ou excluir qualquer sugestão —
+        e tem direito a revisão humana de decisões automatizadas (LGPD art. 20).
+      </p>
+    </section>
+
+    <section id="compartilhamento">
+      <h2>7. Com quem compartilhamos</h2>
+      <p>Apenas com prestadores necessários para o serviço funcionar, todos como operadores:</p>
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr><th>Quem</th><th>Para quê</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Meta (WhatsApp Business Platform)</td><td>Enviar e receber mensagens</td></tr>
+            <tr><td>Anthropic / Groq</td><td>Classificação e assistente de IA</td></tr>
+            <tr><td>Railway</td><td>Hospedagem da aplicação e do banco de dados</td></tr>
+            <tr><td>Provedor de armazenamento de arquivos</td><td>Guardar os documentos enviados</td></tr>
+            <tr><td>Provedor de e-mail transacional</td><td>Confirmações e recuperação de senha</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Também podemos compartilhar dados por <b>ordem judicial</b> ou requisição legal
+        de autoridade competente, e em caso de reorganização societária — hipótese em
+        que você será avisado e esta política continuará valendo.
+      </p>
+    </section>
+
+    <section id="internacional">
+      <h2>8. Transferência internacional</h2>
+      <p>
+        Parte da infraestrutura (hospedagem, IA, mensageria) fica em servidores fora
+        do Brasil, principalmente nos Estados Unidos. Essas transferências seguem o
+        art. 33 da LGPD, com cláusulas contratuais que exigem nível de proteção
+        compatível com a lei brasileira.
+      </p>
+    </section>
+
+    <section id="retencao">
+      <h2>9. Por quanto tempo guardamos</h2>
+      <ul>
+        <li><b>Enquanto sua conta estiver ativa:</b> todos os dados do workspace.</li>
+        <li><b>Após o encerramento:</b> excluímos ou anonimizamos em até <b>90 dias</b>.</li>
+        <li><b>Registros fiscais e contábeis:</b> podem ser mantidos por até <b>5 anos</b>, quando houver exigência legal.</li>
+        <li><b>Logs de acesso:</b> <b>6 meses</b>, conforme o Marco Civil da Internet (art. 15).</li>
+        <li><b>Registros de auditoria:</b> mantidos pelo prazo de guarda dos dados a que se referem.</li>
+      </ul>
+    </section>
+
+    <section id="direitos">
+      <h2>10. Seus direitos</h2>
+      <p>A LGPD (art. 18) garante que você possa, a qualquer momento:</p>
+      <ul>
+        <li>Confirmar que tratamos seus dados e <b>acessá-los</b>.</li>
+        <li><b>Corrigir</b> dados incompletos, inexatos ou desatualizados.</li>
+        <li>Pedir <b>anonimização, bloqueio ou eliminação</b> de dados desnecessários ou excessivos.</li>
+        <li>Solicitar a <b>portabilidade</b> a outro fornecedor.</li>
+        <li><b>Revogar o consentimento</b> e saber com quem compartilhamos seus dados.</li>
+        <li>Pedir <b>revisão humana</b> de decisões automatizadas.</li>
+      </ul>
+      <p>
+        Boa parte disso você já faz sozinho no produto: editar ou excluir lançamentos
+        e documentos, apagar a memória do assistente em <b>Configurações</b> e remover
+        seu número de WhatsApp. Para o restante, escreva para
+        <a href="mailto:<%= @legal["dpo_email"] %>"><%= @legal["dpo_email"] %></a> —
+        respondemos em até <b>15 dias</b>.
+      </p>
+    </section>
+
+    <section id="seguranca">
+      <h2>11. Como protegemos seus dados</h2>
+      <ul>
+        <li>Tráfego sempre criptografado (HTTPS/TLS).</li>
+        <li>Senhas armazenadas como hash; tokens de integração criptografados em repouso.</li>
+        <li><b>Isolamento por workspace:</b> toda consulta é filtrada pelo seu workspace — inclusive as do assistente de IA, que nunca acessa o banco diretamente.</li>
+        <li>Webhooks do WhatsApp validados por assinatura HMAC.</li>
+        <li>Registro de auditoria das ações relevantes.</li>
+        <li>Segredos e chaves fora do código-fonte, em variáveis de ambiente.</li>
+      </ul>
+      <p>
+        Nenhum sistema é 100% imune. Em caso de incidente de segurança com risco
+        relevante, comunicaremos você e a ANPD conforme o art. 48 da LGPD.
+      </p>
+    </section>
+
+    <section id="cookies">
+      <h2>12. Cookies</h2>
+      <p>
+        Usamos apenas cookies <b>essenciais</b>: manter sua sessão ativa e proteger
+        formulários contra falsificação de requisição (CSRF). Não usamos cookies de
+        publicidade nem rastreamento de terceiros. Bloqueá-los impede o login.
+      </p>
+    </section>
+
+    <section id="menores">
+      <h2>13. Menores de idade</h2>
+      <p>
+        O Aionis é destinado a maiores de 18 anos. Não coletamos intencionalmente
+        dados de crianças e adolescentes. Se identificarmos um cadastro nessa
+        situação, a conta será removida.
+      </p>
+    </section>
+
+    <section id="mudancas">
+      <h2>14. Mudanças nesta política</h2>
+      <p>
+        Podemos atualizar este texto. Quando a mudança for material, avisaremos por
+        e-mail ou dentro da plataforma antes de entrar em vigor. A data no topo
+        sempre indica a versão vigente.
+      </p>
+    </section>
+
+    <section id="contato">
+      <h2>15. Como falar conosco</h2>
+      <p>
+        Dúvidas, pedidos de exclusão ou reclamações sobre privacidade:
+        <a href="mailto:<%= @legal["dpo_email"] %>"><%= @legal["dpo_email"] %></a>.
+      </p>
+      <p>
+        Você também pode reclamar à <b>ANPD</b> — Autoridade Nacional de Proteção de
+        Dados: <a href="https://www.gov.br/anpd" target="_blank" rel="noopener">gov.br/anpd</a>.
+      </p>
+    </section>
+
+  </article>
+</main>
+
+<footer class="border-t border-black/5 bg-white mt-8">
+  <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="text-sm text-mist">Aionis — seu financeiro organizado, inteligente e sem complicação.</div>
+    <div class="flex items-center gap-5 text-xs text-mist">
+      <a href="/" class="hover:text-ink transition">Início</a>
+      <a href="<%= privacy_policy_path %>" class="text-ink font-medium">Privacidade</a>
+      <span>© <%= Date.current.year %> Aionis</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* Tipografia do documento legal — legibilidade acima de tudo. */
+  .prose-aionis h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:1.5rem;
+    letter-spacing:-0.02em;color:#0E1B2C;margin-bottom:.75rem;scroll-margin-top:5rem}
+  .prose-aionis h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:1.05rem;
+    color:#0E1B2C;margin-top:1.5rem;margin-bottom:.5rem}
+  .prose-aionis p{color:#5A6B80;line-height:1.75;margin-bottom:1rem}
+  .prose-aionis ul{list-style:disc;padding-left:1.25rem;color:#5A6B80;line-height:1.75;margin-bottom:1rem}
+  .prose-aionis li{margin-bottom:.45rem}
+  .prose-aionis b{color:#0E1B2C;font-weight:600}
+  .prose-aionis a{color:#14B88A;text-decoration:underline;text-underline-offset:2px}
+  .prose-aionis a:hover{color:#0ea273}
+  .prose-aionis table{width:100%;border-collapse:collapse;font-size:.875rem;margin-bottom:1rem}
+  .prose-aionis th{text-align:left;font-weight:600;color:#0E1B2C;padding:.6rem .75rem;
+    border-bottom:1px solid rgba(0,0,0,.08);white-space:nowrap}
+  .prose-aionis td{color:#5A6B80;padding:.6rem .75rem;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:top}
+  .prose-aionis .callout{border-left:3px solid #14B88A;background:rgba(20,184,138,.06);
+    border-radius:0 14px 14px 0;padding:1rem 1.25rem;color:#5A6B80;line-height:1.7;margin:1.25rem 0}
+</style>
+
+<script>lucide.createIcons();</script>

@@ -8,6 +8,13 @@ Rails.application.routes.draw do
   # Landing pública de vendas (home#index antiga ficou sem rota; arquivos mantidos).
   root "landing#index"
 
+  # Páginas legais — públicas e sem login (a Meta valida a URL da política de
+  # privacidade na revisão do app do WhatsApp). Slug sem acento para evitar
+  # URL percent-encoded; os apelidos redirecionam para a URL canônica.
+  get "/politica-de-privacidade", to: "legal#privacy", as: :privacy_policy
+  get "/politicas-privacidade",   to: redirect("/politica-de-privacidade")
+  get "/privacidade",             to: redirect("/politica-de-privacidade")
+
   resources :workspaces do
     scope module: :workspaces do
       # controller: 'dashboard' mantém Workspaces::DashboardController (singular)

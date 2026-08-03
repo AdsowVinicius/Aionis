@@ -1,6 +1,47 @@
 <% content_for :title, "Configurações — #{current_workspace.name}" %>
 <% content_for :page_title, "Configurações" %>
-<div class="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center mx-auto max-w-2xl">
-  <p class="text-base font-semibold text-slate-700 mb-2">Configurações</p>
-  <p class="text-sm text-slate-500">Esta área será implementada na próxima etapa.</p>
+
+<div class="mx-auto max-w-2xl space-y-6">
+  <div class="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center">
+    <p class="text-base font-semibold text-slate-700 mb-2">Configurações</p>
+    <p class="text-sm text-slate-500">Esta área será implementada na próxima etapa.</p>
+  </div>
+
+  <%# Privacidade e LGPD — o titular precisa alcançar a política e a memória do
+      assistente sem sair do produto (LGPD art. 18: acesso e eliminação). %>
+  <section class="bg-white rounded-xl border border-slate-200 p-6">
+    <h2 class="text-sm font-semibold text-slate-700">Privacidade e dados</h2>
+    <p class="mt-1 text-sm text-slate-500">
+      Como tratamos seus dados e o que você pode apagar a qualquer momento.
+    </p>
+
+    <div class="mt-4 divide-y divide-slate-100 border-t border-slate-100">
+      <%= link_to privacy_policy_path, target: "_blank", rel: "noopener",
+            class: "flex items-center justify-between gap-4 py-3 group" do %>
+        <span>
+          <span class="block text-sm font-medium text-slate-700 group-hover:text-slate-900">Política de Privacidade</span>
+          <span class="block text-xs text-slate-500">Quais dados coletamos, com quem compartilhamos e seus direitos</span>
+        </span>
+        <span class="text-xs text-slate-400 group-hover:text-slate-600 whitespace-nowrap">Abrir →</span>
+      <% end %>
+
+      <%= link_to workspace_agent_memories_path(current_workspace),
+            class: "flex items-center justify-between gap-4 py-3 group" do %>
+        <span>
+          <span class="block text-sm font-medium text-slate-700 group-hover:text-slate-900">Memória do assistente</span>
+          <span class="block text-xs text-slate-500">Ver e apagar o que o assistente memorizou sobre o seu negócio</span>
+        </span>
+        <span class="text-xs text-slate-400 group-hover:text-slate-600 whitespace-nowrap">Gerenciar →</span>
+      <% end %>
+
+      <%= link_to workspace_whatsapp_channels_path(current_workspace),
+            class: "flex items-center justify-between gap-4 py-3 group" do %>
+        <span>
+          <span class="block text-sm font-medium text-slate-700 group-hover:text-slate-900">Número de WhatsApp</span>
+          <span class="block text-xs text-slate-500">Cadastrar ou remover o número que conversa com o Aionis</span>
+        </span>
+        <span class="text-xs text-slate-400 group-hover:text-slate-600 whitespace-nowrap">Gerenciar →</span>
+      <% end %>
+    </div>
+  </section>
 </div>
