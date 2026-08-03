@@ -1,0 +1,23 @@
+# ============================================================
+# Adicione estas linhas ao seu .gitignore (raiz do projeto)
+# para não versionar material de referência/segredos
+# ============================================================
+
+# Referência de design do Figma (material de trabalho, não código do app)
+/docs/design/
+
+# Variáveis de ambiente e segredos (NUNCA versionar)
+.env
+.env.*
+!.env.example
+config/master.key
+config/credentials/*.key
+
+# Uploads e arquivos temporários locais
+/tmp/*
+/log/*
+/storage/*
+!/storage/.keep
+
+# Zips e exports soltos
+*.zip
