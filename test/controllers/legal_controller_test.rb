@@ -18,6 +18,19 @@ class LegalControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # O Cloudflare troca e-mails em HTML por "[email protected]" + decodificador
+  # JS. Na política isso escondia o contato do revisor da Meta e de qualquer
+  # leitor sem JS. A diretiva <!--email_off--> desliga isso só aqui.
+  test "e-mail de contato fica legível por máquina (sem ofuscação do Cloudflare)" do
+    get privacy_policy_path
+
+    assert_equal 3, response.body.scan("<!--email_off-->").size,
+                 "todo mailto: da política precisa estar dentro de <!--email_off-->"
+    response.body.scan(%r{<!--email_off-->(.*?)<!--/email_off-->}m).flatten.each do |trecho|
+      assert_match(/mailto:/, trecho)
+    end
+  end
+
   test "dados do controlador vêm do config (nada hardcoded na view)" do
     config = YAML.load_file(Rails.root.join("config/aionis/legal.yml"))
     get privacy_policy_path

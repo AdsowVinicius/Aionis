@@ -8,6 +8,11 @@
   ⚠️ Este texto é um PONTO DE PARTIDA técnico, redigido a partir do que o
      código realmente faz (LGPD Lei 13.709/2018). NÃO é parecer jurídico:
      revise com advogado antes de publicar, e preencha os PENDENTE do YAML.
+
+  Os <!--email_off--> em volta dos mailto: são diretiva do Cloudflare. Sem
+  eles o Email Address Obfuscation troca o endereço por "[email protected]"
+  + um decodificador JS — some para o revisor da Meta, para crawlers e para
+  quem navega sem JS, justo na página que precisa ser legível por máquina.
   ============================================================
 %>
 <% content_for :title, "Política de Privacidade — Aionis" %>
@@ -97,7 +102,7 @@
         Somos o <b>controlador</b> dos dados pessoais tratados na plataforma, nos
         termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
         Nosso Encarregado de Dados (DPO) pode ser contatado em
-        <a href="mailto:<%= @legal["contact_email"] %>"><%= @legal["contact_email"] %></a>.
+        <!--email_off--><a href="mailto:<%= @legal["contact_email"] %>"><%= @legal["contact_email"] %></a><!--/email_off-->.
       </p>
     </section>
 
@@ -265,7 +270,7 @@
         Boa parte disso você já faz sozinho no produto: editar ou excluir lançamentos
         e documentos, apagar a memória do assistente em <b>Configurações</b> e remover
         seu número de WhatsApp. Para o restante, escreva para
-        <a href="mailto:<%= @legal["contact_email"] %>"><%= @legal["contact_email"] %></a> —
+        <!--email_off--><a href="mailto:<%= @legal["contact_email"] %>"><%= @legal["contact_email"] %></a><!--/email_off--> —
         respondemos em até <b>15 dias</b>.
       </p>
     </section>
@@ -317,7 +322,7 @@
       <h2>15. Como falar conosco</h2>
       <p>
         Dúvidas, pedidos de exclusão ou reclamações sobre privacidade:
-        <a href="mailto:<%= @legal["contact_email"] %>"><%= @legal["contact_email"] %></a>.
+        <!--email_off--><a href="mailto:<%= @legal["contact_email"] %>"><%= @legal["contact_email"] %></a><!--/email_off-->.
       </p>
       <p>
         Você também pode reclamar à <b>ANPD</b> — Autoridade Nacional de Proteção de
