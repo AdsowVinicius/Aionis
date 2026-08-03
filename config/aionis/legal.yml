@@ -17,9 +17,11 @@ company_tax_id: "59.619.431/0001-83"
 # Endereço da sede (pode ser o endereço fiscal do MEI/ME).
 company_address: "Rua Estado de Goiás, 43, apto 03 — Ipê 1, Moreira César, Pindamonhangaba/SP, CEP 12443-290"
 
-# E-mail do Encarregado de Dados (DPO) — LGPD art. 41. Pode ser o seu e-mail;
-# o que importa é que exista um canal para o titular exercer os direitos dele.
-dpo_email: "privacidade@aionisfinance.com.br"
+# E-mail de contato ÚNICO: suporte, comercial e privacidade caem aqui.
+# Também é o canal do Encarregado de Dados (LGPD art. 41) — o que a lei exige
+# é que exista um canal para o titular exercer os direitos dele, não que seja
+# um endereço separado. Se um dia o volume justificar, basta separar aqui.
+contact_email: "contato@aionissolutions.com.br"
 
 # Número de WhatsApp do Aionis (o bot), exibido como canal de contato.
 whatsapp_number: "+55 11 92564-7469"

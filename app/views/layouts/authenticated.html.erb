@@ -9,10 +9,12 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <%# Ícones pelo pipeline (URL com digest) — ver comentário no application.html.erb %>
+    <link rel="icon" href="<%= asset_path("icon.svg") %>" type="image/svg+xml">
+    <link rel="icon" href="<%= asset_path("icon.png") %>" type="image/png">
+    <link rel="apple-touch-icon" href="<%= asset_path("icon.png") %>">
     <meta name="theme-color" content="#0E1B2C">
+    <link rel="manifest" href="<%= pwa_manifest_path %>">
 
     <%# Tipografia do design system (docs/design_ref/fonts.css) %>
     <link rel="preconnect" href="https://fonts.googleapis.com">

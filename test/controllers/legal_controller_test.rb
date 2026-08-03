@@ -21,7 +21,7 @@ class LegalControllerTest < ActionDispatch::IntegrationTest
   test "dados do controlador vêm do config (nada hardcoded na view)" do
     config = YAML.load_file(Rails.root.join("config/aionis/legal.yml"))
     get privacy_policy_path
-    assert_includes response.body, config["dpo_email"]
+    assert_includes response.body, config["contact_email"]
     assert_includes response.body, config["whatsapp_number"]
   end
 

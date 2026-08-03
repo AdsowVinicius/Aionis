@@ -60,4 +60,9 @@ Rails.application.routes.draw do
   post "/webhooks/whatsapp/:instance", to: "webhooks/whatsapp#create", as: :whatsapp_webhook
 
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # Manifest do PWA (ícone, nome e cores ao "adicionar à tela de início").
+  # O service-worker.js segue desligado de propósito: cache offline muda o
+  # comportamento do app e merece decisão à parte.
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest, defaults: { format: :json }
 end

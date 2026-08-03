@@ -9,10 +9,13 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <%# Ícones pelo pipeline (URL com digest): trocar a arte invalida o cache
+        sozinha. Em /public elas ficavam presas 1 ano no CDN. %>
+    <link rel="icon" href="<%= asset_path("icon.svg") %>" type="image/svg+xml">
+    <link rel="icon" href="<%= asset_path("icon.png") %>" type="image/png">
+    <link rel="apple-touch-icon" href="<%= asset_path("icon.png") %>">
     <meta name="theme-color" content="#0E1B2C">
+    <link rel="manifest" href="<%= pwa_manifest_path %>">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
