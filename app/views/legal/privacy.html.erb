@@ -91,8 +91,9 @@
     <section id="quem-somos">
       <h2>1. Quem é o controlador dos seus dados</h2>
       <p>
-        O Aionis é operado por <b><%= @legal["company_name"] %></b>,
-        inscrita no CNPJ <b><%= @legal["company_tax_id"] %></b>, com sede em
+        O Aionis é operado por <b><%= @legal["company_name"] %></b><%=
+          ", #{@legal['legal_nature']}" if @legal["legal_nature"].present? %>,
+        inscrito no CNPJ <b><%= @legal["company_tax_id"] %></b>, com sede em
         <%= @legal["company_address"] %>.
       </p>
       <p>

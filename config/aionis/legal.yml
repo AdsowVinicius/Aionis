@@ -6,14 +6,16 @@
 #
 # Não há segredo aqui — é tudo informação pública, exibida na própria página.
 
-# Razão social do controlador dos dados.
-company_name: "PENDENTE — razão social completa"
+# Razão social do controlador dos dados. No MEI, a razão social é o nome
+# completo do titular. Ao migrar para ME/LTDA ("Aionis Solutions"), troque aqui
+# E o CNPJ abaixo — a mudança de natureza jurídica gera inscrição nova.
+company_name: "Adsow Vinicius Freitas Batista (MEI)"
 
 # CNPJ do controlador. Sem ele a página fica juridicamente frágil.
-company_tax_id: "PENDENTE — 00.000.000/0001-00"
+company_tax_id: "59.619.431/0001-83"
 
 # Endereço da sede (pode ser o endereço fiscal do MEI/ME).
-company_address: "PENDENTE — Rua, nº, bairro, cidade/UF, CEP"
+company_address: "Rua Estado de Goiás, 43, apto 03 — Ipê 1, Moreira César, Pindamonhangaba/SP, CEP 12443-290"
 
 # E-mail do Encarregado de Dados (DPO) — LGPD art. 41. Pode ser o seu e-mail;
 # o que importa é que exista um canal para o titular exercer os direitos dele.
@@ -28,3 +30,7 @@ domain: "aionisfinance.com.br"
 # Data da última atualização do texto (formato ISO). Atualize a cada mudança
 # material — a LGPD exige transparência sobre alterações no tratamento.
 updated_at: "2026-08-03"
+
+# Natureza jurídica atual, exibida na página. Ao virar ME/LTDA, ajuste para
+# "sociedade empresária limitada" (ou o que constar no contrato social).
+legal_nature: "microempreendedor individual (MEI)"
