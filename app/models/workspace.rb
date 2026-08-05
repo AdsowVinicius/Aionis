@@ -38,6 +38,12 @@ class Workspace < ApplicationRecord
   BR_MOBILE_WITH_9    = /\A55(\d{2})9(\d{8})\z/
   BR_MOBILE_WITHOUT_9 = /\A55(\d{2})(\d{8})\z/
 
+  # Mesmos formatos SEM o DDI, que é como o brasileiro digita no portal
+  # ("(12) 99604-9308"). DDD nunca tem zero, e celular sempre começa com 9 —
+  # é o que evita confundir um número estrangeiro de 11 dígitos com um BR.
+  BR_LOCAL_WITH_9    = /\A([1-9][1-9])9(\d{8})\z/
+  BR_LOCAL_WITHOUT_9 = /\A([1-9][1-9])(\d{8})\z/
+
   # Formas equivalentes do mesmo número. A Meta entrega o wa_id de celulares
   # brasileiros ora COM, ora SEM o "9" adicional (depende de quando a linha foi
   # registrada no WhatsApp) — e não é o mesmo formato que o cliente digita no
@@ -66,13 +72,28 @@ class Workspace < ApplicationRecord
     found.find { |w| w.whatsapp_number == variants.first } || found.first
   end
 
+  # Forma canônica: só dígitos e SEMPRE com DDI, que é como a Meta entrega o
+  # remetente no webhook (wa_id "5512996049308"). Sem isso, quem cadastra no
+  # formato brasileiro comum — "(12) 99604-9308" — vira "12996049308", nunca
+  # casa com o wa_id e é descartado em silêncio pelo InboundProcessor (nem
+  # IncomingMessage é gravada). É a falha mais cara possível: o cliente só vê
+  # o bot não responder.
+  #
+  # Números que já têm DDI (12–13 dígitos) e os que não parecem brasileiros
+  # passam intactos — só normalizamos o que reconhecemos como BR local.
+  def self.canonical_whatsapp_number(number)
+    digits = number.to_s.gsub(/\D/, "").presence
+    return nil if digits.blank?
+
+    digits.match?(BR_LOCAL_WITH_9) || digits.match?(BR_LOCAL_WITHOUT_9) ? "55#{digits}" : digits
+  end
+
   private
 
-  # Guarda apenas dígitos (com DDI), formato em que a Meta entrega o remetente.
   def normalize_whatsapp_number
     return if whatsapp_number.blank?
 
-    self.whatsapp_number = whatsapp_number.to_s.gsub(/\D/, "").presence
+    self.whatsapp_number = self.class.canonical_whatsapp_number(whatsapp_number)
   end
 
   def add_owner_as_member
