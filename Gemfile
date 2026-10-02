@@ -27,7 +27,7 @@ gem "pundit"
 gem "cpf_cnpj"
 
 # Pagination
-gem "pagy", "~> 9.0"
+gem "pagy", "~> 43.6"
 
 # Money formatting for BRL
 gem "money-rails", "~> 1.15"
